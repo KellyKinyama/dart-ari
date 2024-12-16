@@ -1,7 +1,15 @@
+library ari_client;
+
+import 'package:uuid/uuid.dart';
+import 'dart:convert';
 import 'dart:io';
+import 'package:dart_ari/ari/api/events/channel_destroyed.dart';
+import 'package:dart_ari/ari/api/events/channel_state_change.dart';
+import 'package:dart_ari/ari/api/events/stasis_end.dart';
+import 'package:dart_ari/ari/api/events/stasis_start.dart';
+import 'package:dart_ari/ari/api/misc.dart';
 import 'package:events_emitter/events_emitter.dart';
 
-import '../config/ari_config.dart';
 import '../config/constants.dart';
 import 'bridges.dart';
 import 'channels.dart';
@@ -9,6 +17,8 @@ import 'device_state.dart';
 import 'endpoints.dart';
 import 'globals.dart';
 import 'playbacks.dart';
+
+part 'ari_ws.dart';
 
 class ARI extends EventEmitter {
   /// Creates a new awry API instance, providing clients for all available
@@ -48,7 +58,6 @@ class ARI extends EventEmitter {
   }
 
   factory ARI.fromConfigs() {
-    Config config = Config();
     String scheme = config.ariConfigs[ASTERISK_ARI_SCHEME]!;
 
     String host = config.ariConfigs[ASTERISK_ARI_HOST]!;
@@ -98,23 +107,24 @@ class ARI extends EventEmitter {
   // String baseUrl;
   // HttpClient client = HttpClient();
 
-  void stasisStart(stasisStart, channel) {
+  void stasisStart(StasisStart stasisStart, Channel channel) {
     emit('StasisStart', (stasisStart, channel));
   }
 
-  void stasisEnd(stasisEnd, channel) {
+  void stasisEnd(StasisEnd stasisEnd, Channel channel) {
     emit('StasisEnd', (stasisEnd, channel));
   }
 
-  void channelDestroyed(channelDestroyed, channel) {
+  void channelDestroyed(ChannelDestroyed channelDestroyed, Channel channel) {
     emit('channelDestroyed', (channelDestroyed, channel));
   }
 
-  void channelStateChange(channelStateChange, channel) {
+  void channelStateChange(
+      ChannelStateChange channelStateChange, Channel channel) {
     emit('ChannelStateChange', (channelStateChange, channel));
   }
 
-  Future<WebSocket> connect() async {
+  Future<void> connect() async {
     // Random r = new Random();
     final int key = 758485960049485;
 // Random r = new Random();
@@ -189,6 +199,119 @@ class ARI extends EventEmitter {
     //   var e = json.decode(event);
     //   on(app[e['type']]);
     // },onError: on);
-    return ws;
+    //return ws;
+    listen(ws);
+  }
+
+  Playback playback(
+      {String? id,
+      // ignore: non_constant_identifier_names
+      String? media_uri,
+      // ignore: non_constant_identifier_names
+      String? next_media_uri,
+      // ignore: non_constant_identifier_names
+      String? target_uri,
+      String? language,
+      String? state}) {
+    var uuid = Uuid();
+    var pbId = uuid.v1();
+
+    var playBack = Playback(id: pbId);
+    playbacks[pbId] = playBack;
+
+    return playBack;
+  }
+
+  Future<Channel> channel(
+      {required String endpoint,
+      String? extension,
+      String? context,
+      String? priority,
+      String? label,
+      String? app,
+      List<String>? appArgs,
+      String? callerId,
+      String? timeout,
+      String? channelId,
+      String? otherChannelId,
+      String? originator,
+      dynamic variables}) async {
+    // print("application: $app");
+    // print("endpoint: $app");
+    var resp = await ChannelsApi.create(
+        endpoint: endpoint,
+        extension: extension,
+        context: context,
+        priority: priority,
+        label: label,
+        app: app,
+        appArgs: appArgs,
+        callerId: callerId,
+        timeout: timeout,
+        channelId: channelId,
+        otherChannelId: otherChannelId,
+        originator: originator,
+        variables: variables);
+    var channelJson;
+    //resp.then((value) {
+    //print(resp.resp);
+    channelJson = json.decode(resp.resp);
+    Channel channel = Channel.fromJson(channelJson);
+
+    channels[channel.id] = channel;
+
+    return channel;
+    //});
+    //return null;
+  }
+
+  Future<Bridge> bridge(
+      {String? name, String? bridgeId, List<String>? type}) async {
+    var resp = await BridgesAPI.createOrUpdate(
+        name: name, bridgeId: bridgeId, type: type);
+    //print(resp.resp);
+    var bridgeJson = jsonDecode(resp.resp);
+    var bridge = Bridge.fromJson(bridgeJson);
+
+    bridges[bridge.id] = bridge;
+    return bridge;
+  }
+
+  Future<Channel> externalMedia(
+    Function(bool, Channel) callback, {
+    required String app, //: string;
+    dynamic variables, //?: Containers;
+    required external_host, //: string;
+    String? encapsulation, //?: string;
+    String? transport, //?: string;
+    String? connection_type, //?: string;
+    required String format, //: string;
+    String? direction, //?: string;
+  }) async {
+    var resp = await ChannelsApi.externalMedia(
+        app: app,
+        variables: variables,
+        external_host: external_host,
+        encapsulation: encapsulation,
+        transport: transport,
+        connection_type: connection_type,
+        format: format,
+        direction: direction);
+
+    print("External media: ${resp.resp}");
+
+    var channelJson = jsonDecode(resp.resp);
+
+    Channel channel = Channel.fromJson(channelJson);
+
+    channels[channel.id] = channel;
+    return channel;
+
+    // resp.then((value) {
+    //   if (value.statusCode == 200 || value.statusCode == 204)
+    //     callback(false, this);
+    //   else
+    //     callback(true, this);
+    // });
   }
 }

@@ -1,11 +1,10 @@
-import 'dart:io';
-
 import 'package:dart_ari/dart_ari.dart';
-import 'ari_ws.dart';
+import 'queue_app.dart';
 
 void main(List<String> arguments) async {
   ARI ari = ARI.fromConfigs();
 
-  WebSocket ws = await ari.connect();
-  listen(ws);
+  await ari.connect();
+  queueApp(ari);
+  //listen(ws);
 }

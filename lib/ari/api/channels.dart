@@ -1317,6 +1317,11 @@ class Channel extends Resource {
 
   factory Channel.fromJson(dynamic json, {Channel? channel}) {
     //print(json);
+    if (json['error'] != null) {
+      print(json);
+      throw "Error: ${json['error']}";
+    }
+
     final creationtime = DateTime.parse(json['creationtime']); // 8:18pm
     var caller = CallerID.fromJson(json['caller']);
 
