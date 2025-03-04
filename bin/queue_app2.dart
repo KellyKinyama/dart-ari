@@ -6,139 +6,80 @@ import 'package:dart_ari/dart_ari.dart';
 import 'package:dart_ari/webserver/models/recordings.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:uuid/uuid.dart';
-// import 'utils.dart';
 
-late String voiceLoggerIp; // = env['VOICE_LOGGER_IP']!;
-late int voiceLoggerPort; // = int.parse(env['VOICE_LOGGER_PORT']!);
-
+late String voiceLoggerIp;
+late int voiceLoggerPort;
 late ARI client;
 
 Map<String, AgentState> agentsStatuses = {
-  // 'SIP/7000/8923': AgentState.LOGGEDIN,
   'SIP/7000/8828': AgentState.IDLE,
   'SIP/7000/8703': AgentState.IDLE,
 };
 
 HttpClient httpRtpClient = HttpClient();
+
 Future<int?> rtpPort(String filename) async {
   var uri = Uri(
       scheme: "http",
-      userInfo: "",
       host: voiceLoggerIp,
       port: voiceLoggerPort,
-      query: "",
       queryParameters: {'filename': filename});
   try {
     HttpClientRequest request = await httpRtpClient.postUrl(uri);
     HttpClientResponse response = await request.close();
-    //print(response);
     final String stringData = await response.transform(utf8.decoder).join();
-    print(response.statusCode);
-    var port = json.decode(stringData); //print(stringData);
+    var port = json.decode(stringData);
     return port['rtp_port'];
   } catch (e) {
     print("Error: $e");
+    return null;
   }
 }
 
-Future<bool> checkAgentStatus(String endpoint) async {
-  bool isIdle = await DbQueries.isAgentIdle(endpoint);
-  if (isIdle) {
-    print("The agent is idle.");
-    return true;
-  } else {
-    print("The agent is not idle.");
-    return false;
-  }
+Future<void> playComfortMessage(Channel channel) async {
+  const comfortInterval = Duration(seconds: 30);
+  // while (channel.state == 'Up') {
+  Playback playback = client.playback();
+  await channel.play(playback, media: ['sound:please-hold']);
+  await Future.delayed(comfortInterval);
+  // }
 }
 
 Future<void> attemptAgentCall(Channel channel, int retries) async {
-  const retryDelay = Duration(seconds: 10); // Delay between retries
-  const maxRetries = 3; // Max number of retries
+  const retryDelay = Duration(seconds: 10);
+  const maxRetries = 3;
 
-  final free = await longestWaiting(agentsStatuses);
-  print("Free agent: $free");
+  final free = agentsStatuses.entries
+      .firstWhere(
+        (entry) => entry.value == AgentState.IDLE,
+        orElse: () => MapEntry("", AgentState.ONCONVERSATION),
+      )
+      .key;
 
-  if (free != null) {
-    print("Calling agent: $free");
+  if (free.isNotEmpty) {
     await originate(channel, free);
-    return; // Stop retrying if agent is found
+    return;
   }
 
   if (retries >= maxRetries) {
-    print("All agents are busy after $maxRetries retries.");
-
-    // Play busy message
     Playback busyPlayback = client.playback();
     await channel.play(busyPlayback, media: ['sound:all-circuits-busy-now']);
-
-    // Hang up after the message is finished
     await busyPlayback.once('PlaybackFinished', (_) async {
-      print("Playback finished, hanging up the call.");
       await channel.hangup();
     });
     return;
   }
 
   print("No agents available. Retrying in ${retryDelay.inSeconds} seconds...");
-
-  // Wait before retrying
   await Future.delayed(retryDelay);
   await attemptAgentCall(channel, retries + 1);
 }
 
 stasisStart(StasisStart event, Channel channel) async {
-  bool dialed = event.args.length > 0 ? event.args[0] == 'dialed' : false;
-  if (channel.name.contains('UnicastRTP')) {
-    dialed = true;
-  }
-
-  if (!dialed) {
-    await channel.answer();
-
-    Playback playback = client.playback();
-    await channel.play(playback, media: ['sound:vm-dialout']);
-
-    print("Starting agent search with retries...");
-    await attemptAgentCall(channel, 0); // Start with zero retries
-  } else {
-    if (event.args.length > 0 && event.args[0] == 'dialed') {
-      // Handle dialed calls if necessary
-    }
-  }
+  await channel.answer();
+  await playComfortMessage(channel);
+  await attemptAgentCall(channel, 0);
 }
-
-// stasisStart(StasisStart event, Channel channel) async {
-//   bool dialed = event.args.length > 0 ? event.args[0] == 'dialed' : false;
-//   if (channel.name.contains('UnicastRTP')) {
-//     dialed = true;
-//   }
-
-//   if (!dialed) {
-//     //throw variable;
-//     await channel.answer();
-
-//     Playback playback = client.playback();
-//     await channel.play(playback, media: ['sound:vm-dialout']);
-
-//     // var free = await DbQueries.freeAgents();
-//     final free = await longestWaiting(agentsStatuses);
-//     print("Free agents: $free");
-
-//     //const oneSec = Duration(seconds: 3);
-//     // Timer.periodic(oneSec, (Timer t) {
-//     //   callTimers[channel.id] = t;
-//     //   channel.off();
-//     // if (await checkAgentStatus(free.substring(free.lastIndexOf("/")))) {
-//     print("Calling agent: $free");
-//     await originate(channel, free!);
-//     // }
-//     //callTimers.remove(channel.id);
-//     // });
-//   } else {
-//     if (event.args.length > 0 && event.args[0] == 'dialed') {}
-//   }
-// }
 
 Future<bool> originate(Channel incoming, String agent) async {
   Uuid uid = Uuid();
@@ -187,8 +128,8 @@ Future<bool> originate(Channel incoming, String agent) async {
           clid: incoming.caller.number,
         );
 
-        DbQueries.updateAgentStatus(
-            endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
+        DbQueries.updateAgentStatus(endpoint, AgentState.LOGGEDIN.toString(),
+            AgentState.ONCONVERSATION.toString());
         agentsStatuses[agent] = AgentState.ONCONVERSATION;
 
         //}
@@ -196,8 +137,8 @@ Future<bool> originate(Channel incoming, String agent) async {
 
       if (dialChannel.state == 'Ringing') {
         print("dialed channel: ${dialed.id} is ${dialChannel.state}");
-        DbQueries.updateAgentStatus(
-            endpoint, AgentState.LOGGEDIN, AgentState.RINGING);
+        DbQueries.updateAgentStatus(endpoint, AgentState.LOGGEDIN.toString(),
+            AgentState.RINGING.toString());
         agentsStatuses[agent] = AgentState.RINGING;
       }
     });
@@ -224,7 +165,7 @@ Future<bool> originate(Channel incoming, String agent) async {
       agentsStatuses[agent] = AgentState.IDLE;
 
       DbQueries.updateAgentStatus(
-          endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+          endpoint, AgentState.LOGGEDIN.toString(), AgentState.IDLE.toString());
       await incoming.hangup();
     });
 
@@ -257,8 +198,8 @@ Future<bool> originate(Channel incoming, String agent) async {
           voiceRecords[incoming.id]!.hangupdate =
               stasisEndEvent.timestamp.toString();
           await voiceRecords[incoming.id]!.insertCallRecording();
-          DbQueries.updateAgentStatus(
-              endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+          DbQueries.updateAgentStatus(endpoint, AgentState.LOGGEDIN.toString(),
+              AgentState.IDLE.toString());
           agentsStatuses[agent] = AgentState.IDLE;
           //agent.waitingSince = DateTime.now();
           //voiceRecords.remove(incoming.id);
@@ -306,10 +247,10 @@ void queueApp(ARI ari) {
   voiceLoggerIp = env['VOICE_LOGGER_IP']!;
   voiceLoggerPort = int.parse(env['VOICE_LOGGER_PORT']!);
   client = ari;
+
   client.on("StasisStart", (event) {
     var (stasisStartEvent, channel) = (event) as (StasisStart, Channel);
     print("Channel: ${channel.id} entered stasis application");
-
     stasisStart(stasisStartEvent, channel);
   });
 }

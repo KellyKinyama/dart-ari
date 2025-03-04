@@ -27,20 +27,25 @@ class DbQueries {
     return db;
   }
 
-  static Future<void> updateAgentStatus(
-      String endpoint, String state, String status) async {
+  static Future<bool> updateAgentStatus(
+      String endpoint, AgentState state, AgentState status) async {
+    bool successful = false;
     final db = await getDbConnection();
 
     try {
       await db
           .table('agents')
           .where('endpoint', '=', endpoint)
-          .update({'state': state, 'status': status});
+          .update({'state': state.toString(), 'status': status.toString()});
+      successful = true;
     } catch (e) {
       print('Error: $e');
       // Handle reconnection logic if needed
+      successful = false;
     } finally {
       await db.disconnect();
+      // ignore: control_flow_in_finally
+      return successful;
     }
   }
 

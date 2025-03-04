@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:dart_ari/ari/api/db_queries.dart';
+import 'package:dart_ari/ari/api/enums.dart';
 import 'package:dart_ari/webserver/models/queue_member.dart';
 import 'package:shelf/shelf.dart';
 
@@ -7,6 +9,13 @@ class AgentController {
   Future<String> agents() async {
     var agents = await QueueMember.get();
     return json.encode(agents);
+  }
+
+  static Future<String> excecuteCommand(
+      String agent, String state, status) async {
+    await DbQueries.updateAgentStatus(
+        agent, AgentState.fromString(state), AgentState.fromString(status));
+    return "true";
   }
 
   Future<String> login(Request request) async {
