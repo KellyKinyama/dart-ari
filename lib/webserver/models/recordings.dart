@@ -1,5 +1,7 @@
 import 'package:dart_ari/webserver/models/base.dart';
 
+import '../../ari/api/enums.dart';
+
 class Recordings extends Model {
   static String table = 'recordings';
 
@@ -29,24 +31,53 @@ class Recordings extends Model {
   }
 }
 
-Future<String> longestWaiting() async {
-  List<String> loggedInAgents = [
-    'SIP/7000/6003',
-    'SIP/7000/8923',
-    'SIP/7000/1061'
-  ];
+Future<String?> longestWaiting(Map<String, AgentState> agentsStates) async {
+  // Filter only idle agents
+  List<String> loggedInAgents = agentsStates.entries
+      .where((entry) => entry.value == AgentState.IDLE)
+      .map((entry) => entry.key)
+      .toList();
+
+  if (loggedInAgents.isEmpty) {
+    print("No idle agents available.");
+    return null;
+  }
+
   final longestIdleAgent = await Recordings.getLongestIdleAgent(loggedInAgents);
+
   if (longestIdleAgent != null) {
     print(
         "Longest Idle Agent: ${longestIdleAgent['agent_number']} (Last Call: ${longestIdleAgent['updated_at']})");
     return longestIdleAgent['agent_number'];
   } else {
-    print("No idle agents found.");
+    print("No idle agents found in the database.");
     return loggedInAgents[0];
   }
 }
 
+// Future<String> longestWaiting(Map<String, AgentState> agentsStates) async {
+//   List<String> loggedInAgents = [
+//     'SIP/7000/6003',
+//     'SIP/7000/8923',
+//     'SIP/7000/1061'
+//   ];
+//   final longestIdleAgent = await Recordings.getLongestIdleAgent(loggedInAgents);
+//   if (longestIdleAgent != null) {
+//     print(
+//         "Longest Idle Agent: ${longestIdleAgent['agent_number']} (Last Call: ${longestIdleAgent['updated_at']})");
+//     return longestIdleAgent['agent_number'];
+//   } else {
+//     print("No idle agents found.");
+//     return loggedInAgents[0];
+//   }
+// }
+
 Future<void> main() async {
-  final bestAgent = await longestWaiting();
+  Map<String, AgentState> agentsStates = {
+    'SIP/7000/6003': AgentState.LOGGEDIN,
+    'SIP/7000/8923': AgentState.LOGGEDIN,
+    'SIP/7000/1061': AgentState.LOGGEDIN
+  };
+  final bestAgent = await longestWaiting(agentsStates);
   print("Best agent: $bestAgent");
 }

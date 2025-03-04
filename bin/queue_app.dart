@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dart_ari/ari/api/enums.dart';
 import 'package:dart_ari/dart_ari.dart';
 import 'package:dart_ari/webserver/models/recordings.dart';
 import 'package:dotenv/dotenv.dart';
@@ -11,6 +12,12 @@ late String voiceLoggerIp; // = env['VOICE_LOGGER_IP']!;
 late int voiceLoggerPort; // = int.parse(env['VOICE_LOGGER_PORT']!);
 
 late ARI client;
+
+Map<String, AgentState> agentsStatuses = {
+  'SIP/7000/8923': AgentState.LOGGEDIN,
+  'SIP/7000/1061': AgentState.LOGGEDIN,
+  'SIP/7000/6003': AgentState.IDLE,
+};
 
 HttpClient httpRtpClient = HttpClient();
 Future<int?> rtpPort(String filename) async {
@@ -59,7 +66,7 @@ stasisStart(StasisStart event, Channel channel) async {
     await channel.play(playback, media: ['sound:vm-dialout']);
 
     // var free = await DbQueries.freeAgents();
-    final free = await longestWaiting();
+    final free = await longestWaiting(agentsStatuses);
     print("Free agents: $free");
 
     //const oneSec = Duration(seconds: 3);
@@ -68,7 +75,7 @@ stasisStart(StasisStart event, Channel channel) async {
     //   channel.off();
     // if (await checkAgentStatus(free.substring(free.lastIndexOf("/")))) {
     print("Calling agent: $free");
-    await originate(channel, free);
+    await originate(channel, free!);
     // }
     //callTimers.remove(channel.id);
     // });
@@ -125,6 +132,7 @@ Future<void> originate(Channel incoming, String agent) async {
 
       DbQueries.updateAgentStatus(endpoint, AgentState.LOGGEDIN.toString(),
           AgentState.ONCONVERSATION.toString());
+      agentsStatuses[agent] = AgentState.ONCONVERSATION;
 
       //}
     }
@@ -133,6 +141,7 @@ Future<void> originate(Channel incoming, String agent) async {
       print("dialed channel: ${dialed.id} is ${dialChannel.state}");
       DbQueries.updateAgentStatus(endpoint, AgentState.LOGGEDIN.toString(),
           AgentState.RINGING.toString());
+      agentsStatuses[agent] = AgentState.RINGING;
     }
   });
 
@@ -154,6 +163,7 @@ Future<void> originate(Channel incoming, String agent) async {
           channelDestroyedEvent.timestamp.toString();
 //          voiceRecords.remove(incoming.id);
     }
+    agentsStatuses[agent] = AgentState.IDLE;
 
     DbQueries.updateAgentStatus(
         endpoint, AgentState.LOGGEDIN.toString(), AgentState.IDLE.toString());

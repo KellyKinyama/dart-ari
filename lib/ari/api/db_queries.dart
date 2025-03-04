@@ -1,9 +1,10 @@
 import 'dart:convert';
 
-import 'package:dart_ari/ari/api/enums.dart';
+// import 'package:dart_ari/ari/api/utils.dart';
 import 'package:dart_ari/dart_ari.dart';
 
-import 'globals.dart';
+import 'enums.dart';
+// import 'globals.dart';
 import 'package:eloquent/eloquent.dart';
 
 // Declarations

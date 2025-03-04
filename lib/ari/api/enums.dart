@@ -1,3 +1,5 @@
+import 'package:dart_ari/dart_ari.dart';
+
 enum AgentState {
   LOGGEDIN,
   LOGGEDOUT,
@@ -9,3 +11,5 @@ enum AgentState {
   RINGING,
   UNKNOWN
 }
+
+Map<String, CallRecording> voiceRecords = {};
