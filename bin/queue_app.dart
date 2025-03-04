@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dart_ari/dart_ari.dart';
+import 'package:dart_ari/webserver/models/recordings.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:uuid/uuid.dart';
 import 'utils.dart';
@@ -33,6 +34,17 @@ Future<int?> rtpPort(String filename) async {
   }
 }
 
+Future<bool> checkAgentStatus(String endpoint) async {
+  bool isIdle = await DbQueries.isAgentIdle(endpoint);
+  if (isIdle) {
+    print("The agent is idle.");
+    return true;
+  } else {
+    print("The agent is not idle.");
+    return false;
+  }
+}
+
 stasisStart(StasisStart event, Channel channel) async {
   bool dialed = event.args.length > 0 ? event.args[0] == 'dialed' : false;
   if (channel.name.contains('UnicastRTP')) {
@@ -46,14 +58,18 @@ stasisStart(StasisStart event, Channel channel) async {
     Playback playback = client.playback();
     await channel.play(playback, media: ['sound:vm-dialout']);
 
-    var free = await DbQueries.freeAgents();
+    // var free = await DbQueries.freeAgents();
+    final free = await longestWaiting();
     print("Free agents: $free");
 
     //const oneSec = Duration(seconds: 3);
     // Timer.periodic(oneSec, (Timer t) {
     //   callTimers[channel.id] = t;
     //   channel.off();
-    await originate(channel);
+    // if (await checkAgentStatus(free.substring(free.lastIndexOf("/")))) {
+    print("Calling agent: $free");
+    await originate(channel, free);
+    // }
     //callTimers.remove(channel.id);
     // });
   } else {
@@ -61,11 +77,11 @@ stasisStart(StasisStart event, Channel channel) async {
   }
 }
 
-Future<void> originate(Channel incoming) async {
+Future<void> originate(Channel incoming, String agent) async {
   Uuid uid = Uuid();
   String filename = uid.v1();
 
-  String endpoint = "PJSIP/6003";
+  String endpoint = "PJSIP${agent.substring(agent.lastIndexOf("/"))}";
   print("Agent enpoint to dial: $endpoint");
 
   int? rtpport = await rtpPort(filename);

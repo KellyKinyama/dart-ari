@@ -64,4 +64,29 @@ class DbQueries {
     db.disconnect();
     return resp;
   }
+
+  // Function to check if an agent's status is IDLE
+  static Future<bool> isAgentIdle(String endpoint) async {
+    final db = await getDbConnection();
+
+    try {
+      // Query the agent's state and status based on the endpoint
+      var agent =
+          await db.table('agents').where('endpoint', '=', endpoint).first();
+
+      // Check if the agent's status is IDLE
+      if (agent != null) {
+        return agent['state'] == AgentState.LOGGEDIN &&
+            agent['status'] == AgentState.IDLE;
+      } else {
+        // Agent not found
+        return false;
+      }
+    } catch (e) {
+      print('Error: $e');
+      return false; // Return false in case of error
+    } finally {
+      await db.disconnect();
+    }
+  }
 }
