@@ -106,6 +106,9 @@ Future<String> longestWaiting(EventEmitter event) async {
     freeAgentCompleter.complete(true);
     return longestIdleAgent['agent_number'];
   } else {
+    if (loggedInAgents.length > 1) {
+      return loggedInAgents[0];
+    }
     print("No idle agents found in the database.");
     // return loggedInAgents[0];
 
@@ -118,21 +121,45 @@ Future<String> longestWaiting(EventEmitter event) async {
   throw ("No idle agents found.");
 }
 
-// Future<String> longestWaiting(Map<String, AgentState> agentsStates) async {
-//   List<String> loggedInAgents = [
-//     'SIP/7000/6003',
-//     'SIP/7000/8923',
-//     'SIP/7000/1061'
-//   ];
-//   final longestIdleAgent = await Recordings.getLongestIdleAgent(loggedInAgents);
-//   if (longestIdleAgent != null) {
-//     print(
-//         "Longest Idle Agent: ${longestIdleAgent['agent_number']} (Last Call: ${longestIdleAgent['updated_at']})");
-//     return longestIdleAgent['agent_number'];
-//   } else {
-//     print("No idle agents found.");
-//     return loggedInAgents[0];
+// static Future<Map<String, dynamic>?> getLongestIdleAgent(List<String> loggedInAgents) async {
+//   if (loggedInAgents.isEmpty) return null;
+
+//   final db = await Model.getDbConnection();
+
+//   // Get all agent_number and their last updated_at from recordings (if any)
+//   final recordings = await db
+//       .table(table)
+//       .select(['agent_number', 'updated_at'])
+//       .whereIn('agent_number', loggedInAgents)
+//       .get();
+
+//   await db.disconnect();
+
+//   // Create a map of agent_number to updated_at
+//   final Map<String, String> agentUpdatedMap = {
+//     for (var row in recordings) row['agent_number']: row['updated_at']
+//   };
+
+//   // Separate agents with no recordings
+//   final agentsWithNoRecordings = loggedInAgents.where((a) => !agentUpdatedMap.containsKey(a)).toList();
+
+//   if (agentsWithNoRecordings.isNotEmpty) {
+//     // If some agents have no recordings, return the first one (or sort them by whatever other criteria)
+//     return {
+//       'agent_number': agentsWithNoRecordings.first,
+//       'updated_at': null,
+//       'note': 'No recordings yet'
+//     };
 //   }
+
+//   // Else, get the one with the oldest updated_at
+//   final sorted = agentUpdatedMap.entries.toList()
+//     ..sort((a, b) => a.value.compareTo(b.value));
+
+//   return {
+//     'agent_number': sorted.first.key,
+//     'updated_at': sorted.first.value
+//   };
 // }
 
 Future<void> main() async {
