@@ -63,7 +63,7 @@ extension ARIPart1 on ARI {
           {}
         default:
           {
-            print("Unhandled event: ${e['type']}");
+            // print("Unhandled event: ${e['type']}");
           }
       }
     }, onError: (err, stackTrace) {

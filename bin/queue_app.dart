@@ -5,6 +5,7 @@ import 'package:dart_ari/ari/api/enums.dart';
 import 'package:dart_ari/dart_ari.dart';
 import 'package:dart_ari/webserver/models/recordings.dart';
 import 'package:dotenv/dotenv.dart';
+import 'package:events_emitter/events_emitter.dart';
 import 'package:uuid/uuid.dart';
 // import 'utils.dart';
 
@@ -15,8 +16,8 @@ late ARI client;
 
 Map<String, AgentState> agentsStatuses = {
   // 'SIP/7000/8923': AgentState.LOGGEDIN,
-  'SIP/7000/8828': AgentState.IDLE,
-  'SIP/7000/8703': AgentState.IDLE,
+  'SIP/7000/6003': AgentState.IDLE,
+  // 'SIP/7000/8703': AgentState.IDLE,
 };
 
 HttpClient httpRtpClient = HttpClient();
@@ -52,40 +53,40 @@ Future<bool> checkAgentStatus(String endpoint) async {
   }
 }
 
-Future<void> attemptAgentCall(Channel channel, int retries) async {
-  const retryDelay = Duration(seconds: 10); // Delay between retries
-  const maxRetries = 3; // Max number of retries
+// Future<void> attemptAgentCall(Channel channel, int retries) async {
+//   const retryDelay = Duration(seconds: 10); // Delay between retries
+//   const maxRetries = 3; // Max number of retries
 
-  final free = await longestWaiting(agentsStatuses);
-  print("Free agent: $free");
+//   final free = await longestWaiting();
+//   print("Free agent: $free");
 
-  if (free != null) {
-    print("Calling agent: $free");
-    await originate(channel, free);
-    return; // Stop retrying if agent is found
-  }
+//   if (free != null) {
+//     print("Calling agent: $free");
+//     // await originate(channel, free);
+//     return; // Stop retrying if agent is found
+//   }
 
-  if (retries >= maxRetries) {
-    print("All agents are busy after $maxRetries retries.");
+//   if (retries >= maxRetries) {
+//     print("All agents are busy after $maxRetries retries.");
 
-    // Play busy message
-    Playback busyPlayback = client.playback();
-    await channel.play(busyPlayback, media: ['sound:all-circuits-busy-now']);
+//     // Play busy message
+//     Playback busyPlayback = client.playback();
+//     await channel.play(busyPlayback, media: ['sound:all-circuits-busy-now']);
 
-    // Hang up after the message is finished
-    await busyPlayback.once('PlaybackFinished', (_) async {
-      print("Playback finished, hanging up the call.");
-      await channel.hangup();
-    });
-    return;
-  }
+//     // Hang up after the message is finished
+//     await busyPlayback.once('PlaybackFinished', (_) async {
+//       print("Playback finished, hanging up the call.");
+//       await channel.hangup();
+//     });
+//     return;
+//   }
 
-  print("No agents available. Retrying in ${retryDelay.inSeconds} seconds...");
+//   print("No agents available. Retrying in ${retryDelay.inSeconds} seconds...");
 
-  // Wait before retrying
-  await Future.delayed(retryDelay);
-  await attemptAgentCall(channel, retries + 1);
-}
+//   // Wait before retrying
+//   await Future.delayed(retryDelay);
+//   await attemptAgentCall(channel, retries + 1);
+// }
 
 stasisStart(StasisStart event, Channel channel) async {
   bool dialed = event.args.length > 0 ? event.args[0] == 'dialed' : false;
@@ -100,11 +101,51 @@ stasisStart(StasisStart event, Channel channel) async {
     await channel.play(playback, media: ['sound:vm-dialout']);
 
     print("Starting agent search with retries...");
-    await attemptAgentCall(channel, 0); // Start with zero retries
+    // await attemptAgentCall(channel, 0); // Start with zero retries
+
+    // await originate(channel, free);
+    await findOrCreateBridge(channel);
   } else {
     if (event.args.length > 0 && event.args[0] == 'dialed') {
       // Handle dialed calls if necessary
     }
+  }
+}
+
+Future<void> findOrCreateBridge(Channel channel) async {
+  final events = EventEmitter();
+  channel.on('StasisEnd', (event) {
+    events.emit('stopquery', channel);
+  });
+  final bridges = await Bridges.list();
+  late Bridge holdBridge;
+
+  final List<Bridge> holdingBridges = bridges.where((bridge) {
+    if (bridge.bridge_type == 'holding') {
+      // print("Found existing bridge: $bridge");
+      return true;
+    }
+    return false;
+  }).toList();
+
+  if (holdingBridges.isEmpty) {
+    holdBridge = await client.bridge(type: ['holding']);
+
+    print("Created bridge: ${holdBridge}");
+  } else {
+    holdBridge = holdingBridges[0];
+    print("Using existing holding bridge: ${holdBridge}");
+  }
+
+  await holdBridge.addChannel(channels: [channel.id]);
+
+  await holdBridge.startMoh();
+  try {
+    String free = await longestWaiting(events);
+
+    await originate(channel, holdBridge, free);
+  } catch (e, st) {
+    print("Error: $e, Stack trace: $st");
   }
 }
 
@@ -140,7 +181,8 @@ stasisStart(StasisStart event, Channel channel) async {
 //   }
 // }
 
-Future<bool> originate(Channel incoming, String agent) async {
+Future<bool> originate(
+    Channel incoming, Bridge holdingBridge, String agent) async {
   Uuid uid = Uuid();
   String filename = uid.v1();
 
@@ -236,6 +278,8 @@ Future<bool> originate(Channel incoming, String agent) async {
       // }
       print("dialed channel: ${dialed.id} entered our application");
 
+      await holdingBridge.removeChannel(channel: [incoming.id]);
+
       Bridge mixingBridge = await client.bridge(type: ['mixing']);
 
       dialed.on('StasisEnd', (event) async {
@@ -296,6 +340,9 @@ Future<bool> originate(Channel incoming, String agent) async {
         callerId: incoming.caller.number);
   } catch (e, st) {
     print("Error: $e, Stack trace: $st");
+    DbQueries.updateAgentStatus(
+        endpoint, AgentState.UNKNOWN, AgentState.UNKNOWN);
+    agentsStatuses[agent] = AgentState.UNKNOWN;
     return false;
   }
   return false;

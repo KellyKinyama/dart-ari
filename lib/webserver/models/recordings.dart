@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:dart_ari/webserver/models/base.dart';
+import 'package:events_emitter/events_emitter.dart';
 
 import '../../ari/api/enums.dart';
 
@@ -19,7 +23,7 @@ class Recordings extends Model {
         .table(table)
         .select(['agent_number', 'updated_at'])
         .whereIn('agent_number', loggedInAgents)
-        .where('updated_at', '>=', eightHoursAgo)
+        // .where('updated_at', '>=', eightHoursAgo)
         .groupBy('agent_number')
         .orderBy('updated_at', 'asc')
         .limit(1)
@@ -31,16 +35,67 @@ class Recordings extends Model {
   }
 }
 
-Future<String?> longestWaiting(Map<String, AgentState> agentsStates) async {
+Future<Map<String, AgentState>> idleAgents() async {
+  Map<String, AgentState> agentsStates = {
+    // 'SIP/7000/6003': AgentState.LOGGEDIN,
+    // 'SIP/7000/8923': AgentState.LOGGEDIN,
+    // 'SIP/7000/1061': AgentState.LOGGEDIN
+  };
+  // final bestAgent = await longestWaiting(agentsStates);
+  // print("Best agent: $bestAgent");
+  String table = 'agents';
+
+  final db = await Model.getDbConnection();
+  final eightHoursAgo =
+      DateTime.now().subtract(Duration(hours: 8)).toIso8601String();
+
+  List<Map<String, dynamic>> res = await db
+      .table(table)
+      .select(['endpoint', 'state', 'status', 'updated_at'])
+      // .whereIn('agent_number', loggedInAgents)
+      .where('updated_at', '>=', eightHoursAgo)
+      .whereIn('status', ['IDLE', 'AgentState.IDLE'])
+      // .orWhere('status', '=', 'AgentState.IDLE')
+      .groupBy('endpoint')
+      .orderBy('updated_at', 'asc')
+      // .limit(1)
+      .get();
+
+  await db.disconnect();
+  for (var element in res) {
+    agentsStates["SIP/7000/${element['endpoint']}"] = AgentState.LOGGEDIN;
+    print("Response: ${element['endpoint']}");
+  }
+  print("Agents: ${agentsStates}");
+  return agentsStates;
+}
+
+Future<String> longestWaiting(EventEmitter event) async {
   // Filter only idle agents
-  List<String> loggedInAgents = agentsStates.entries
-      .where((entry) => entry.value == AgentState.IDLE)
+  bool stopQuery = false;
+  event.on('stopquery', (event) {
+    stopQuery = true;
+  });
+  Completer<bool> freeAgentCompleter = Completer();
+  List<String> loggedInAgents = (await idleAgents())
+      // .where((entry) => entry.value == AgentState.IDLE)
+      .entries
+      .where((entry) => entry.value == AgentState.LOGGEDIN)
       .map((entry) => entry.key)
       .toList();
 
+  if (loggedInAgents.length == 1) {
+    // print("No idle agents available.");
+    return loggedInAgents[0];
+  }
+
   if (loggedInAgents.isEmpty) {
-    print("No idle agents available.");
-    return null;
+    // print("No idle agents available.");
+    if (!stopQuery) {
+      await Future.delayed(Duration(seconds: 4));
+      event.off();
+      await longestWaiting(event);
+    }
   }
 
   final longestIdleAgent = await Recordings.getLongestIdleAgent(loggedInAgents);
@@ -48,11 +103,19 @@ Future<String?> longestWaiting(Map<String, AgentState> agentsStates) async {
   if (longestIdleAgent != null) {
     print(
         "Longest Idle Agent: ${longestIdleAgent['agent_number']} (Last Call: ${longestIdleAgent['updated_at']})");
+    freeAgentCompleter.complete(true);
     return longestIdleAgent['agent_number'];
   } else {
     print("No idle agents found in the database.");
-    return loggedInAgents[0];
+    // return loggedInAgents[0];
+
+    if (!stopQuery) {
+      await Future.delayed(Duration(seconds: 4));
+      event.off();
+      await longestWaiting(event);
+    }
   }
+  throw ("No idle agents found.");
 }
 
 // Future<String> longestWaiting(Map<String, AgentState> agentsStates) async {
@@ -73,11 +136,13 @@ Future<String?> longestWaiting(Map<String, AgentState> agentsStates) async {
 // }
 
 Future<void> main() async {
-  Map<String, AgentState> agentsStates = {
-    'SIP/7000/6003': AgentState.LOGGEDIN,
-    'SIP/7000/8923': AgentState.LOGGEDIN,
-    'SIP/7000/1061': AgentState.LOGGEDIN
-  };
-  final bestAgent = await longestWaiting(agentsStates);
-  print("Best agent: $bestAgent");
+  // Map<String, AgentState> agentsStates = {
+  //   'SIP/7000/6003': AgentState.LOGGEDIN,
+  //   'SIP/7000/8923': AgentState.LOGGEDIN,
+  //   'SIP/7000/1061': AgentState.LOGGEDIN
+  // };
+  // final bestAgent = await longestWaiting(agentsStates);
+  // print("Best agent: $bestAgent");
+  await idleAgents();
+  // await longestWaiting();
 }

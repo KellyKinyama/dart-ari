@@ -513,10 +513,16 @@ class Bridge extends Resource {
     // });
     //return;
   }
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return "Bridge: {$id, $name, $bridge_type, $technology, $creationtime, channels: $channels}";
+  }
 }
 
 class Bridges {
-  Future<List<Bridge>> list() async {
+  static Future<List<Bridge>> list() async {
     var resp = await BridgesAPI.list();
 
     //resp.then((value) {
