@@ -13,23 +13,31 @@ class Recordings extends Model {
   /// Only considers records updated within the last 8 hours.
   static Future<Map<String, dynamic>?> getLongestIdleAgent(
       List<String> loggedInAgents) async {
-    if (loggedInAgents.isEmpty) return null;
+    if (loggedInAgents.isEmpty) {
+      throw ArgumentError('No agents provided.');
+    } else {
+      // if (loggedInAgents.length == 1) {
+      print("Probbing for agents: $loggedInAgents");
+      // return {'agent_number': loggedInAgents.first, 'updated_at': null};
+    }
 
     final db = await Model.getDbConnection();
     final eightHoursAgo =
-        DateTime.now().subtract(Duration(hours: 8)).toIso8601String();
+        DateTime.now().subtract(Duration(hours: 48)).toIso8601String();
 
     List<Map<String, dynamic>> res = await db
         .table(table)
         .select(['agent_number', 'updated_at'])
         .whereIn('agent_number', loggedInAgents)
-        // .where('updated_at', '>=', eightHoursAgo)
+        .where('updated_at', '>=', eightHoursAgo)
         .groupBy('agent_number')
         .orderBy('updated_at', 'asc')
-        .limit(1)
+        // .limit(2)
         .get();
 
     await db.disconnect();
+
+    print("records: ${res}");
 
     return res.isNotEmpty ? res.first : null;
   }
@@ -47,7 +55,7 @@ Future<Map<String, AgentState>> idleAgents() async {
 
   final db = await Model.getDbConnection();
   final eightHoursAgo =
-      DateTime.now().subtract(Duration(hours: 8)).toIso8601String();
+      DateTime.now().subtract(Duration(hours: 48)).toIso8601String();
 
   List<Map<String, dynamic>> res = await db
       .table(table)
@@ -63,10 +71,11 @@ Future<Map<String, AgentState>> idleAgents() async {
 
   await db.disconnect();
   for (var element in res) {
-    agentsStates["SIP/7000/${element['endpoint']}"] = AgentState.LOGGEDIN;
-    print("Response: ${element['endpoint']}");
+    agentsStates["PJSIP/${element['endpoint']}"] = AgentState.LOGGEDIN;
+    // agentsStates[element['endpoint']] = AgentState.LOGGEDIN;
+    // print("Response: ${element['endpoint']}");
   }
-  print("Agents: ${agentsStates}");
+  // print("records: ${res}");
   return agentsStates;
 }
 
@@ -84,10 +93,10 @@ Future<String> longestWaiting(EventEmitter event) async {
       .map((entry) => entry.key)
       .toList();
 
-  if (loggedInAgents.length == 1) {
-    // print("No idle agents available.");
-    return loggedInAgents[0];
-  }
+  // if (loggedInAgents.length == 1) {
+  //   // print("No idle agents available.");
+  //   return loggedInAgents[0];
+  // }
 
   if (loggedInAgents.isEmpty) {
     // print("No idle agents available.");
@@ -170,6 +179,11 @@ Future<void> main() async {
   // };
   // final bestAgent = await longestWaiting(agentsStates);
   // print("Best agent: $bestAgent");
-  await idleAgents();
-  // await longestWaiting();
+  //  await idleAgents();
+
+  final events = EventEmitter();
+  final agent = await longestWaiting(events);
+
+  // Recordings.getLongestIdleAgent();
+  print("Best agent: $agent");
 }
