@@ -27,10 +27,23 @@ class DbQueries {
     return db;
   }
 
-  static Future<bool> updateAgentStatus(
-      String endpoint, AgentState state, AgentState status) async {
+  static Future<bool> updateAgentStatus(String endpoint, AgentState state,
+      AgentState status, Map<String, AgentState> agentsStatuses) async {
     bool successful = false;
+
     final db = await getDbConnection();
+
+    final index = endpoint.indexOf('/');
+    endpoint = endpoint.substring(index + 1);
+    agentsStatuses[endpoint] = status;
+
+    if (status != AgentState.UNKNOWN && state != AgentState.UNKNOWN) {
+      print(
+          "Cannot update agent status with state: $state and status: $status");
+      return false;
+    }
+
+    print("Updating agent status: $endpoint, $state, $status");
 
     try {
       await db

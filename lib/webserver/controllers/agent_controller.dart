@@ -11,12 +11,12 @@ class AgentController {
     return json.encode(agents);
   }
 
-  static Future<String> excecuteCommand(
-      String agent, String state, status) async {
-    await DbQueries.updateAgentStatus(
-        agent, AgentState.fromString(state), AgentState.fromString(status));
-    return "true";
-  }
+  // static Future<String> excecuteCommand(
+  //     String agent, String state, status) async {
+  //   await DbQueries.updateAgentStatus(
+  //       agent, AgentState.fromString(state), AgentState.fromString(status));
+  //   return "true";
+  // }
 
   Future<String> login(Request request) async {
     final String query = await request.readAsString();

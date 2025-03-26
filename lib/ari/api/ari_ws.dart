@@ -40,7 +40,7 @@ extension ARIPart1 on ARI {
             setTimeout(() {
               //print("Removing channel: ${ch.id} from stasis app");
               channels.remove(ch.id);
-            }, 5000);
+            }, 10000);
           }
         case 'ChannelStateChange':
           {

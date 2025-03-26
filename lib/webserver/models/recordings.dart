@@ -43,7 +43,8 @@ class Recordings extends Model {
   }
 }
 
-Future<Map<String, AgentState>> idleAgents() async {
+Future<Map<String, AgentState>> idleAgents(
+    Map<String, AgentState> agentsStatuses) async {
   Map<String, AgentState> agentsStates = {
     // 'SIP/7000/6003': AgentState.LOGGEDIN,
     // 'SIP/7000/8923': AgentState.LOGGEDIN,
@@ -79,17 +80,25 @@ Future<Map<String, AgentState>> idleAgents() async {
   return agentsStates;
 }
 
-Future<String> longestWaiting(EventEmitter event) async {
+Future<String> longestWaiting(
+    EventEmitter event, Map<String, AgentState> agentsStatuses) async {
   // Filter only idle agents
   bool stopQuery = false;
   event.on('stopquery', (event) {
     stopQuery = true;
   });
   Completer<bool> freeAgentCompleter = Completer();
-  List<String> loggedInAgents = (await idleAgents())
+  List<String> loggedInAgents = (await idleAgents(agentsStatuses))
       // .where((entry) => entry.value == AgentState.IDLE)
       .entries
-      .where((entry) => entry.value == AgentState.LOGGEDIN)
+      .where((entry) {
+        if (agentsStatuses.containsKey(entry)) {
+          if (agentsStatuses[entry] != AgentState.IDLE) {
+            return false;
+          }
+        }
+        return entry.value == AgentState.LOGGEDIN;
+      })
       .map((entry) => entry.key)
       .toList();
 
@@ -99,11 +108,11 @@ Future<String> longestWaiting(EventEmitter event) async {
   // }
 
   if (loggedInAgents.isEmpty) {
-    // print("No idle agents available.");
+    print("No idle agents available.");
     if (!stopQuery) {
       await Future.delayed(Duration(seconds: 4));
       event.off();
-      await longestWaiting(event);
+      await longestWaiting(event, agentsStatuses);
     }
   }
 
@@ -124,7 +133,7 @@ Future<String> longestWaiting(EventEmitter event) async {
     if (!stopQuery) {
       await Future.delayed(Duration(seconds: 4));
       event.off();
-      await longestWaiting(event);
+      await longestWaiting(event, agentsStatuses);
     }
   }
   throw ("No idle agents found.");
@@ -182,8 +191,8 @@ Future<void> main() async {
   //  await idleAgents();
 
   final events = EventEmitter();
-  final agent = await longestWaiting(events);
+  // final agent = await longestWaiting(events);
 
   // Recordings.getLongestIdleAgent();
-  print("Best agent: $agent");
+  // print("Best agent: $agent");
 }

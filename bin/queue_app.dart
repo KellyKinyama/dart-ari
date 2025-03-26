@@ -16,7 +16,7 @@ late ARI client;
 
 Map<String, AgentState> agentsStatuses = {
   // 'SIP/7000/8923': AgentState.LOGGEDIN,
-  'SIP/7000/6003': AgentState.IDLE,
+  // 'SIP/7000/6003': AgentState.IDLE,
   // 'SIP/7000/8703': AgentState.IDLE,
 };
 
@@ -141,7 +141,7 @@ Future<void> findOrCreateBridge(Channel channel) async {
 
   await holdBridge.startMoh();
   try {
-    String free = await longestWaiting(events);
+    String free = await longestWaiting(events, agentsStatuses);
 
     await originate(channel, holdBridge, free);
   } catch (e, st) {
@@ -230,7 +230,7 @@ Future<bool> originate(
         );
 
         DbQueries.updateAgentStatus(
-            endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
+            endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION,agentsStatuses);
         agentsStatuses[agent] = AgentState.ONCONVERSATION;
 
         //}
@@ -239,7 +239,7 @@ Future<bool> originate(
       if (dialChannel.state == 'Ringing') {
         print("dialed channel: ${dialed.id} is ${dialChannel.state}");
         DbQueries.updateAgentStatus(
-            endpoint, AgentState.LOGGEDIN, AgentState.RINGING);
+            endpoint, AgentState.LOGGEDIN, AgentState.RINGING,agentsStatuses);
         agentsStatuses[agent] = AgentState.RINGING;
       }
     });
@@ -266,7 +266,7 @@ Future<bool> originate(
       agentsStatuses[agent] = AgentState.IDLE;
 
       DbQueries.updateAgentStatus(
-          endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+          endpoint, AgentState.LOGGEDIN, AgentState.IDLE, agentsStatuses);
       await incoming.hangup();
     });
 
@@ -302,7 +302,7 @@ Future<bool> originate(
               stasisEndEvent.timestamp.toString();
           await voiceRecords[incoming.id]!.insertCallRecording();
           DbQueries.updateAgentStatus(
-              endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+              endpoint, AgentState.LOGGEDIN, AgentState.IDLE, agentsStatuses);
           agentsStatuses[agent] = AgentState.IDLE;
           //agent.waitingSince = DateTime.now();
           //voiceRecords.remove(incoming.id);
@@ -341,7 +341,7 @@ Future<bool> originate(
   } catch (e, st) {
     print("Error: $e, Stack trace: $st");
     DbQueries.updateAgentStatus(
-        endpoint, AgentState.UNKNOWN, AgentState.UNKNOWN);
+        endpoint, AgentState.UNKNOWN, AgentState.UNKNOWN, agentsStatuses);
     agentsStatuses[agent] = AgentState.UNKNOWN;
     return false;
   }
