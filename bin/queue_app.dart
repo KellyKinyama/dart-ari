@@ -199,7 +199,7 @@ Future<bool> originate(Channel incoming, Bridge holdingBridge, String agent,
     dialed = await client.channel(endpoint: endpoint);
 
     incoming.on('StasisEnd', (event) async {
-      var (stasisEndEvent, channel) = event as (StasisEnd, Channel);
+      // var (stasisEndEvent, channel) = event as (StasisEnd, Channel);
 
       // if (incomingStasisEndListeners[incoming.id] == null) {
       //   incomingStasisEndListeners[incoming.id] = 1;
