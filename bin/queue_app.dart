@@ -143,7 +143,7 @@ Future<void> findOrCreateBridge(Channel channel) async {
   try {
     String free = await longestWaiting(events);
 
-    await originate(channel, holdBridge, free, findOrCreateBridge, events);
+    await originate(channel, holdBridge, free, events);
   } catch (e, st) {
     print("Error: $e, Stack trace: $st");
   }
@@ -182,7 +182,7 @@ Future<void> findOrCreateBridge(Channel channel) async {
 // }
 
 Future<bool> originate(Channel incoming, Bridge holdingBridge, String agent,
-    Function callback, EventEmitter event) async {
+    EventEmitter event) async {
   Uuid uid = Uuid();
   String filename = uid.v1();
 
