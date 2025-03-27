@@ -14,11 +14,11 @@ late int voiceLoggerPort; // = int.parse(env['VOICE_LOGGER_PORT']!);
 
 late ARI client;
 
-Map<String, AgentState> agentsStatuses = {
-  // 'SIP/7000/8923': AgentState.LOGGEDIN,
-  // 'SIP/7000/6003': AgentState.IDLE,
-  // 'SIP/7000/8703': AgentState.IDLE,
-};
+// Map<String, AgentState> agentsStatuses = {
+//   // 'SIP/7000/8923': AgentState.LOGGEDIN,
+//   // 'SIP/7000/6003': AgentState.IDLE,
+//   // 'SIP/7000/8703': AgentState.IDLE,
+// };
 
 HttpClient httpRtpClient = HttpClient();
 Future<int?> rtpPort(String filename) async {
@@ -141,9 +141,9 @@ Future<void> findOrCreateBridge(Channel channel) async {
 
   await holdBridge.startMoh();
   try {
-    String free = await longestWaiting(events, agentsStatuses);
+    String free = await longestWaiting(events);
 
-    await originate(channel, holdBridge, free);
+    await originate(channel, holdBridge, free, findOrCreateBridge, events);
   } catch (e, st) {
     print("Error: $e, Stack trace: $st");
   }
@@ -181,8 +181,8 @@ Future<void> findOrCreateBridge(Channel channel) async {
 //   }
 // }
 
-Future<bool> originate(
-    Channel incoming, Bridge holdingBridge, String agent) async {
+Future<bool> originate(Channel incoming, Bridge holdingBridge, String agent,
+    Function callback, EventEmitter event) async {
   Uuid uid = Uuid();
   String filename = uid.v1();
 
@@ -190,12 +190,13 @@ Future<bool> originate(
   print("Agent enpoint to dial: $endpoint");
 
   int? rtpport = await rtpPort(filename);
+  var dialed;
+
+  Channel? externalChannel;
 
   //int? rtpport = await rtpPort(filename);
   try {
-    var dialed = await client.channel(endpoint: endpoint);
-
-    Channel? externalChannel;
+    dialed = await client.channel(endpoint: endpoint);
 
     incoming.on('StasisEnd', (event) async {
       var (stasisEndEvent, channel) = event as (StasisEnd, Channel);
@@ -230,8 +231,8 @@ Future<bool> originate(
         );
 
         DbQueries.updateAgentStatus(
-            endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION,agentsStatuses);
-        agentsStatuses[agent] = AgentState.ONCONVERSATION;
+            endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
+        // agentsStatuses[agent] = AgentState.ONCONVERSATION;
 
         //}
       }
@@ -239,8 +240,8 @@ Future<bool> originate(
       if (dialChannel.state == 'Ringing') {
         print("dialed channel: ${dialed.id} is ${dialChannel.state}");
         DbQueries.updateAgentStatus(
-            endpoint, AgentState.LOGGEDIN, AgentState.RINGING,agentsStatuses);
-        agentsStatuses[agent] = AgentState.RINGING;
+            endpoint, AgentState.LOGGEDIN, AgentState.RINGING);
+        // agentsStatuses[agent] = AgentState.RINGING;
       }
     });
 
@@ -263,10 +264,10 @@ Future<bool> originate(
             channelDestroyedEvent.timestamp.toString();
 //          voiceRecords.remove(incoming.id);
       }
-      agentsStatuses[agent] = AgentState.IDLE;
+      // agentsStatuses[agent] = AgentState.IDLE;
 
       DbQueries.updateAgentStatus(
-          endpoint, AgentState.LOGGEDIN, AgentState.IDLE, agentsStatuses);
+          endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
       await incoming.hangup();
     });
 
@@ -302,8 +303,8 @@ Future<bool> originate(
               stasisEndEvent.timestamp.toString();
           await voiceRecords[incoming.id]!.insertCallRecording();
           DbQueries.updateAgentStatus(
-              endpoint, AgentState.LOGGEDIN, AgentState.IDLE, agentsStatuses);
-          agentsStatuses[agent] = AgentState.IDLE;
+              endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+          // agentsStatuses[agent] = AgentState.IDLE;
           //agent.waitingSince = DateTime.now();
           //voiceRecords.remove(incoming.id);
         }
@@ -336,14 +337,19 @@ Future<bool> originate(
         // endpoint: next_agent.number,
         endpoint: endpoint,
         app: 'hello',
-        appArgs: ['dialed', endpoint, incoming.id],
+        appArgs: ['dialed', endpoint, "channel${incoming.id}"],
         callerId: incoming.caller.number);
   } catch (e, st) {
     print("Error: $e, Stack trace: $st");
     DbQueries.updateAgentStatus(
-        endpoint, AgentState.UNKNOWN, AgentState.UNKNOWN, agentsStatuses);
-    agentsStatuses[agent] = AgentState.UNKNOWN;
-    return false;
+        endpoint, AgentState.UNKNOWN, AgentState.UNKNOWN);
+    // agentsStatuses[agent] = AgentState.UNKNOWN;
+
+    incoming.off();
+    dialed.off();
+    event.off();
+    print("Attempting another call");
+    await findOrCreateBridge(incoming);
   }
   return false;
 }

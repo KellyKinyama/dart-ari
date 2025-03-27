@@ -43,8 +43,7 @@ class Recordings extends Model {
   }
 }
 
-Future<Map<String, AgentState>> idleAgents(
-    Map<String, AgentState> agentsStatuses) async {
+Future<Map<String, AgentState>> idleAgents() async {
   Map<String, AgentState> agentsStates = {
     // 'SIP/7000/6003': AgentState.LOGGEDIN,
     // 'SIP/7000/8923': AgentState.LOGGEDIN,
@@ -80,23 +79,17 @@ Future<Map<String, AgentState>> idleAgents(
   return agentsStates;
 }
 
-Future<String> longestWaiting(
-    EventEmitter event, Map<String, AgentState> agentsStatuses) async {
+Future<String> longestWaiting(EventEmitter event) async {
   // Filter only idle agents
   bool stopQuery = false;
   event.on('stopquery', (event) {
     stopQuery = true;
   });
   Completer<bool> freeAgentCompleter = Completer();
-  List<String> loggedInAgents = (await idleAgents(agentsStatuses))
+  List<String> loggedInAgents = (await idleAgents())
       // .where((entry) => entry.value == AgentState.IDLE)
       .entries
       .where((entry) {
-        if (agentsStatuses.containsKey(entry)) {
-          if (agentsStatuses[entry] != AgentState.IDLE) {
-            return false;
-          }
-        }
         return entry.value == AgentState.LOGGEDIN;
       })
       .map((entry) => entry.key)
@@ -111,8 +104,9 @@ Future<String> longestWaiting(
     print("No idle agents available.");
     if (!stopQuery) {
       await Future.delayed(Duration(seconds: 4));
-      event.off();
-      await longestWaiting(event, agentsStatuses);
+      if(event.listeners.isNotEmpty) {
+        await longestWaiting(event);
+      }
     }
   }
 
@@ -133,7 +127,7 @@ Future<String> longestWaiting(
     if (!stopQuery) {
       await Future.delayed(Duration(seconds: 4));
       event.off();
-      await longestWaiting(event, agentsStatuses);
+      await longestWaiting(event);
     }
   }
   throw ("No idle agents found.");
@@ -150,7 +144,7 @@ Future<String> longestWaiting(
 //       .select(['agent_number', 'updated_at'])
 //       .whereIn('agent_number', loggedInAgents)
 //       .get();
-
+ 
 //   await db.disconnect();
 
 //   // Create a map of agent_number to updated_at
@@ -189,7 +183,7 @@ Future<void> main() async {
   // final bestAgent = await longestWaiting(agentsStates);
   // print("Best agent: $bestAgent");
   //  await idleAgents();
-
+ 
   final events = EventEmitter();
   // final agent = await longestWaiting(events);
 

@@ -27,21 +27,41 @@ class DbQueries {
     return db;
   }
 
-  static Future<bool> updateAgentStatus(String endpoint, AgentState state,
-      AgentState status, Map<String, AgentState> agentsStatuses) async {
+  static Future<bool> setAgentStatuses(
+      AgentState state, AgentState status) async {
+    bool successful = false;
+
+    final db = await getDbConnection();
+
+    print("Updating agent status: $state, $status");
+    final eightHoursAgo =
+        DateTime.now().subtract(Duration(hours: 48)).toIso8601String();
+
+    try {
+      await db
+          .table('agents')
+          .where('updated_at', '>=', eightHoursAgo)
+          .update({'state': state.toString(), 'status': status.toString()});
+      successful = true;
+    } catch (e) {
+      print('Error: $e');
+      // Handle reconnection logic if needed
+      successful = false;
+    } finally {
+      await db.disconnect();
+      // ignore: control_flow_in_finally
+      return successful;
+    }
+  }
+
+  static Future<bool> updateAgentStatus(
+      String endpoint, AgentState state, AgentState status) async {
     bool successful = false;
 
     final db = await getDbConnection();
 
     final index = endpoint.indexOf('/');
     endpoint = endpoint.substring(index + 1);
-    agentsStatuses[endpoint] = status;
-
-    if (status != AgentState.UNKNOWN && state != AgentState.UNKNOWN) {
-      print(
-          "Cannot update agent status with state: $state and status: $status");
-      return false;
-    }
 
     print("Updating agent status: $endpoint, $state, $status");
 
