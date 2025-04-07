@@ -16,9 +16,10 @@ class Recordings extends Model {
     if (loggedInAgents.isEmpty) {
       throw ArgumentError('No agents provided.');
     } else {
-      // if (loggedInAgents.length == 1) {
-      print("Probbing for agents: $loggedInAgents");
-      // return {'agent_number': loggedInAgents.first, 'updated_at': null};
+      if (loggedInAgents.length == 1) {
+        print("Probbing for agents: $loggedInAgents");
+        return {'agent_number': loggedInAgents.first, 'updated_at': null};
+      }
     }
 
     final db = await Model.getDbConnection();
@@ -104,7 +105,7 @@ Future<String> longestWaiting(EventEmitter event) async {
     print("No idle agents available.");
     if (!stopQuery) {
       await Future.delayed(Duration(seconds: 4));
-      if(event.listeners.isNotEmpty) {
+      if (event.listeners.isNotEmpty) {
         await longestWaiting(event);
       }
     }
@@ -144,7 +145,7 @@ Future<String> longestWaiting(EventEmitter event) async {
 //       .select(['agent_number', 'updated_at'])
 //       .whereIn('agent_number', loggedInAgents)
 //       .get();
- 
+
 //   await db.disconnect();
 
 //   // Create a map of agent_number to updated_at
@@ -183,7 +184,7 @@ Future<void> main() async {
   // final bestAgent = await longestWaiting(agentsStates);
   // print("Best agent: $bestAgent");
   //  await idleAgents();
- 
+
   final events = EventEmitter();
   // final agent = await longestWaiting(events);
 
