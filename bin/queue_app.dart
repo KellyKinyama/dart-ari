@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -141,9 +142,38 @@ Future<void> findOrCreateBridge(Channel channel) async {
 
   await holdBridge.startMoh();
   try {
-    String free = await longestWaiting(events);
+    Completer<bool> freeAgentCompleter = Completer();
 
-    await originate(channel, holdBridge, free, events);
+    String? free;
+    // Timer.periodic(Duration(seconds: 3), (timer) async {
+    channel.on('StasisEnd', (event) {
+      // timer.cancel();
+      channel.off();
+    });
+    void findFreeAgent() async {
+      free = await longestWaiting();
+      if (free != null) {
+        // timer.cancel();
+        freeAgentCompleter.complete(true);
+      } else {
+        // timer.cancel();
+        await Future.delayed(Duration(seconds: 3), findFreeAgent);
+      }
+    }
+
+    // free = await longestWaiting();
+    if (free == null) {
+      // timer.cancel();
+      await Future.delayed(Duration(seconds: 1), findFreeAgent);
+    }
+    // });
+
+    print("Found agent: $free");
+    // if (free != null) freeAgentCompleter.complete(true);
+
+    channel.off();
+
+    await originate(channel, holdBridge, free!, events);
   } catch (e, st) {
     print("Error: $e, Stack trace: $st");
   }
@@ -355,12 +385,19 @@ Future<bool> originate(Channel incoming, Bridge holdingBridge, String agent,
     // agentsStatuses[agent] = AgentState.UNKNOWN;
 
     incoming.off();
-    dialed.off();
+    if (dialed != null) dialed.off();
     event.off();
     print("Attempting another call");
     await findOrCreateBridge(incoming);
-    String free = await longestWaiting(event);
-    await originate(incoming, holdingBridge, free, event);
+    String? free;
+    Timer.periodic(Duration(seconds: 3), (timer) async {
+      free = await longestWaiting();
+      if (free != null) {
+        timer.cancel();
+
+        await originate(incoming, holdingBridge, free!, event);
+      }
+    });
   }
   return false;
 }

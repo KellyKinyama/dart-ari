@@ -32,7 +32,7 @@ class Recordings extends Model {
         .whereIn('agent_number', loggedInAgents)
         .where('updated_at', '>=', eightHoursAgo)
         .groupBy('agent_number')
-        .orderBy('updated_at', 'asc')
+        .orderBy('updated_at', 'desc')
         // .limit(2)
         .get();
 
@@ -76,17 +76,15 @@ Future<Map<String, AgentState>> idleAgents() async {
     // agentsStates[element['endpoint']] = AgentState.LOGGEDIN;
     // print("Response: ${element['endpoint']}");
   }
-  // print("records: ${res}");
+  print("idle agents: ${res}");
   return agentsStates;
 }
 
-Future<String> longestWaiting(EventEmitter event) async {
+Future<String?> longestWaiting() async {
   // Filter only idle agents
-  bool stopQuery = false;
-  event.on('stopquery', (event) {
-    stopQuery = true;
-  });
-  Completer<bool> freeAgentCompleter = Completer();
+  // bool stopQuery = false;
+
+  // Completer<bool> freeAgentCompleter = Completer();
   List<String> loggedInAgents = (await idleAgents())
       // .where((entry) => entry.value == AgentState.IDLE)
       .entries
@@ -103,12 +101,7 @@ Future<String> longestWaiting(EventEmitter event) async {
 
   if (loggedInAgents.isEmpty) {
     print("No idle agents available.");
-    if (!stopQuery) {
-      await Future.delayed(Duration(seconds: 4));
-      if (event.listeners.isNotEmpty) {
-        await longestWaiting(event);
-      }
-    }
+    return null;
   }
 
   final longestIdleAgent = await Recordings.getLongestIdleAgent(loggedInAgents);
@@ -116,22 +109,38 @@ Future<String> longestWaiting(EventEmitter event) async {
   if (longestIdleAgent != null) {
     print(
         "Longest Idle Agent: ${longestIdleAgent['agent_number']} (Last Call: ${longestIdleAgent['updated_at']})");
-    freeAgentCompleter.complete(true);
-    return longestIdleAgent['agent_number'];
+    // freeAgentCompleter.complete(true);
+    dynamic bestAgent;
+
+    // loggedInAgents.forEach((action, value) {
+    //   print("${{action: value}}");
+    //   int index = action.indexOf("/");
+    //   if (!loggedInAgents.contains(action.substring(index + 1))) {
+    //     bestAgent = action;
+    //   }
+    // });
+
+    loggedInAgents.forEach((agentNum) {
+      int index = agentNum.indexOf("/");
+      if (agentNum.substring(index + 1) != longestIdleAgent['agent_number']) {
+        bestAgent = agentNum;
+      }
+    });
+
+    if (bestAgent != null) {
+      print("Best agent: $bestAgent");
+      return bestAgent;
+    } else {
+      return longestIdleAgent['agent_number'];
+    }
   } else {
     if (loggedInAgents.length > 1) {
       return loggedInAgents[0];
     }
     print("No idle agents found in the database.");
     // return loggedInAgents[0];
-
-    if (!stopQuery) {
-      await Future.delayed(Duration(seconds: 4));
-      event.off();
-      await longestWaiting(event);
-    }
   }
-  throw ("No idle agents found.");
+  return null;
 }
 
 // static Future<Map<String, dynamic>?> getLongestIdleAgent(List<String> loggedInAgents) async {
@@ -185,9 +194,14 @@ Future<void> main() async {
   // print("Best agent: $bestAgent");
   //  await idleAgents();
 
-  final events = EventEmitter();
-  // final agent = await longestWaiting(events);
+  String? free;
+  Timer.periodic(Duration(seconds: 3), (timer) async {
+    // channel.on('StasisEnd', (event) {
+    timer.cancel();
+    // channel.off();
+    // });
 
-  // Recordings.getLongestIdleAgent();
-  // print("Best agent: $agent");
+    free = await longestWaiting();
+    if (free != null) timer.cancel();
+  });
 }
