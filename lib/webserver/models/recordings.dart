@@ -134,7 +134,7 @@ Future<String?> longestWaiting() async {
       return longestIdleAgent['agent_number'];
     }
   } else {
-    if (loggedInAgents.length > 1) {
+    if (loggedInAgents.isNotEmpty) {
       return loggedInAgents[0];
     }
     print("No idle agents found in the database.");
