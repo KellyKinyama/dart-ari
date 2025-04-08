@@ -32,7 +32,7 @@ class Recordings extends Model {
         .whereIn('agent_number', loggedInAgents)
         .where('updated_at', '>=', eightHoursAgo)
         .groupBy('agent_number')
-        .orderBy('updated_at', 'desc')
+        .orderBy('updated_at', 'asc')
         // .limit(2)
         .get();
 
@@ -120,7 +120,7 @@ Future<String?> longestWaiting() async {
     //   }
     // });
 
-    loggedInAgents.forEach((agentNum) {
+    loggedInAgents.reversed.forEach((agentNum) {
       int index = agentNum.indexOf("/");
       if (agentNum.substring(index + 1) != longestIdleAgent['agent_number']) {
         bestAgent = agentNum;
