@@ -384,13 +384,19 @@ Future<bool> originate(Channel incoming, Bridge holdingBridge, String agent,
         endpoint, AgentState.UNKNOWN, AgentState.UNKNOWN);
     // agentsStatuses[agent] = AgentState.UNKNOWN;
 
-    incoming.off();
-    if (dialed != null) dialed.off();
-    event.off();
     print("Attempting another call");
-    await findOrCreateBridge(incoming);
+    // await findOrCreateBridge(incoming);
     String? free;
     Timer.periodic(Duration(seconds: 3), (timer) async {
+      incoming.off();
+      incoming.on('StasisEnd', (event) {
+        // timer.cancel();
+        incoming.off();
+      });
+
+      if (dialed != null) dialed.off();
+      event.off();
+
       free = await longestWaiting();
       if (free != null) {
         timer.cancel();
