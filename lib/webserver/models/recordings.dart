@@ -50,8 +50,6 @@ Future<Map<String, AgentState>> idleAgents() async {
     // 'SIP/7000/8923': AgentState.LOGGEDIN,
     // 'SIP/7000/1061': AgentState.LOGGEDIN
   };
-  // final bestAgent = await longestWaiting(agentsStates);
-  // print("Best agent: $bestAgent");
   String table = 'agents';
 
   final db = await Model.getDbConnection();
@@ -73,18 +71,12 @@ Future<Map<String, AgentState>> idleAgents() async {
   await db.disconnect();
   for (var element in res) {
     agentsStates["PJSIP/${element['endpoint']}"] = AgentState.LOGGEDIN;
-    // agentsStates[element['endpoint']] = AgentState.LOGGEDIN;
-    // print("Response: ${element['endpoint']}");
   }
   print("idle agents: ${res}");
   return agentsStates;
 }
 
 Future<String?> longestWaiting() async {
-  // Filter only idle agents
-  // bool stopQuery = false;
-
-  // Completer<bool> freeAgentCompleter = Completer();
   List<String> loggedInAgents = (await idleAgents())
       // .where((entry) => entry.value == AgentState.IDLE)
       .entries
@@ -93,11 +85,6 @@ Future<String?> longestWaiting() async {
       })
       .map((entry) => entry.key)
       .toList();
-
-  // if (loggedInAgents.length == 1) {
-  //   // print("No idle agents available.");
-  //   return loggedInAgents[0];
-  // }
 
   if (loggedInAgents.isEmpty) {
     print("No idle agents available.");
@@ -109,16 +96,8 @@ Future<String?> longestWaiting() async {
   if (longestIdleAgent != null) {
     print(
         "Longest Idle Agent: ${longestIdleAgent['agent_number']} (Last Call: ${longestIdleAgent['updated_at']})");
-    // freeAgentCompleter.complete(true);
-    dynamic bestAgent;
 
-    // loggedInAgents.forEach((action, value) {
-    //   print("${{action: value}}");
-    //   int index = action.indexOf("/");
-    //   if (!loggedInAgents.contains(action.substring(index + 1))) {
-    //     bestAgent = action;
-    //   }
-    // });
+    dynamic bestAgent;
 
     loggedInAgents.reversed.forEach((agentNum) {
       int index = agentNum.indexOf("/");
@@ -138,62 +117,11 @@ Future<String?> longestWaiting() async {
       return loggedInAgents[0];
     }
     print("No idle agents found in the database.");
-    // return loggedInAgents[0];
   }
   return null;
 }
 
-// static Future<Map<String, dynamic>?> getLongestIdleAgent(List<String> loggedInAgents) async {
-//   if (loggedInAgents.isEmpty) return null;
-
-//   final db = await Model.getDbConnection();
-
-//   // Get all agent_number and their last updated_at from recordings (if any)
-//   final recordings = await db
-//       .table(table)
-//       .select(['agent_number', 'updated_at'])
-//       .whereIn('agent_number', loggedInAgents)
-//       .get();
-
-//   await db.disconnect();
-
-//   // Create a map of agent_number to updated_at
-//   final Map<String, String> agentUpdatedMap = {
-//     for (var row in recordings) row['agent_number']: row['updated_at']
-//   };
-
-//   // Separate agents with no recordings
-//   final agentsWithNoRecordings = loggedInAgents.where((a) => !agentUpdatedMap.containsKey(a)).toList();
-
-//   if (agentsWithNoRecordings.isNotEmpty) {
-//     // If some agents have no recordings, return the first one (or sort them by whatever other criteria)
-//     return {
-//       'agent_number': agentsWithNoRecordings.first,
-//       'updated_at': null,
-//       'note': 'No recordings yet'
-//     };
-//   }
-
-//   // Else, get the one with the oldest updated_at
-//   final sorted = agentUpdatedMap.entries.toList()
-//     ..sort((a, b) => a.value.compareTo(b.value));
-
-//   return {
-//     'agent_number': sorted.first.key,
-//     'updated_at': sorted.first.value
-//   };
-// }
-
 Future<void> main() async {
-  // Map<String, AgentState> agentsStates = {
-  //   'SIP/7000/6003': AgentState.LOGGEDIN,
-  //   'SIP/7000/8923': AgentState.LOGGEDIN,
-  //   'SIP/7000/1061': AgentState.LOGGEDIN
-  // };
-  // final bestAgent = await longestWaiting(agentsStates);
-  // print("Best agent: $bestAgent");
-  //  await idleAgents();
-
   String? free;
   Timer.periodic(Duration(seconds: 3), (timer) async {
     // channel.on('StasisEnd', (event) {
