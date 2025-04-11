@@ -132,10 +132,10 @@ Future<void> findOrCreateBridge(Channel channel) async {
   if (holdingBridges.isEmpty) {
     holdBridge = await client.bridge(type: ['holding']);
 
-    print("Created bridge: ${holdBridge}");
+    print("Created bridge: $holdBridge");
   } else {
     holdBridge = holdingBridges[0];
-    print("Using existing holding bridge: ${holdBridge}");
+    print("Using existing holding bridge: $holdBridge");
   }
 
   await holdBridge.addChannel(channels: [channel.id]);
@@ -143,11 +143,12 @@ Future<void> findOrCreateBridge(Channel channel) async {
   await holdBridge.startMoh();
   try {
     Completer<bool> freeAgentCompleter = Completer();
-
+    bool stopProbingForFreeAgent = false;
     String? free;
     // Timer.periodic(Duration(seconds: 3), (timer) async {
     channel.on('StasisEnd', (event) {
       // timer.cancel();
+      stopProbingForFreeAgent = true;
       channel.off();
     });
     void findFreeAgent() async {
@@ -157,7 +158,9 @@ Future<void> findOrCreateBridge(Channel channel) async {
         freeAgentCompleter.complete(true);
       } else {
         // timer.cancel();
-        await Future.delayed(Duration(seconds: 3), findFreeAgent);
+        if (!stopProbingForFreeAgent) {
+          await Future.delayed(Duration(seconds: 3), findFreeAgent);
+        }
       }
     }
 
@@ -172,6 +175,9 @@ Future<void> findOrCreateBridge(Channel channel) async {
     // if (free != null) freeAgentCompleter.complete(true);
 
     channel.off();
+    if (stopProbingForFreeAgent) {
+      return;
+    }
 
     await originate(channel, holdBridge, free!, events);
   } catch (e, st) {
