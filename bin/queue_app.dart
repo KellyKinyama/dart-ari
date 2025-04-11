@@ -105,7 +105,7 @@ stasisStart(StasisStart event, Channel channel) async {
     // await attemptAgentCall(channel, 0); // Start with zero retries
 
     // await originate(channel, free);
-    await findOrCreateBridge(channel);
+    await findOrCreateBridge(channel, createHoldingBridge: true);
   } else {
     if (event.args.length > 0 && event.args[0] == 'dialed') {
       // Handle dialed calls if necessary
@@ -113,34 +113,37 @@ stasisStart(StasisStart event, Channel channel) async {
   }
 }
 
-Future<void> findOrCreateBridge(Channel channel) async {
+Future<void> findOrCreateBridge(Channel channel,
+    {required bool createHoldingBridge, Bridge? holdingBridge}) async {
   final events = EventEmitter();
   channel.on('StasisEnd', (event) {
     events.emit('stopquery', channel);
   });
   final bridges = await Bridges.list();
-  late Bridge holdBridge;
+  Bridge? holdBridge = holdingBridge;
 
-  final List<Bridge> holdingBridges = bridges.where((bridge) {
-    if (bridge.bridge_type == 'holding') {
-      // print("Found existing bridge: $bridge");
-      return true;
+  if (createHoldingBridge) {
+    final List<Bridge> holdingBridges = bridges.where((bridge) {
+      if (bridge.bridge_type == 'holding') {
+        // print("Found existing bridge: $bridge");
+        return true;
+      }
+      return false;
+    }).toList();
+
+    if (holdingBridges.isEmpty) {
+      holdBridge = await client.bridge(type: ['holding']);
+
+      print("Created bridge: $holdBridge");
+    } else {
+      holdBridge = holdingBridges[0];
+      print("Using existing holding bridge: $holdBridge");
     }
-    return false;
-  }).toList();
 
-  if (holdingBridges.isEmpty) {
-    holdBridge = await client.bridge(type: ['holding']);
+    await holdBridge.addChannel(channels: [channel.id]);
 
-    print("Created bridge: $holdBridge");
-  } else {
-    holdBridge = holdingBridges[0];
-    print("Using existing holding bridge: $holdBridge");
+    await holdBridge.startMoh();
   }
-
-  await holdBridge.addChannel(channels: [channel.id]);
-
-  await holdBridge.startMoh();
   try {
     Completer<bool> freeAgentCompleter = Completer();
     bool stopProbingForFreeAgent = false;
@@ -179,7 +182,7 @@ Future<void> findOrCreateBridge(Channel channel) async {
       return;
     }
 
-    await originate(channel, holdBridge, free!, events);
+    await originate(channel, holdBridge!, free!, events);
   } catch (e, st) {
     print("Error: $e, Stack trace: $st");
   }
@@ -392,24 +395,26 @@ Future<bool> originate(Channel incoming, Bridge holdingBridge, String agent,
 
     print("Attempting another call");
     // await findOrCreateBridge(incoming);
-    String? free;
-    Timer.periodic(Duration(seconds: 3), (timer) async {
-      incoming.off();
-      incoming.on('StasisEnd', (event) {
-        // timer.cancel();
-        incoming.off();
-      });
+    // String? free;
+    // Timer.periodic(Duration(seconds: 3), (timer) async {
+    //   incoming.off();
+    //   incoming.on('StasisEnd', (event) {
+    //     // timer.cancel();
+    //     incoming.off();
+    //   });
 
-      if (dialed != null) dialed.off();
-      event.off();
+    //   if (dialed != null) dialed.off();
+    //   event.off();
 
-      free = await longestWaiting();
-      if (free != null) {
-        timer.cancel();
+    //   free = await longestWaiting();
+    // if (free != null) {
+    //   timer.cancel();
 
-        await originate(incoming, holdingBridge, free!, event);
-      }
-    });
+    // await originate(incoming, holdingBridge, free!, event);
+    await findOrCreateBridge(incoming,
+        createHoldingBridge: false, holdingBridge: holdingBridge);
+    //   }
+    // });
   }
   return false;
 }
