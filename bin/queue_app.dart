@@ -264,6 +264,7 @@ void _setupCallHandlers(
       await mixingBridge.destroy();
       if (voiceRecords[incoming.id] != null) {
         await voiceRecords[incoming.id]!.insertCallRecording();
+        voiceRecords.remove(incoming.id);
       }
       await _cleanupCall(incoming.id);
     });
@@ -277,7 +278,7 @@ Future<void> _cleanupCall(String channelId) async {
   activeCalls[channelId]?.complete();
   activeCalls.remove(channelId);
 
-  voiceRecords.remove(channelId);
+  // voiceRecords.remove(channelId);
 
   _cleanupEmptyBridges();
 }

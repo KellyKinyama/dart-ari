@@ -5,6 +5,8 @@ extension ARIPart1 on ARI {
     ws.listen((onData) {
       var e = json.decode(onData);
 
+      eventEmitterProxy.emit("proxy", onData);
+
       print("Event type: ${e['type']}");
 
       switch (e['type']) {
