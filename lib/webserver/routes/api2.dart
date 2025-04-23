@@ -1,8 +1,4 @@
-import 'dart:convert';
-import 'package:dart_ari/ari/api/events/event.dart';
-import 'package:dart_ari/ari/api/globals.dart';
-import 'package:dart_ari/webserver/controllers/agent_controller.dart';
-import 'package:events_emitter/events_emitter.dart';
+import 'package:dotenv/dotenv.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
@@ -12,13 +8,20 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'package:redis/redis.dart';
 
-EventEmitter eventEmitterProxy = EventEmitter();
-
 class WebServer {
   String serverIp;
   int serverPort;
 
-  WebServer(this.serverIp, this.serverPort);
+  late String redisIp;
+  late int redisPort;
+  late String redisPassword;
+
+  WebServer(this.serverIp, this.serverPort) {
+    final env = DotEnv(includePlatformEnvironment: true)..load();
+    redisIp = env['REDIS_ADDRESS']!;
+    redisPort = int.parse(env['REDIS_PORT']!);
+    redisPassword = env['REDIS_PASSWORD']!;
+  }
 
   // CORS helper
   // Response addCorsHeaders(Response res) => res.change(headers: {
@@ -41,21 +44,30 @@ class WebServer {
     final router = Router();
 
     // WebSocket endpoint
-    router.get('/ws', webSocketHandler((WebSocketChannel webSocket, path) {
+    router.get('/ws',
+        webSocketHandler((WebSocketChannel webSocket, path) async {
       print("Connected to WebSocket: $path");
 
-      final localEventEmitter = EventEmitter();
+      // final localEventEmitter = EventEmitter();
 
-      localEventEmitter.on("proxy", (String event) {
-        print("Event: $event");
-        webSocket.sink.add(event);
-      });
+      // localEventEmitter.on("proxy", (String event) {
+      //   print("Event: $event");
+      //   webSocket.sink.add(event);
+      // });
 
-      eventEmitterProxy.on("proxy", (String event) {
-        print("Event: $event");
-        // webSocket.sink.add(event);
-        localEventEmitter.emit("proxy", event);
-      });
+      // eventEmitterProxy.on("proxy", (String event) {
+      //   print("Event: $event");
+      //   // webSocket.sink.add(event);
+      //   localEventEmitter.emit("proxy", event);
+      // });
+
+      final connection = RedisConnection();
+      Command command = await connection.connect(redisIp, redisPort);
+
+      final result = await command.send_object(["AUTH", redisPassword]);
+
+      PubSub pubsub = PubSub(command);
+      pubsub.subscribe(["monkey"]);
 
       webSocket.stream.listen((message) {
         print('Received: $message');
@@ -63,6 +75,20 @@ class WebServer {
       }, onDone: () {
         print('Client disconnected.');
       });
+
+      final stream = pubsub.getStream();
+      var streamWithoutErrors = stream.handleError((e) => print("error $e"));
+
+      await for (final msg in streamWithoutErrors) {
+        var kind = msg[0];
+        var food = msg[2];
+        if (kind == "message") {
+          //print("monkey got ${food}");
+          webSocket.sink.add(food);
+        } else {
+          print("received non-message $msg");
+        }
+      }
     }));
 
     // CORS-aware pipeline

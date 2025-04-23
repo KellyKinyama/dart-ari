@@ -81,3 +81,32 @@ class WebServer {
     print('Server running on $serverIp:${server.port}');
   }
 }
+
+class RedisClient {
+  final String host;
+  final int port;
+  final String password;
+
+  RedisClient(this.host, this.port, this.password);
+
+  Future<void> connect() async {
+    final connection = RedisConnection();
+    final command = await connection.connect(host, port);
+    print('Connected to Redis at $host:$port');
+
+    if (password.isNotEmpty) {
+      await command.send_object(['AUTH', password]);
+      print('Authenticated with Redis');
+    }
+
+    // Subscribe to a channel
+    await command.send_object(['SUBSCRIBE', 'my_channel']);
+    print('Subscribed to channel: my_channel');
+
+    // Listen for messages
+    command.stream.listen((message) {
+      print('Received message: $message');
+      eventEmitterProxy.emit("proxy", message);
+    });
+  }
+}

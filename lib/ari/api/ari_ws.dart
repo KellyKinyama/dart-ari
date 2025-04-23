@@ -2,10 +2,29 @@ part of 'ari.dart';
 
 extension ARIPart1 on ARI {
   void listen(WebSocket ws) {
-    ws.listen((onData) {
-      var e = json.decode(onData);
+    late Command command;
+    RedisConnection().connect('10.44.0.56', 6379).then((connection) {
+      connection.send_object(["AUTH", "zsco@123deraboof"]).then((var response) {
+        //print(response);
+        command = connection;
+      });
+      // connection.send_object(["PUBLISH", "monkey", onData]);
+    });
 
-      eventEmitterProxy.emit("proxy", onData);
+    ws.listen((onData) {
+      // eventEmitterProxy.emit("proxy", onData);
+
+      //  Command command = await RedisConnection().connect('10.44.0.55', 6379);
+      // command.send_object(["AUTH", "zsco@123deraboof"]).then((var response) {
+      //   //print(response);
+      // });
+      //final pubsub = PubSub(command);
+      //pubsub.sub(["monkey"]);
+
+      command
+          .send_object(["PUBLISH", "monkey", onData]).then((var response) {});
+
+      var e = json.decode(onData);
 
       print("Event type: ${e['type']}");
 

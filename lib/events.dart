@@ -1,102 +1,1872 @@
-Message from server: {"type":"StasisStart","timestamp":"2025-04-22T17:26:05.072+0200","args":[],"channel":{"id":"1745335565.8964","name":"PJSIP/mytrunk-0000051c","state":"Ring","protocol_id":"4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:26:05.072+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-dashboard:1065 Message from server: {"type":"ChannelStateChange","timestamp":"2025-04-22T17:26:05.234+0200","channel":{"id":"1745335565.8964","name":"PJSIP/mytrunk-0000051c","state":"Up","protocol_id":"4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:26:05.072+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-dashboard:1065 Message from server: {"type":"PlaybackStarted","timestamp":"2025-04-22T17:26:05.286+0200","playback":{"id":"1b597530-1f8e-11f0-a551-8dc1db2598bf","media_uri":"sound:vm-dialout","target_uri":"channel:1745335565.8964","language":"en","state":"playing"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-dashboard:1065 Message from server: {"type":"PlaybackFinished","timestamp":"2025-04-22T17:26:07.467+0200","playback":{"id":"1b597530-1f8e-11f0-a551-8dc1db2598bf","media_uri":"sound:vm-dialout","target_uri":"channel:1745335565.8964","language":"en","state":"done"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-dashboard:1065 Message from server: {"type":"ChannelEnteredBridge","timestamp":"2025-04-22T17:26:07.467+0200","bridge":{"id":"65440fd3-991e-45e8-a92d-cea4f5991dd3","technology":"holding_bridge","bridge_type":"holding","bridge_class":"stasis","creator":"Stasis","name":"","channels":["1745335565.8964"],"creationtime":"2025-04-22T17:26:05.323+0200","video_mode":"talker"},"channel":{"id":"1745335565.8964","name":"PJSIP/mytrunk-0000051c","state":"Up","protocol_id":"4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:26:05.072+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-dashboard:1065 Message from server: {"variable":"RTPAUDIOQOS","value":"ssrc=80413220;themssrc=23012889;lp=0;rxjitter=0.000125;rxcount=804;txjitter=0.000125;txcount=812;rlp=0;rtt=0.000854;rxmes=88.077270;txmes=88.076186","type":"ChannelVarset","timestamp":"2025-04-22T17:26:21.534+0200","channel":{"id":"1745335565.8964","name":"PJSIP/mytrunk-0000051c","state":"Up","protocol_id":"4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:26:05.072+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-dashboard:1065 Message from server: {"variable":"RTPAUDIOQOSJITTER","value":"minrxjitter=000.000000;maxrxjitter=000.001000;avgrxjitter=000.000174;stdevrxjitter=000.000168;mintxjitter=000.000000;maxtxjitter=000.000250;avgtxjitter=000.000125;stdevtxjitter=000.000102;","type":"ChannelVarset","timestamp":"2025-04-22T17:26:21.534+0200","channel":{"id":"1745335565.8964","name":"PJSIP/mytrunk-0000051c","state":"Up","protocol_id":"4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:26:05.072+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-dashboard:1065 Message from server: {"variable":"RTPAUDIOQOSLOSS","value":"  minrxlost=000.000000;  maxrxlost=000.000000;  avgrxlost=000.000000;  stdevrxlost=000.000000;  mintxlost=000.000000;  maxtxlost=000.000000;  avgtxlost=000.000000;  stdevtxlost=000.000000;","type":"ChannelVarset","timestamp":"2025-04-22T17:26:21.534+0200","channel":{"id":"1745335565.8964","name":"PJSIP/mytrunk-0000051c","state":"Up","protocol_id":"4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:26:05.072+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-dashboard:1065 Message from server: {"variable":"RTPAUDIOQOSRTT","value":"     minrtt=000.000854;     maxrtt=000.001327;     avgrtt=000.001073;     stdevrtt=000.000195;","type":"ChannelVarset","timestamp":"2025-04-22T17:26:21.534+0200","channel":{"id":"1745335565.8964","name":"PJSIP/mytrunk-0000051c","state":"Up","protocol_id":"4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:26:05.072+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-dashboard:1065 Message from server: {"variable":"RTPAUDIOQOSMES","value":"   minrxmes=088.074749;   maxrxmes=088.087887;   avgrxmes=088.079607;   stdevrxmes=000.000168;   mintxmes=088.074749;   maxtxmes=088.077270;   avgtxmes=088.076068;   stdevtxmes=000.001033;","type":"ChannelVarset","timestamp":"2025-04-22T17:26:21.534+0200","channel":{"id":"1745335565.8964","name":"PJSIP/mytrunk-0000051c","state":"Up","protocol_id":"4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:26:05.072+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-dashboard:1065 Message from server: {"cause":16,"type":"ChannelHangupRequest","timestamp":"2025-04-22T17:26:21.534+0200","channel":{"id":"1745335565.8964","name":"PJSIP/mytrunk-0000051c","state":"Up","protocol_id":"4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:26:05.072+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-dashboard:1065 Message from server: {"type":"ChannelLeftBridge","timestamp":"2025-04-22T17:26:21.538+0200","bridge":{"id":"65440fd3-991e-45e8-a92d-cea4f5991dd3","technology":"holding_bridge","bridge_type":"holding","bridge_class":"stasis","creator":"Stasis","name":"","channels":["1745335565.8968"],"creationtime":"2025-04-22T17:26:05.323+0200","video_mode":"talker"},"channel":{"id":"1745335565.8964","name":"PJSIP/mytrunk-0000051c","state":"Up","protocol_id":"4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:26:05.072+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-dashboard:1065 Message from server: {"type":"StasisEnd","timestamp":"2025-04-22T17:26:21.539+0200","channel":{"id":"1745335565.8964","name":"PJSIP/mytrunk-0000051c","state":"Up","protocol_id":"4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:26:05.072+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-
-Message from server: {"type":"StasisStart","timestamp":"2025-04-22T17:28:24.283+0200","args":[],"channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Ring","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelStateChange","timestamp":"2025-04-22T17:28:24.559+0200","channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"PlaybackStarted","timestamp":"2025-04-22T17:28:24.666+0200","playback":{"id":"6e6d9da0-1f8e-11f0-a551-8dc1db2598bf","media_uri":"sound:vm-dialout","target_uri":"channel:1745335704.8974","language":"en","state":"playing"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"PlaybackFinished","timestamp":"2025-04-22T17:28:26.847+0200","playback":{"id":"6e6d9da0-1f8e-11f0-a551-8dc1db2598bf","media_uri":"sound:vm-dialout","target_uri":"channel:1745335704.8974","language":"en","state":"done"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelEnteredBridge","timestamp":"2025-04-22T17:28:26.847+0200","bridge":{"id":"65440fd3-991e-45e8-a92d-cea4f5991dd3","technology":"holding_bridge","bridge_type":"holding","bridge_class":"stasis","creator":"Stasis","name":"","channels":["1745335704.8974"],"creationtime":"2025-04-22T17:26:05.323+0200","video_mode":"talker"},"channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-sip-0.20.0.min.js:2 Tue Apr 22 2025 17:28:28 GMT+0200 (Central Africa Time) | sip.Invitation | Invitation.progress
-sip-0.20.0.min.js:2 Tue Apr 22 2025 17:28:28 GMT+0200 (Central Africa Time) | sip.invite-dialog | INVITE dialog 628bf32b-8ea8-47af-92b8-a83b03cb346dri0u09oc9b4521de3e-9350-4c2c-a3a3-f49a3749f399 constructed
-phone2.js:2344 New Incoming Call! 00260972462922 <00260972462922>
-phone2.js:2347 Current Call Count: 0
-phone2.js:8957 Selecting Line : 2
-phone2.js:2665 Audio: media/Ringtone_1.mp3
-3:684 Message from server: {"type":"Dial","timestamp":"2025-04-22T17:28:28.133+0200","dialstatus":"","forward":"","dialstring":"6004","peer":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Down","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"AppDial2","app_data":"(Outgoing Line)"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelStateChange","timestamp":"2025-04-22T17:28:28.206+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Ringing","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"AppDial2","app_data":"(Outgoing Line)"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"Dial","timestamp":"2025-04-22T17:28:28.206+0200","dialstatus":"RINGING","forward":"","dialstring":"6004","peer":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Ringing","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"AppDial2","app_data":"(Outgoing Line)"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-sip-0.20.0.min.js:2 Tue Apr 22 2025 17:28:32 GMT+0200 (Central Africa Time) | sip.Invitation | Invitation.accept
-sip-0.20.0.min.js:2 Tue Apr 22 2025 17:28:32 GMT+0200 (Central Africa Time) | sip.Invitation | Session 628bf32b-8ea8-47af-92b8-a83b03cb346d4521de3e-9350-4c2c-a3a3-f49a3749f399 transitioned to state Establishing
-phone2.js:3371 Adding Remote Audio Track
-phone2.js:3391 sinkId applied: default
-sip-0.20.0.min.js:2 Tue Apr 22 2025 17:28:33 GMT+0200 (Central Africa Time) | sip.Invitation | Session 628bf32b-8ea8-47af-92b8-a83b03cb346d4521de3e-9350-4c2c-a3a3-f49a3749f399 transitioned to state Established
-phone2.js:3828 Creating LocalAudio AudioContext on line 2
-phone2.js:3844 Adding Track to Monitor:  Default - Microphone Array (Intel® Smart Sound Technology for Digital Microphones)
-phone2.js:4036 SoundMeter connecting...
-phone2.js:3917 SoundMeter for LocalAudio Connected, displaying levels for Line: 2
-phone2.js:3572 Creating RemoteAudio AudioContext on Line:2
-phone2.js:4036 SoundMeter connecting...
-phone2.js:3716 SoundMeter for RemoteAudio Connected, displaying levels for Line: 2
-sip-0.20.0.min.js:2 Tue Apr 22 2025 17:28:33 GMT+0200 (Central Africa Time) | sip.invite-dialog | INVITE dialog 628bf32b-8ea8-47af-92b8-a83b03cb346dri0u09oc9b4521de3e-9350-4c2c-a3a3-f49a3749f399 received ACK request
-sip-0.20.0.min.js:2 Tue Apr 22 2025 17:28:33 GMT+0200 (Central Africa Time) | sip.Invitation | Session.onAckRequest
-3:684 Message from server: {"type":"ChannelStateChange","timestamp":"2025-04-22T17:28:33.265+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"AppDial2","app_data":"(Outgoing Line)"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"Dial","timestamp":"2025-04-22T17:28:33.265+0200","dialstatus":"ANSWER","forward":"","dialstring":"6004","peer":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"AppDial2","app_data":"(Outgoing Line)"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"STASISSTATUS","value":"","type":"ChannelVarset","timestamp":"2025-04-22T17:28:33.266+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"StasisStart","timestamp":"2025-04-22T17:28:33.266+0200","args":["dialed","PJSIP/6004","channel1745335704.8974"],"channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelLeftBridge","timestamp":"2025-04-22T17:28:33.292+0200","bridge":{"id":"65440fd3-991e-45e8-a92d-cea4f5991dd3","technology":"holding_bridge","bridge_type":"holding","bridge_class":"stasis","creator":"Stasis","name":"","channels":[],"creationtime":"2025-04-22T17:26:05.323+0200","video_mode":"talker"},"channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"Dial","timestamp":"2025-04-22T17:28:33.390+0200","dialstatus":"","forward":"","dialstring":"10.44.0.70:47029/c(alaw)","peer":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Down","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"AppDial2","app_data":"(Outgoing Line)"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelStateChange","timestamp":"2025-04-22T17:28:33.390+0200","channel":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Up","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"AppDial2","app_data":"(Outgoing Line)"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"Dial","timestamp":"2025-04-22T17:28:33.390+0200","dialstatus":"ANSWER","forward":"","dialstring":"10.44.0.70:47029/c(alaw)","peer":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Up","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"AppDial2","app_data":"(Outgoing Line)"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"STASISSTATUS","value":"","type":"ChannelVarset","timestamp":"2025-04-22T17:28:33.390+0200","channel":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Up","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"StasisStart","timestamp":"2025-04-22T17:28:33.390+0200","args":[],"channel":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Up","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelEnteredBridge","timestamp":"2025-04-22T17:28:33.475+0200","bridge":{"id":"ec34542e-e16b-4955-bc48-37f7c347bfc5","technology":"simple_bridge","bridge_type":"mixing","bridge_class":"stasis","creator":"Stasis","name":"","channels":["1745335704.8974"],"creationtime":"2025-04-22T17:28:33.362+0200","video_mode":"talker"},"channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelEnteredBridge","timestamp":"2025-04-22T17:28:33.476+0200","bridge":{"id":"ec34542e-e16b-4955-bc48-37f7c347bfc5","technology":"simple_bridge","bridge_type":"mixing","bridge_class":"stasis","creator":"Stasis","name":"","channels":["1745335704.8974","1745335708.8978"],"creationtime":"2025-04-22T17:28:33.362+0200","video_mode":"talker"},"channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPEER","value":"PJSIP/6004-0000051f","type":"ChannelVarset","timestamp":"2025-04-22T17:28:33.476+0200","channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPVTCALLID","value":"628bf32b-8ea8-47af-92b8-a83b03cb346d","type":"ChannelVarset","timestamp":"2025-04-22T17:28:33.476+0200","channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPEER","value":"PJSIP/mytrunk-0000051d","type":"ChannelVarset","timestamp":"2025-04-22T17:28:33.476+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPVTCALLID","value":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","type":"ChannelVarset","timestamp":"2025-04-22T17:28:33.476+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelConnectedLine","timestamp":"2025-04-22T17:28:33.477+0200","channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"Conrad de Wet","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelEnteredBridge","timestamp":"2025-04-22T17:28:33.478+0200","bridge":{"id":"ec34542e-e16b-4955-bc48-37f7c347bfc5","technology":"simple_bridge","bridge_type":"mixing","bridge_class":"stasis","creator":"Stasis","name":"","channels":["1745335704.8974","1745335708.8978","1745335713.8986"],"creationtime":"2025-04-22T17:28:33.362+0200","video_mode":"talker"},"channel":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Up","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPEER","value":"PJSIP/mytrunk-0000051d,PJSIP/6004-0000051f","type":"ChannelVarset","timestamp":"2025-04-22T17:28:33.478+0200","channel":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Up","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPEER","value":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0,PJSIP/6004-0000051f","type":"ChannelVarset","timestamp":"2025-04-22T17:28:33.478+0200","channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"Conrad de Wet","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPVTCALLID","value":"","type":"ChannelVarset","timestamp":"2025-04-22T17:28:33.478+0200","channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"Conrad de Wet","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPEER","value":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0,PJSIP/mytrunk-0000051d","type":"ChannelVarset","timestamp":"2025-04-22T17:28:33.478+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPVTCALLID","value":"","type":"ChannelVarset","timestamp":"2025-04-22T17:28:33.478+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-phone2.js:7829 Ending call with: 2
-sip-0.20.0.min.js:2 Tue Apr 22 2025 17:28:41 GMT+0200 (Central Africa Time) | sip.invite-dialog | INVITE dialog 628bf32b-8ea8-47af-92b8-a83b03cb346dri0u09oc9b4521de3e-9350-4c2c-a3a3-f49a3749f399 sending BYE request
-sip-0.20.0.min.js:2 Tue Apr 22 2025 17:28:41 GMT+0200 (Central Africa Time) | sip.invite-dialog | INVITE dialog 628bf32b-8ea8-47af-92b8-a83b03cb346dri0u09oc9b4521de3e-9350-4c2c-a3a3-f49a3749f399 destroyed
-sip-0.20.0.min.js:2 Tue Apr 22 2025 17:28:41 GMT+0200 (Central Africa Time) | sip.Invitation | Session 628bf32b-8ea8-47af-92b8-a83b03cb346d4521de3e-9350-4c2c-a3a3-f49a3749f399 transitioned to state Terminated
-sip-0.20.0.min.js:2 Tue Apr 22 2025 17:28:41 GMT+0200 (Central Africa Time) | sip.Invitation | Session 628bf32b-8ea8-47af-92b8-a83b03cb346d4521de3e-9350-4c2c-a3a3-f49a3749f399 in state Terminated is being disposed
-phone2.js:4068 Disconnecting SoundMeter...
-phone2.js:4068 Disconnecting SoundMeter...
-phone2.js:5438 New CDR {CdrId: '17453357219271AE2', ItemType: 'CDR', ItemDate: '2025-04-22 15:28:28 UTC', CallAnswer: '2025-04-22 15:28:33 UTC', CallEnd: '2025-04-22 15:28:41 UTC', …}
-phone2.js:5641 Last Activity for 00260972462922 is now: 2025-04-22 15:28:41 UTC
-2phone2.js:4140 Call CallQos Success:  628bf32b-8ea8-47af-92b8-a83b03cb346d4521de3e-9350-4c2c-a3a3-f49a3749f399
-3:684 Message from server: {"variable":"RTPAUDIOQOS","value":"ssrc=412479622;themssrc=171055185;lp=0;rxjitter=0.002250;rxcount=426;txjitter=0.000875;txcount=420;rlp=0;rtt=0.019515;rxmes=87.890996;txmes=88.087887","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.861+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"RTPAUDIOQOSJITTER","value":"minrxjitter=000.000125;maxrxjitter=000.007500;avgrxjitter=000.001221;stdevrxjitter=000.001036;mintxjitter=000.002000;maxtxjitter=000.002250;avgtxjitter=000.002125;stdevtxjitter=000.000125;","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.861+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"RTPAUDIOQOSLOSS","value":"  minrxlost=000.000000;  maxrxlost=000.000000;  avgrxlost=000.000000;  stdevrxlost=000.000000;  mintxlost=000.000000;  maxtxlost=000.000000;  avgtxlost=000.000000;  stdevtxlost=000.000000;","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.861+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"RTPAUDIOQOSRTT","value":"     minrtt=000.019515;     maxrtt=000.019515;     avgrtt=000.019515;     stdevrtt=000.000000;","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.861+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"RTPAUDIOQOSMES","value":"   minrxmes=088.087887;   maxrxmes=088.087887;   avgrxmes=088.087887;   stdevrxmes=000.001036;   mintxmes=087.890996;   maxtxmes=088.087887;   avgtxmes=087.989442;   stdevtxmes=000.098446;","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.861+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"cause":16,"type":"ChannelHangupRequest","timestamp":"2025-04-22T17:28:41.861+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPEER","value":"","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.862+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelLeftBridge","timestamp":"2025-04-22T17:28:41.862+0200","bridge":{"id":"ec34542e-e16b-4955-bc48-37f7c347bfc5","technology":"softmix","bridge_type":"mixing","bridge_class":"stasis","creator":"Stasis","name":"","channels":["1745335704.8974","1745335713.8986"],"creationtime":"2025-04-22T17:28:33.362+0200","video_mode":"talker"},"channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPEER","value":"PJSIP/mytrunk-0000051d","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.862+0200","channel":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Up","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPVTCALLID","value":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.862+0200","channel":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Up","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPEER","value":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.862+0200","channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"Conrad de Wet","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"StasisEnd","timestamp":"2025-04-22T17:28:41.863+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"STASISSTATUS","value":"SUCCESS","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.863+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelConnectedLine","timestamp":"2025-04-22T17:28:41.864+0200","channel":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Up","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"RTPAUDIOQOS","value":"ssrc=412479622;themssrc=171055185;lp=0;rxjitter=0.002250;rxcount=426;txjitter=0.000875;txcount=420;rlp=0;rtt=0.019515;rxmes=87.890996;txmes=88.087887","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.864+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"RTPAUDIOQOSJITTER","value":"minrxjitter=000.000125;maxrxjitter=000.007500;avgrxjitter=000.001221;stdevrxjitter=000.001036;mintxjitter=000.002000;maxtxjitter=000.002250;avgtxjitter=000.002125;stdevtxjitter=000.000125;","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.864+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"RTPAUDIOQOSLOSS","value":"  minrxlost=000.000000;  maxrxlost=000.000000;  avgrxlost=000.000000;  stdevrxlost=000.000000;  mintxlost=000.000000;  maxtxlost=000.000000;  avgtxlost=000.000000;  stdevtxlost=000.000000;","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.864+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"RTPAUDIOQOSRTT","value":"     minrtt=000.019515;     maxrtt=000.019515;     avgrtt=000.019515;     stdevrtt=000.000000;","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.864+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"RTPAUDIOQOSMES","value":"   minrxmes=088.087887;   maxrxmes=088.087887;   avgrxmes=088.087887;   stdevrxmes=000.001036;   mintxmes=087.890996;   maxtxmes=088.087887;   avgtxmes=087.989442;   stdevtxmes=000.098446;","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.864+0200","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello,dialed,PJSIP/6004,channel1745335704.8974"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelDestroyed","timestamp":"2025-04-22T17:28:41.864+0200","cause":16,"cause_txt":"Normal Clearing","channel":{"id":"1745335708.8978","name":"PJSIP/6004-0000051f","state":"Up","protocol_id":"628bf32b-8ea8-47af-92b8-a83b03cb346d","caller":{"name":"Conrad de Wet","number":"00260972462922"},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"from-zesco","exten":"s","priority":1,"app_name":"AppDial2","app_data":"(Outgoing Line)"},"creationtime":"2025-04-22T17:28:28.132+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelConnectedLine","timestamp":"2025-04-22T17:28:41.865+0200","channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPEER","value":"","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.954+0200","channel":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Up","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPVTCALLID","value":"","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.954+0200","channel":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Up","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"variable":"BRIDGEPEER","value":"","type":"ChannelVarset","timestamp":"2025-04-22T17:28:41.954+0200","channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelLeftBridge","timestamp":"2025-04-22T17:28:41.955+0200","bridge":{"id":"ec34542e-e16b-4955-bc48-37f7c347bfc5","technology":"simple_bridge","bridge_type":"mixing","bridge_class":"stasis","creator":"Stasis","name":"","channels":["1745335704.8974"],"creationtime":"2025-04-22T17:28:33.362+0200","video_mode":"talker"},"channel":{"id":"1745335713.8986","name":"UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0","state":"Up","protocol_id":"","caller":{"name":"","number":""},"connected":{"name":"","number":"00260972462922"},"accountcode":"","dialplan":{"context":"default","exten":"s","priority":1,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:33.390+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"ChannelLeftBridge","timestamp":"2025-04-22T17:28:41.956+0200","bridge":{"id":"ec34542e-e16b-4955-bc48-37f7c347bfc5","technology":"simple_bridge","bridge_type":"mixing","bridge_class":"stasis","creator":"Stasis","name":"","channels":[],"creationtime":"2025-04-22T17:28:33.362+0200","video_mode":"talker"},"channel":{"id":"1745335704.8974","name":"PJSIP/mytrunk-0000051d","state":"Up","protocol_id":"714737594818e7a134e89a154edc34f1@10.44.0.56:5060","caller":{"name":"","number":"00260972462922"},"connected":{"name":"","number":""},"accountcode":"","dialplan":{"context":"from-zesco","exten":"6003","priority":2,"app_name":"Stasis","app_data":"hello"},"creationtime":"2025-04-22T17:28:24.282+0200","language":"en"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
-3:684 Message from server: {"type":"BridgeDestroyed","timestamp":"2025-04-22T17:28:41.956+0200","bridge":{"id":"ec34542e-e16b-4955-bc48-37f7c347bfc5","technology":"simple_bridge","bridge_type":"mixing","bridge_class":"stasis","creator":"Stasis","name":"","channels":[],"creationtime":"2025-04-22T17:28:33.362+0200","video_mode":"talker"},"asterisk_id":"00:15:5d:00:2a:0d","application":"hello"}
+final events = [
+  {
+    "type": "StasisStart",
+    "timestamp": "2025-04-22T17:26:05.072+0200",
+    "args": [],
+    "channel": {
+      "id": "1745335565.8964",
+      "name": "PJSIP/mytrunk-0000051c",
+      "state": "Ring",
+      "protocol_id": "4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:26:05.072+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelStateChange",
+    "timestamp": "2025-04-22T17:26:05.234+0200",
+    "channel": {
+      "id": "1745335565.8964",
+      "name": "PJSIP/mytrunk-0000051c",
+      "state": "Up",
+      "protocol_id": "4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:26:05.072+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "PlaybackStarted",
+    "timestamp": "2025-04-22T17:26:05.286+0200",
+    "playback": {
+      "id": "1b597530-1f8e-11f0-a551-8dc1db2598bf",
+      "media_uri": "sound:vm-dialout",
+      "target_uri": "channel:1745335565.8964",
+      "language": "en",
+      "state": "playing"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "PlaybackFinished",
+    "timestamp": "2025-04-22T17:26:07.467+0200",
+    "playback": {
+      "id": "1b597530-1f8e-11f0-a551-8dc1db2598bf",
+      "media_uri": "sound:vm-dialout",
+      "target_uri": "channel:1745335565.8964",
+      "language": "en",
+      "state": "done"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelEnteredBridge",
+    "timestamp": "2025-04-22T17:26:07.467+0200",
+    "bridge": {
+      "id": "65440fd3-991e-45e8-a92d-cea4f5991dd3",
+      "technology": "holding_bridge",
+      "bridge_type": "holding",
+      "bridge_class": "stasis",
+      "creator": "Stasis",
+      "name": "",
+      "channels": ["1745335565.8964"],
+      "creationtime": "2025-04-22T17:26:05.323+0200",
+      "video_mode": "talker"
+    },
+    "channel": {
+      "id": "1745335565.8964",
+      "name": "PJSIP/mytrunk-0000051c",
+      "state": "Up",
+      "protocol_id": "4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:26:05.072+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOS",
+    "value":
+        "ssrc=80413220;themssrc=23012889;lp=0;rxjitter=0.000125;rxcount=804;txjitter=0.000125;txcount=812;rlp=0;rtt=0.000854;rxmes=88.077270;txmes=88.076186",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:26:21.534+0200",
+    "channel": {
+      "id": "1745335565.8964",
+      "name": "PJSIP/mytrunk-0000051c",
+      "state": "Up",
+      "protocol_id": "4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:26:05.072+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOSJITTER",
+    "value":
+        "minrxjitter=000.000000;maxrxjitter=000.001000;avgrxjitter=000.000174;stdevrxjitter=000.000168;mintxjitter=000.000000;maxtxjitter=000.000250;avgtxjitter=000.000125;stdevtxjitter=000.000102;",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:26:21.534+0200",
+    "channel": {
+      "id": "1745335565.8964",
+      "name": "PJSIP/mytrunk-0000051c",
+      "state": "Up",
+      "protocol_id": "4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:26:05.072+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOSLOSS",
+    "value":
+        "  minrxlost=000.000000;  maxrxlost=000.000000;  avgrxlost=000.000000;  stdevrxlost=000.000000;  mintxlost=000.000000;  maxtxlost=000.000000;  avgtxlost=000.000000;  stdevtxlost=000.000000;",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:26:21.534+0200",
+    "channel": {
+      "id": "1745335565.8964",
+      "name": "PJSIP/mytrunk-0000051c",
+      "state": "Up",
+      "protocol_id": "4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:26:05.072+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOSRTT",
+    "value":
+        "     minrtt=000.000854;     maxrtt=000.001327;     avgrtt=000.001073;     stdevrtt=000.000195;",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:26:21.534+0200",
+    "channel": {
+      "id": "1745335565.8964",
+      "name": "PJSIP/mytrunk-0000051c",
+      "state": "Up",
+      "protocol_id": "4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:26:05.072+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOSMES",
+    "value":
+        "   minrxmes=088.074749;   maxrxmes=088.087887;   avgrxmes=088.079607;   stdevrxmes=000.000168;   mintxmes=088.074749;   maxtxmes=088.077270;   avgtxmes=088.076068;   stdevtxmes=000.001033;",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:26:21.534+0200",
+    "channel": {
+      "id": "1745335565.8964",
+      "name": "PJSIP/mytrunk-0000051c",
+      "state": "Up",
+      "protocol_id": "4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:26:05.072+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "cause": 16,
+    "type": "ChannelHangupRequest",
+    "timestamp": "2025-04-22T17:26:21.534+0200",
+    "channel": {
+      "id": "1745335565.8964",
+      "name": "PJSIP/mytrunk-0000051c",
+      "state": "Up",
+      "protocol_id": "4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:26:05.072+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelLeftBridge",
+    "timestamp": "2025-04-22T17:26:21.538+0200",
+    "bridge": {
+      "id": "65440fd3-991e-45e8-a92d-cea4f5991dd3",
+      "technology": "holding_bridge",
+      "bridge_type": "holding",
+      "bridge_class": "stasis",
+      "creator": "Stasis",
+      "name": "",
+      "channels": ["1745335565.8968"],
+      "creationtime": "2025-04-22T17:26:05.323+0200",
+      "video_mode": "talker"
+    },
+    "channel": {
+      "id": "1745335565.8964",
+      "name": "PJSIP/mytrunk-0000051c",
+      "state": "Up",
+      "protocol_id": "4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:26:05.072+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "StasisEnd",
+    "timestamp": "2025-04-22T17:26:21.539+0200",
+    "channel": {
+      "id": "1745335565.8964",
+      "name": "PJSIP/mytrunk-0000051c",
+      "state": "Up",
+      "protocol_id": "4c02827b6ff6cc3023e7767b7d0546db@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:26:05.072+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "StasisStart",
+    "timestamp": "2025-04-22T17:28:24.283+0200",
+    "args": [],
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Ring",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelStateChange",
+    "timestamp": "2025-04-22T17:28:24.559+0200",
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "PlaybackStarted",
+    "timestamp": "2025-04-22T17:28:24.666+0200",
+    "playback": {
+      "id": "6e6d9da0-1f8e-11f0-a551-8dc1db2598bf",
+      "media_uri": "sound:vm-dialout",
+      "target_uri": "channel:1745335704.8974",
+      "language": "en",
+      "state": "playing"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "PlaybackFinished",
+    "timestamp": "2025-04-22T17:28:26.847+0200",
+    "playback": {
+      "id": "6e6d9da0-1f8e-11f0-a551-8dc1db2598bf",
+      "media_uri": "sound:vm-dialout",
+      "target_uri": "channel:1745335704.8974",
+      "language": "en",
+      "state": "done"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelEnteredBridge",
+    "timestamp": "2025-04-22T17:28:26.847+0200",
+    "bridge": {
+      "id": "65440fd3-991e-45e8-a92d-cea4f5991dd3",
+      "technology": "holding_bridge",
+      "bridge_type": "holding",
+      "bridge_class": "stasis",
+      "creator": "Stasis",
+      "name": "",
+      "channels": ["1745335704.8974"],
+      "creationtime": "2025-04-22T17:26:05.323+0200",
+      "video_mode": "talker"
+    },
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "Dial",
+    "timestamp": "2025-04-22T17:28:28.133+0200",
+    "dialstatus": "",
+    "forward": "",
+    "dialstring": "6004",
+    "peer": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Down",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "AppDial2",
+        "app_data": "(Outgoing Line)"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelStateChange",
+    "timestamp": "2025-04-22T17:28:28.206+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Ringing",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "AppDial2",
+        "app_data": "(Outgoing Line)"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "Dial",
+    "timestamp": "2025-04-22T17:28:28.206+0200",
+    "dialstatus": "RINGING",
+    "forward": "",
+    "dialstring": "6004",
+    "peer": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Ringing",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "AppDial2",
+        "app_data": "(Outgoing Line)"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelStateChange",
+    "timestamp": "2025-04-22T17:28:33.265+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "AppDial2",
+        "app_data": "(Outgoing Line)"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "Dial",
+    "timestamp": "2025-04-22T17:28:33.265+0200",
+    "dialstatus": "ANSWER",
+    "forward": "",
+    "dialstring": "6004",
+    "peer": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "AppDial2",
+        "app_data": "(Outgoing Line)"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "STASISSTATUS",
+    "value": "",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:33.266+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "StasisStart",
+    "timestamp": "2025-04-22T17:28:33.266+0200",
+    "args": ["dialed", "PJSIP/6004", "channel1745335704.8974"],
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelLeftBridge",
+    "timestamp": "2025-04-22T17:28:33.292+0200",
+    "bridge": {
+      "id": "65440fd3-991e-45e8-a92d-cea4f5991dd3",
+      "technology": "holding_bridge",
+      "bridge_type": "holding",
+      "bridge_class": "stasis",
+      "creator": "Stasis",
+      "name": "",
+      "channels": [],
+      "creationtime": "2025-04-22T17:26:05.323+0200",
+      "video_mode": "talker"
+    },
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "Dial",
+    "timestamp": "2025-04-22T17:28:33.390+0200",
+    "dialstatus": "",
+    "forward": "",
+    "dialstring": "10.44.0.70:47029/c(alaw)",
+    "peer": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Down",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "AppDial2",
+        "app_data": "(Outgoing Line)"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelStateChange",
+    "timestamp": "2025-04-22T17:28:33.390+0200",
+    "channel": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "AppDial2",
+        "app_data": "(Outgoing Line)"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "Dial",
+    "timestamp": "2025-04-22T17:28:33.390+0200",
+    "dialstatus": "ANSWER",
+    "forward": "",
+    "dialstring": "10.44.0.70:47029/c(alaw)",
+    "peer": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "AppDial2",
+        "app_data": "(Outgoing Line)"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "STASISSTATUS",
+    "value": "",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:33.390+0200",
+    "channel": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "StasisStart",
+    "timestamp": "2025-04-22T17:28:33.390+0200",
+    "args": [],
+    "channel": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelEnteredBridge",
+    "timestamp": "2025-04-22T17:28:33.475+0200",
+    "bridge": {
+      "id": "ec34542e-e16b-4955-bc48-37f7c347bfc5",
+      "technology": "simple_bridge",
+      "bridge_type": "mixing",
+      "bridge_class": "stasis",
+      "creator": "Stasis",
+      "name": "",
+      "channels": ["1745335704.8974"],
+      "creationtime": "2025-04-22T17:28:33.362+0200",
+      "video_mode": "talker"
+    },
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelEnteredBridge",
+    "timestamp": "2025-04-22T17:28:33.476+0200",
+    "bridge": {
+      "id": "ec34542e-e16b-4955-bc48-37f7c347bfc5",
+      "technology": "simple_bridge",
+      "bridge_type": "mixing",
+      "bridge_class": "stasis",
+      "creator": "Stasis",
+      "name": "",
+      "channels": ["1745335704.8974", "1745335708.8978"],
+      "creationtime": "2025-04-22T17:28:33.362+0200",
+      "video_mode": "talker"
+    },
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPEER",
+    "value": "PJSIP/6004-0000051f",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:33.476+0200",
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPVTCALLID",
+    "value": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:33.476+0200",
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPEER",
+    "value": "PJSIP/mytrunk-0000051d",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:33.476+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPVTCALLID",
+    "value": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:33.476+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelConnectedLine",
+    "timestamp": "2025-04-22T17:28:33.477+0200",
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelEnteredBridge",
+    "timestamp": "2025-04-22T17:28:33.478+0200",
+    "bridge": {
+      "id": "ec34542e-e16b-4955-bc48-37f7c347bfc5",
+      "technology": "simple_bridge",
+      "bridge_type": "mixing",
+      "bridge_class": "stasis",
+      "creator": "Stasis",
+      "name": "",
+      "channels": ["1745335704.8974", "1745335708.8978", "1745335713.8986"],
+      "creationtime": "2025-04-22T17:28:33.362+0200",
+      "video_mode": "talker"
+    },
+    "channel": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPEER",
+    "value": "PJSIP/mytrunk-0000051d,PJSIP/6004-0000051f",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:33.478+0200",
+    "channel": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPEER",
+    "value": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0,PJSIP/6004-0000051f",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:33.478+0200",
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPVTCALLID",
+    "value": "",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:33.478+0200",
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPEER",
+    "value":
+        "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0,PJSIP/mytrunk-0000051d",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:33.478+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPVTCALLID",
+    "value": "",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:33.478+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOS",
+    "value":
+        "ssrc=412479622;themssrc=171055185;lp=0;rxjitter=0.002250;rxcount=426;txjitter=0.000875;txcount=420;rlp=0;rtt=0.019515;rxmes=87.890996;txmes=88.087887",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.861+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOSJITTER",
+    "value":
+        "minrxjitter=000.000125;maxrxjitter=000.007500;avgrxjitter=000.001221;stdevrxjitter=000.001036;mintxjitter=000.002000;maxtxjitter=000.002250;avgtxjitter=000.002125;stdevtxjitter=000.000125;",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.861+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOSLOSS",
+    "value":
+        "  minrxlost=000.000000;  maxrxlost=000.000000;  avgrxlost=000.000000;  stdevrxlost=000.000000;  mintxlost=000.000000;  maxtxlost=000.000000;  avgtxlost=000.000000;  stdevtxlost=000.000000;",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.861+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOSRTT",
+    "value":
+        "     minrtt=000.019515;     maxrtt=000.019515;     avgrtt=000.019515;     stdevrtt=000.000000;",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.861+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOSMES",
+    "value":
+        "   minrxmes=088.087887;   maxrxmes=088.087887;   avgrxmes=088.087887;   stdevrxmes=000.001036;   mintxmes=087.890996;   maxtxmes=088.087887;   avgtxmes=087.989442;   stdevtxmes=000.098446;",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.861+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "cause": 16,
+    "type": "ChannelHangupRequest",
+    "timestamp": "2025-04-22T17:28:41.861+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPEER",
+    "value": "",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.862+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelLeftBridge",
+    "timestamp": "2025-04-22T17:28:41.862+0200",
+    "bridge": {
+      "id": "ec34542e-e16b-4955-bc48-37f7c347bfc5",
+      "technology": "softmix",
+      "bridge_type": "mixing",
+      "bridge_class": "stasis",
+      "creator": "Stasis",
+      "name": "",
+      "channels": ["1745335704.8974", "1745335713.8986"],
+      "creationtime": "2025-04-22T17:28:33.362+0200",
+      "video_mode": "talker"
+    },
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPEER",
+    "value": "PJSIP/mytrunk-0000051d",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.862+0200",
+    "channel": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPVTCALLID",
+    "value": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.862+0200",
+    "channel": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPEER",
+    "value": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.862+0200",
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "StasisEnd",
+    "timestamp": "2025-04-22T17:28:41.863+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "STASISSTATUS",
+    "value": "SUCCESS",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.863+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelConnectedLine",
+    "timestamp": "2025-04-22T17:28:41.864+0200",
+    "channel": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOS",
+    "value":
+        "ssrc=412479622;themssrc=171055185;lp=0;rxjitter=0.002250;rxcount=426;txjitter=0.000875;txcount=420;rlp=0;rtt=0.019515;rxmes=87.890996;txmes=88.087887",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.864+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOSJITTER",
+    "value":
+        "minrxjitter=000.000125;maxrxjitter=000.007500;avgrxjitter=000.001221;stdevrxjitter=000.001036;mintxjitter=000.002000;maxtxjitter=000.002250;avgtxjitter=000.002125;stdevtxjitter=000.000125;",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.864+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOSLOSS",
+    "value":
+        "  minrxlost=000.000000;  maxrxlost=000.000000;  avgrxlost=000.000000;  stdevrxlost=000.000000;  mintxlost=000.000000;  maxtxlost=000.000000;  avgtxlost=000.000000;  stdevtxlost=000.000000;",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.864+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOSRTT",
+    "value":
+        "     minrtt=000.019515;     maxrtt=000.019515;     avgrtt=000.019515;     stdevrtt=000.000000;",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.864+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "RTPAUDIOQOSMES",
+    "value":
+        "   minrxmes=088.087887;   maxrxmes=088.087887;   avgrxmes=088.087887;   stdevrxmes=000.001036;   mintxmes=087.890996;   maxtxmes=088.087887;   avgtxmes=087.989442;   stdevtxmes=000.098446;",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.864+0200",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello,dialed,PJSIP/6004,channel1745335704.8974"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelDestroyed",
+    "timestamp": "2025-04-22T17:28:41.864+0200",
+    "cause": 16,
+    "cause_txt": "Normal Clearing",
+    "channel": {
+      "id": "1745335708.8978",
+      "name": "PJSIP/6004-0000051f",
+      "state": "Up",
+      "protocol_id": "628bf32b-8ea8-47af-92b8-a83b03cb346d",
+      "caller": {"name": "Conrad de Wet", "number": "00260972462922"},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "AppDial2",
+        "app_data": "(Outgoing Line)"
+      },
+      "creationtime": "2025-04-22T17:28:28.132+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelConnectedLine",
+    "timestamp": "2025-04-22T17:28:41.865+0200",
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPEER",
+    "value": "",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.954+0200",
+    "channel": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPVTCALLID",
+    "value": "",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.954+0200",
+    "channel": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "variable": "BRIDGEPEER",
+    "value": "",
+    "type": "ChannelVarset",
+    "timestamp": "2025-04-22T17:28:41.954+0200",
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelLeftBridge",
+    "timestamp": "2025-04-22T17:28:41.955+0200",
+    "bridge": {
+      "id": "ec34542e-e16b-4955-bc48-37f7c347bfc5",
+      "technology": "simple_bridge",
+      "bridge_type": "mixing",
+      "bridge_class": "stasis",
+      "creator": "Stasis",
+      "name": "",
+      "channels": ["1745335704.8974"],
+      "creationtime": "2025-04-22T17:28:33.362+0200",
+      "video_mode": "talker"
+    },
+    "channel": {
+      "id": "1745335713.8986",
+      "name": "UnicastRTP/10.44.0.70:47029-0x7f13282ca9e0",
+      "state": "Up",
+      "protocol_id": "",
+      "caller": {"name": "", "number": ""},
+      "connected": {"name": "", "number": "00260972462922"},
+      "accountcode": "",
+      "dialplan": {
+        "context": "default",
+        "exten": "s",
+        "priority": 1,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:33.390+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "ChannelLeftBridge",
+    "timestamp": "2025-04-22T17:28:41.956+0200",
+    "bridge": {
+      "id": "ec34542e-e16b-4955-bc48-37f7c347bfc5",
+      "technology": "simple_bridge",
+      "bridge_type": "mixing",
+      "bridge_class": "stasis",
+      "creator": "Stasis",
+      "name": "",
+      "channels": [],
+      "creationtime": "2025-04-22T17:28:33.362+0200",
+      "video_mode": "talker"
+    },
+    "channel": {
+      "id": "1745335704.8974",
+      "name": "PJSIP/mytrunk-0000051d",
+      "state": "Up",
+      "protocol_id": "714737594818e7a134e89a154edc34f1@10.44.0.56:5060",
+      "caller": {"name": "", "number": "00260972462922"},
+      "connected": {"name": "", "number": ""},
+      "accountcode": "",
+      "dialplan": {
+        "context": "from-zesco",
+        "exten": "6003",
+        "priority": 2,
+        "app_name": "Stasis",
+        "app_data": "hello"
+      },
+      "creationtime": "2025-04-22T17:28:24.282+0200",
+      "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  },
+  {
+    "type": "BridgeDestroyed",
+    "timestamp": "2025-04-22T17:28:41.956+0200",
+    "bridge": {
+      "id": "ec34542e-e16b-4955-bc48-37f7c347bfc5",
+      "technology": "simple_bridge",
+      "bridge_type": "mixing",
+      "bridge_class": "stasis",
+      "creator": "Stasis",
+      "name": "",
+      "channels": [],
+      "creationtime": "2025-04-22T17:28:33.362+0200",
+      "video_mode": "talker"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+  }
+];
