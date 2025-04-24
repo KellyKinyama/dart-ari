@@ -1870,3 +1870,138 @@ final events = [
     "application": "hello"
   }
 ];
+
+
+//Call journey:
+
+Message from server: {
+    "type": "Dial",
+    "timestamp": "2025-04-24T11:29:38.005+0200",
+    "dialstatus": "",
+    "forward": "",
+    "dialstring": "6004",
+    "peer": {
+        "id": "1745486977.9352",
+        "name": "PJSIP/6004-00000552",
+        "state": "Down",
+        "protocol_id": "3ec39dc1-b056-40f5-90e7-7c03cbd643be",
+        "caller": {
+            "name": "Conrad de Wet",
+            "number": "00260972462922"
+        },
+        "connected": {
+            "name": "",
+            "number": "00260972462922"
+        },
+        "accountcode": "",
+        "dialplan": {
+            "context": "from-zesco",
+            "exten": "s",
+            "priority": 1,
+            "app_name": "AppDial2",
+            "app_data": "(Outgoing Line)"
+        },
+        "creationtime": "2025-04-24T11:29:38.004+0200",
+        "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+}
+Message from server: {
+    "type": "Dial",
+    "timestamp": "2025-04-24T11:29:38.066+0200",
+    "dialstatus": "RINGING",
+    "forward": "",
+    "dialstring": "6004",
+    "peer": {
+        "id": "1745486977.9352",
+        "name": "PJSIP/6004-00000552",
+        "state": "Ringing",
+        "protocol_id": "3ec39dc1-b056-40f5-90e7-7c03cbd643be",
+        "caller": {
+            "name": "Conrad de Wet",
+            "number": "00260972462922"
+        },
+        "connected": {
+            "name": "",
+            "number": "00260972462922"
+        },
+        "accountcode": "",
+        "dialplan": {
+            "context": "from-zesco",
+            "exten": "s",
+            "priority": 1,
+            "app_name": "AppDial2",
+            "app_data": "(Outgoing Line)"
+        },
+        "creationtime": "2025-04-24T11:29:38.004+0200",
+        "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+}
+Message from server: {
+    "type": "Dial",
+    "timestamp": "2025-04-24T11:29:45.122+0200",
+    "dialstatus": "ANSWER",
+    "forward": "",
+    "dialstring": "6004",
+    "peer": {
+        "id": "1745486977.9352",
+        "name": "PJSIP/6004-00000552",
+        "state": "Up",
+        "protocol_id": "3ec39dc1-b056-40f5-90e7-7c03cbd643be",
+        "caller": {
+            "name": "Conrad de Wet",
+            "number": "00260972462922"
+        },
+        "connected": {
+            "name": "",
+            "number": "00260972462922"
+        },
+        "accountcode": "",
+        "dialplan": {
+            "context": "from-zesco",
+            "exten": "s",
+            "priority": 1,
+            "app_name": "AppDial2",
+            "app_data": "(Outgoing Line)"
+        },
+        "creationtime": "2025-04-24T11:29:38.004+0200",
+        "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+}
+
+
+Message from server: {
+    "type": "StasisEnd",
+    "timestamp": "2025-04-24T14:49:32.755+0200",
+    "channel": {
+        "id": "1745498961.9572",
+        "name": "PJSIP/6004-0000056b",
+        "state": "Up",
+        "protocol_id": "811e83fd-f7f1-44fd-97a2-98fd89bed47f",
+        "caller": {
+            "name": "Conrad de Wet",
+            "number": "00260972462922"
+        },
+        "connected": {
+            "name": "",
+            "number": ""
+        },
+        "accountcode": "",
+        "dialplan": {
+            "context": "from-zesco",
+            "exten": "s",
+            "priority": 1,
+            "app_name": "Stasis",
+            "app_data": "hello,dialed,PJSIP/6004,channel1745498957.9566,00260972462922,8d5dce10-210a-11f0-bc91-dd0a2a110acc"
+        },
+        "creationtime": "2025-04-24T14:49:21.270+0200",
+        "language": "en"
+    },
+    "asterisk_id": "00:15:5d:00:2a:0d",
+    "application": "hello"
+}

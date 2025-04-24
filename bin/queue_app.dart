@@ -286,7 +286,7 @@ Future<void> _cleanupCall(String channelId) async {
 
   // voiceRecords.remove(channelId);
 
-  _cleanupEmptyBridges();
+  // _cleanupEmptyBridges();
 }
 
 Future<void> _safeHangup(Channel? channel) async {
