@@ -7,7 +7,6 @@ import 'package:dart_ari/ari/api/enums.dart';
 import 'package:dart_ari/dart_ari.dart';
 import 'package:dart_ari/webserver/models/recordings.dart';
 import 'package:dotenv/dotenv.dart';
-import 'package:events_emitter/events_emitter.dart';
 import 'package:uuid/uuid.dart';
 
 late String voiceLoggerIp;
@@ -205,6 +204,7 @@ void _setupCallHandlers(
   String filename,
   int? rtpport,
 ) {
+  bool insertedRecord = false;
   voiceRecords[incoming.id] = CallRecording(
     file_name: filename,
     file_path: filename,
@@ -219,6 +219,14 @@ void _setupCallHandlers(
   incoming.on('StasisEnd', (_) async {
     await _cleanupCall(incoming.id);
     await _safeHangup(dialed);
+
+    if (!insertedRecord) {
+      if (voiceRecords[incoming.id] != null) {
+        await voiceRecords[incoming.id]!.insertCallRecording();
+        voiceRecords.remove(incoming.id);
+        insertedRecord = true;
+      }
+    }
   });
 
   dialed.on('ChannelStateChange', (event) async {
@@ -268,9 +276,12 @@ void _setupCallHandlers(
 
     dialed.on('StasisEnd', (_) async {
       await mixingBridge.destroy();
-      if (voiceRecords[incoming.id] != null) {
-        await voiceRecords[incoming.id]!.insertCallRecording();
-        voiceRecords.remove(incoming.id);
+      if (!insertedRecord) {
+        if (voiceRecords[incoming.id] != null) {
+          await voiceRecords[incoming.id]!.insertCallRecording();
+          voiceRecords.remove(incoming.id);
+          insertedRecord = true;
+        }
       }
       await _cleanupCall(incoming.id);
     });
