@@ -87,6 +87,19 @@ Future<void> findOrCreateBridge(Channel channel) async {
 
     channel.on('StasisEnd', (_) async {
       await _cleanupCall(channel.id);
+
+      if (voiceRecords[channel.id] == null) {
+        CallRecording(
+          file_name: "empty",
+          file_path: "empty",
+          agent_number: "empty",
+          phone_number: channel.caller.number,
+          answerdate: DateTime.now().toString(),
+          src: channel.caller.number,
+          dst: "empty",
+          clid: channel.caller.number,
+        ).insertCallRecording();
+      }
     });
 
     channel.on('ChannelDestroyed', (_) async {
@@ -204,7 +217,6 @@ void _setupCallHandlers(
   String filename,
   int? rtpport,
 ) {
-  bool insertedRecord = false;
   voiceRecords[incoming.id] = CallRecording(
     file_name: filename,
     file_path: filename,
@@ -219,14 +231,6 @@ void _setupCallHandlers(
   incoming.on('StasisEnd', (_) async {
     await _cleanupCall(incoming.id);
     await _safeHangup(dialed);
-
-    if (!insertedRecord) {
-      if (voiceRecords[incoming.id] != null) {
-        await voiceRecords[incoming.id]!.insertCallRecording();
-        voiceRecords.remove(incoming.id);
-        insertedRecord = true;
-      }
-    }
   });
 
   dialed.on('ChannelStateChange', (event) async {
@@ -276,13 +280,11 @@ void _setupCallHandlers(
 
     dialed.on('StasisEnd', (_) async {
       await mixingBridge.destroy();
-      if (!insertedRecord) {
-        if (voiceRecords[incoming.id] != null) {
-          await voiceRecords[incoming.id]!.insertCallRecording();
-          voiceRecords.remove(incoming.id);
-          insertedRecord = true;
-        }
+      if (voiceRecords[incoming.id] != null) {
+        await voiceRecords[incoming.id]!.insertCallRecording();
+        voiceRecords.remove(incoming.id);
       }
+
       await _cleanupCall(incoming.id);
     });
   });
