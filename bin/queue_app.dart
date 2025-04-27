@@ -199,8 +199,8 @@ Future<bool> originate(
     return true;
   } catch (e, st) {
     print("Originate Error: $e\n$st");
-    await DbQueries.updateAgentStatus(
-        endpoint, AgentState.UNKNOWN, AgentState.UNKNOWN);
+    // await DbQueries.updateAgentStatus(
+    //     endpoint, AgentState.UNKNOWN, AgentState.UNKNOWN);
 
     Timer(const Duration(seconds: 5), () {
       _startAgentSearch(incoming, holdingBridge);

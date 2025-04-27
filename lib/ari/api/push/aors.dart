@@ -119,9 +119,21 @@ class Aor {
     return resp.resp;
     //});
   }
+
+  static Future<bool> contact(String endpoint) async {
+    final aor = jsonDecode(await Aor.get(endpoint));
+    for (var item in aor) {
+      if (item["attribute"] == "contact") {
+        print("value: ${item["value"]}");
+
+        return item["value"].length > 0;
+      }
+    }
+    return false;
+  }
 }
 
 Future<void> main() async {
-  final aor = await Aor.get("6004");
+  final aor = await Aor.get("6003");
   print("Aor: $aor");
 }

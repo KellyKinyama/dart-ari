@@ -7,7 +7,7 @@ import 'queue_app.dart';
 void main(List<String> arguments) async {
   ARI ari = ARI.fromConfigs();
 
-  //DbQueries.setAgentStatuses(AgentState.LOGGEDIN, AgentState.IDLE);
+  //await DbQueries.setAgentStatuses(AgentState.LOGGEDIN, AgentState.IDLE);
 
   await ari.connect();
   queueApp(ari);

@@ -71,12 +71,12 @@ Future<Map<String, AgentState>> idleAgents() async {
 
   await db.disconnect();
   for (var element in res) {
-    final aor = jsonDecode(await Aor.get(element['endpoint']));
-    for (var item in aor) {
-      if (item["attribute"] == "contact") {
-        agentsStates["PJSIP/${element['endpoint']}"] = AgentState.LOGGEDIN;
-      }
+    // final aor = jsonDecode(await Aor.get(element['endpoint']));
+    // for (var item in aor) {
+    if (await Aor.contact(element['endpoint'])) {
+      agentsStates["PJSIP/${element['endpoint']}"] = AgentState.LOGGEDIN;
     }
+    // }
   }
   print("idle agents: ${res}");
   return agentsStates;
@@ -141,6 +141,13 @@ Future<String?> longestWaiting() async {
 // }
 
 Future<void> main() async {
-  final aor = await Aor.get("6004");
-  print("Aor: $aor");
+  final aor = jsonDecode(await Aor.get("6004"));
+  // print("Aor: $aor");
+
+  for (var item in aor) {
+    if (item["attribute"] == "contact") {
+      print("Aor attribute: ${item["attribute"]}");
+      print("Aor: ${await Aor.contact("6004")}");
+    }
+  }
 }
