@@ -1,3 +1,4 @@
+import 'package:dart_ari/ari/api/push/aors.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
@@ -48,19 +49,6 @@ class WebServer {
         webSocketHandler((WebSocketChannel webSocket, path) async {
       print("Connected to WebSocket: $path");
 
-      // final localEventEmitter = EventEmitter();
-
-      // localEventEmitter.on("proxy", (String event) {
-      //   print("Event: $event");
-      //   webSocket.sink.add(event);
-      // });
-
-      // eventEmitterProxy.on("proxy", (String event) {
-      //   print("Event: $event");
-      //   // webSocket.sink.add(event);
-      //   localEventEmitter.emit("proxy", event);
-      // });
-
       final connection = RedisConnection();
       Command command = await connection.connect(redisIp, redisPort);
 
@@ -90,6 +78,16 @@ class WebServer {
         }
       }
     }));
+
+    // --- New HTTP GET endpoint ---
+    router.get('/online/<endpoint|.*>', (Request req, String endpoint) async {
+      // Remove any trailing slashes from endpoint
+      endpoint = endpoint.replaceAll(RegExp(r'/$'), '');
+
+      print('Endpoint: $endpoint');
+      return Response.ok(
+          'Endpoint: $endpoint, status: ${await Aor.contact(endpoint)}');
+    });
 
     // CORS-aware pipeline
     final handler =
