@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dart_ari/ari/api/push/aors.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:shelf/shelf.dart';
@@ -85,10 +87,18 @@ class WebServer {
       endpoint = endpoint.replaceAll(RegExp(r'/$'), '');
 
       print('Endpoint: $endpoint');
-      return Response.ok(
-          'Endpoint: $endpoint, status: ${await Aor.contact(endpoint)}');
-    });
 
+      final contactStatus = await Aor.contact(endpoint);
+
+      // Return a JSON response
+      return Response.ok(
+        jsonEncode({
+          'endpoint': endpoint,
+          'status': contactStatus,
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    });
     // CORS-aware pipeline
     final handler =
         Pipeline().addMiddleware(logRequests()).addHandler((Request req) async {
