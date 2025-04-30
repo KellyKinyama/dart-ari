@@ -64,6 +64,10 @@ class WebServer {
         // webSocket.sink.add('Echo: $message');
       }, onDone: () {
         print('Client disconnected.');
+        pubsub.unsubscribe(["monkey"]);
+      }, onError: (error) {
+        print('Error: $error');
+        pubsub.unsubscribe(["monkey"]);
       });
 
       final stream = pubsub.getStream();
