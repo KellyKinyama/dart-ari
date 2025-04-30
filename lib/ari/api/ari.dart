@@ -11,7 +11,6 @@ import 'package:dart_ari/ari/api/events/stasis_start.dart';
 import 'package:dart_ari/ari/api/misc.dart';
 import 'package:events_emitter/events_emitter.dart';
 
-import '../../webserver/routes/api.dart';
 import '../config/constants.dart';
 import 'bridges.dart';
 import 'channels.dart';
