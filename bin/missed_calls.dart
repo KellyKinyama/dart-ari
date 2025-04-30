@@ -31,7 +31,7 @@ class WsClient {
 
       // final stasisEndEvent = StasisEndEvent.fromJson(jsonData);
       // print('Dial status: ${dialEvent.dialstatus}');
-
+      print("inserting in db");
       await DbQueries.insertStasisStartEvent(jsonData);
     }
   }
