@@ -87,19 +87,6 @@ Future<void> findOrCreateBridge(Channel channel) async {
 
     channel.on('StasisEnd', (_) async {
       await _cleanupCall(channel.id);
-
-      if (voiceRecords[channel.id] == null) {
-        CallRecording(
-          file_name: "empty",
-          file_path: "empty",
-          agent_number: "empty",
-          phone_number: channel.caller.number,
-          answerdate: DateTime.now().toString(),
-          src: channel.caller.number,
-          dst: "empty",
-          clid: channel.caller.number,
-        ).insertCallRecording();
-      }
     });
 
     channel.on('ChannelDestroyed', (_) async {
@@ -217,6 +204,10 @@ void _setupCallHandlers(
   String filename,
   int? rtpport,
 ) {
+  String dst = endpoint;
+  if (dst.startsWith("PJSIP/")) {
+    dst = dst.substring(6);
+  }
   voiceRecords[incoming.id] = CallRecording(
     file_name: filename,
     file_path: filename,
@@ -224,7 +215,7 @@ void _setupCallHandlers(
     phone_number: incoming.caller.number,
     answerdate: DateTime.now().toString(),
     src: incoming.caller.number,
-    dst: endpoint,
+    dst: dst,
     clid: incoming.caller.number,
   );
 
