@@ -211,7 +211,7 @@ void _setupCallHandlers(
   voiceRecords[incoming.id] = CallRecording(
     file_name: filename,
     file_path: filename,
-    agent_number: endpoint,
+    agent_number: dst,
     phone_number: incoming.caller.number,
     answerdate: DateTime.now().toString(),
     src: incoming.caller.number,
