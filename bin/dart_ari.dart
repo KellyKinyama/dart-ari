@@ -7,7 +7,8 @@ import 'missed_calls.dart';
 void main(List<String> arguments) async {
   ARI ari = ARI.fromConfigs();
 
-  //await DbQueries.setAgentStatuses(AgentState.LOGGEDIN, AgentState.IDLE);
+  await DbQueries.updateInactiveAgentStatuses(
+      AgentState.LOGGEDOUT, AgentState.LOGGEDOUT);
 
   await ari.connect();
   queueApp(ari);

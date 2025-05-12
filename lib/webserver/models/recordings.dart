@@ -82,6 +82,43 @@ Future<Map<String, AgentState>> idleAgents() async {
   return agentsStates;
 }
 
+Future<Map<String, AgentState>> inactiveAgents() async {
+  Map<String, AgentState> agentsStates = {
+    // 'SIP/7000/6003': AgentState.LOGGEDIN,
+    // 'SIP/7000/8923': AgentState.LOGGEDIN,
+    // 'SIP/7000/1061': AgentState.LOGGEDIN
+  };
+  String table = 'agents';
+
+  final db = await Model.getDbConnection();
+  final eightHoursAgo =
+      DateTime.now().subtract(Duration(hours: 24)).toIso8601String();
+
+  List<Map<String, dynamic>> res = await db
+      .table(table)
+      .select(['endpoint', 'state', 'status', 'updated_at'])
+      // .whereIn('agent_number', loggedInAgents)
+      .where('updated_at', '<=', eightHoursAgo)
+      .whereIn('state', ['IDLE', 'AgentState.IDLE'])
+      // .orWhere('status', '=', 'AgentState.IDLE')
+      .groupBy('endpoint')
+      .orderBy('updated_at', 'asc')
+      // .limit(1)
+      .get();
+
+  await db.disconnect();
+  for (var element in res) {
+    // final aor = jsonDecode(await Aor.get(element['endpoint']));
+    // for (var item in aor) {
+    if (await Aor.contact(element['endpoint'])) {
+      agentsStates["PJSIP/${element['endpoint']}"] = AgentState.LOGGEDIN;
+    }
+    // }
+  }
+  print("idle agents: ${res}");
+  return agentsStates;
+}
+
 Future<String?> longestWaiting() async {
   List<String> loggedInAgents = (await idleAgents())
       // .where((entry) => entry.value == AgentState.IDLE)
