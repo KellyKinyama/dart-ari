@@ -5,6 +5,7 @@ import 'package:dart_ari/webserver/models/base.dart';
 import 'package:events_emitter/events_emitter.dart';
 
 import '../../ari/api/enums.dart';
+import '../../ari/api/push/aors.dart';
 
 class Recordings extends Model {
   static String table = 'recordings';
@@ -70,7 +71,12 @@ Future<Map<String, AgentState>> idleAgents() async {
 
   await db.disconnect();
   for (var element in res) {
-    agentsStates["PJSIP/${element['endpoint']}"] = AgentState.LOGGEDIN;
+    // final aor = jsonDecode(await Aor.get(element['endpoint']));
+    // for (var item in aor) {
+    if (await Aor.contact(element['endpoint'])) {
+      agentsStates["PJSIP/${element['endpoint']}"] = AgentState.LOGGEDIN;
+    }
+    // }
   }
   print("idle agents: ${res}");
   return agentsStates;
@@ -121,15 +127,27 @@ Future<String?> longestWaiting() async {
   return null;
 }
 
-Future<void> main() async {
-  String? free;
-  Timer.periodic(Duration(seconds: 3), (timer) async {
-    // channel.on('StasisEnd', (event) {
-    timer.cancel();
-    // channel.off();
-    // });
+// Future<void> main() async {
+//   String? free;
+//   Timer.periodic(Duration(seconds: 3), (timer) async {
+//     // channel.on('StasisEnd', (event) {
+//     timer.cancel();
+//     // channel.off();
+//     // });
 
-    free = await longestWaiting();
-    if (free != null) timer.cancel();
-  });
+//     free = await longestWaiting();
+//     if (free != null) timer.cancel();
+//   });
+// }
+
+Future<void> main() async {
+  final aor = jsonDecode(await Aor.get("6004"));
+  // print("Aor: $aor");
+
+  for (var item in aor) {
+    if (item["attribute"] == "contact") {
+      print("Aor attribute: ${item["attribute"]}");
+      print("Aor: ${await Aor.contact("6004")}");
+    }
+  }
 }

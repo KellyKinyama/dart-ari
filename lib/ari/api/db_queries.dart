@@ -7,6 +7,24 @@ import 'enums.dart';
 // import 'globals.dart';
 import 'package:eloquent/eloquent.dart';
 
+String formatDateTime(String input) {
+  try {
+    final dt = DateTime.parse(input);
+    return dt
+        .toLocal()
+        .toIso8601String()
+        .split('.')
+        .first
+        .replaceFirst('T', ' ');
+  } catch (_) {
+    return DateTime.now()
+        .toIso8601String()
+        .split('.')
+        .first
+        .replaceFirst('T', ' ');
+  }
+}
+
 // Declarations
 
 class DbQueries {
@@ -126,6 +144,170 @@ class DbQueries {
       return false; // Return false in case of error
     } finally {
       await db.disconnect();
+    }
+  }
+
+  static Future<bool> insertDialEvent(Map<String, dynamic> event) async {
+    final db = await getDbConnection();
+    bool success = false;
+
+    try {
+      final peer = event['peer'] ?? {};
+      final dialplan = peer['dialplan'] ?? {};
+      final caller = peer['caller'] ?? {};
+      final connected = peer['connected'] ?? {};
+
+      await db.table('dial_event_logs').insert({
+        'event_type': event['type'],
+        'event_timestamp': formatDateTime(event['timestamp']),
+        'dialstatus': event['dialstatus'],
+        'forward': event['forward'],
+        'dialstring': event['dialstring'],
+        'asterisk_id': event['asterisk_id'],
+        'application': event['application'],
+        'peer_id': peer['id'],
+        'peer_name': peer['name'],
+        'peer_state': peer['state'],
+        'peer_protocol_id': peer['protocol_id'],
+        'peer_accountcode': peer['accountcode'],
+        'peer_creationtime': formatDateTime(peer['creationtime']),
+        'peer_language': peer['language'],
+        'caller_name': caller['name'],
+        'caller_number': caller['number'],
+        'connected_name': connected['name'],
+        'connected_number': connected['number'],
+        'dialplan_context': dialplan['context'],
+        'dialplan_exten': dialplan['exten'],
+        'dialplan_priority': dialplan['priority'],
+        'dialplan_app_name': dialplan['app_name'],
+        'dialplan_app_data': dialplan['app_data'],
+        'created_at': DateTime.now()
+            .toIso8601String()
+            .split('.')
+            .first
+            .replaceFirst('T', ' '),
+        'updated_at': DateTime.now()
+            .toIso8601String()
+            .split('.')
+            .first
+            .replaceFirst('T', ' '),
+      });
+
+      success = true;
+    } catch (e, st) {
+      print('Insert Dial Event Error: $e, Stack trace: $st');
+      success = false;
+    } finally {
+      await db.disconnect();
+      return success;
+    }
+  }
+
+  static Future<bool> insertStasisEndEvent(Map<String, dynamic> event) async {
+    final db = await getDbConnection();
+    bool success = false;
+
+    try {
+      final channel = event['channel'] ?? {};
+      final caller = channel['caller'] ?? {};
+      final connected = channel['connected'] ?? {};
+      final dialplan = channel['dialplan'] ?? {};
+
+      await db.table('stasis_end_events').insert({
+        'type': event['type'],
+        'timestamp': formatDateTime(event['timestamp']),
+        'asterisk_id': event['asterisk_id'],
+        'application': event['application'],
+        'channel_id': channel['id'],
+        'channel_name': channel['name'],
+        'channel_state': channel['state'],
+        'channel_protocol_id': channel['protocol_id'],
+        'caller_name': caller['name'],
+        'caller_number': caller['number'],
+        'connected_name': connected['name'],
+        'connected_number': connected['number'],
+        'accountcode': channel['accountcode'],
+        'dialplan_context': dialplan['context'],
+        'dialplan_exten': dialplan['exten'],
+        'dialplan_priority': dialplan['priority'],
+        'dialplan_app_name': dialplan['app_name'],
+        'dialplan_app_data': dialplan['app_data'],
+        'channel_creationtime': formatDateTime(channel['creationtime']),
+        'channel_language': channel['language'],
+        'created_at': DateTime.now()
+            .toIso8601String()
+            .split('.')
+            .first
+            .replaceFirst('T', ' '),
+        'updated_at': DateTime.now()
+            .toIso8601String()
+            .split('.')
+            .first
+            .replaceFirst('T', ' '),
+      });
+
+      success = true;
+    } catch (e, st) {
+      print('Insert StasisEnd Event Error: $e\nStack trace: $st');
+      success = false;
+    } finally {
+      await db.disconnect();
+      return success;
+    }
+  }
+
+  static Future<bool> insertStasisStartEvent(Map<String, dynamic> event) async {
+    final db = await getDbConnection();
+    bool success = false;
+
+    try {
+      final channel = event['channel'] ?? {};
+      final caller = channel['caller'] ?? {};
+      final connected = channel['connected'] ?? {};
+      final dialplan = channel['dialplan'] ?? {};
+      final args = event['args'];
+
+      await db.table('stasis_start_events').insert({
+        'type': event['type'],
+        'timestamp': formatDateTime(event['timestamp']),
+        'asterisk_id': event['asterisk_id'],
+        'application': event['application'],
+        'args': args != null ? jsonEncode(args) : null,
+        'channel_id': channel['id'],
+        'channel_name': channel['name'],
+        'channel_state': channel['state'],
+        'channel_protocol_id': channel['protocol_id'],
+        'caller_name': caller['name'],
+        'caller_number': caller['number'],
+        'connected_name': connected['name'],
+        'connected_number': connected['number'],
+        'accountcode': channel['accountcode'],
+        'dialplan_context': dialplan['context'],
+        'dialplan_exten': dialplan['exten'],
+        'dialplan_priority': dialplan['priority'],
+        'dialplan_app_name': dialplan['app_name'],
+        'dialplan_app_data': dialplan['app_data'],
+        'channel_creationtime': formatDateTime(channel['creationtime']),
+        'channel_language': channel['language'],
+        'created_at': DateTime.now()
+            .toIso8601String()
+            .split('.')
+            .first
+            .replaceFirst('T', ' '),
+        'updated_at': DateTime.now()
+            .toIso8601String()
+            .split('.')
+            .first
+            .replaceFirst('T', ' '),
+      });
+
+      success = true;
+    } catch (e, st) {
+      print('Insert StasisStart Event Error: $e\nStack trace: $st');
+      success = false;
+    } finally {
+      await db.disconnect();
+      return success;
     }
   }
 }

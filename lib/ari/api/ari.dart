@@ -1,5 +1,6 @@
 library ari_client;
 
+import 'package:redis/redis.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'dart:io';

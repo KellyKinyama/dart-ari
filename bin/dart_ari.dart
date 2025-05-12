@@ -1,19 +1,21 @@
 import 'package:dart_ari/ari/api/enums.dart';
 import 'package:dart_ari/dart_ari.dart';
-// import 'package:dart_ari/webserver/routes/api.dart';
+import 'package:dart_ari/webserver/routes/api2.dart';
 import 'queue_app.dart';
-// import 'webserver.dart';
+import 'missed_calls.dart';
 
 void main(List<String> arguments) async {
   ARI ari = ARI.fromConfigs();
 
-  DbQueries.setAgentStatuses(AgentState.LOGGEDIN, AgentState.IDLE);
+  //await DbQueries.setAgentStatuses(AgentState.LOGGEDIN, AgentState.IDLE);
 
   await ari.connect();
   queueApp(ari);
 
-  // final apiServer = WebServer("localhost", 8000);
+  final apiServer = WebServer("localhost", 8001);
 
-  // apiServer.server();
+  await apiServer.serve();
+
+  WsClient.connect();
   //listen(ws);
 }

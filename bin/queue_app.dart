@@ -7,7 +7,6 @@ import 'package:dart_ari/ari/api/enums.dart';
 import 'package:dart_ari/dart_ari.dart';
 import 'package:dart_ari/webserver/models/recordings.dart';
 import 'package:dotenv/dotenv.dart';
-import 'package:events_emitter/events_emitter.dart';
 import 'package:uuid/uuid.dart';
 
 late String voiceLoggerIp;
@@ -174,15 +173,21 @@ Future<bool> originate(
     await dialed.originate(
       endpoint: endpoint,
       app: 'hello',
-      appArgs: ['dialed', endpoint, "channel${incoming.id}"],
+      appArgs: [
+        'dialed',
+        endpoint,
+        "channel${incoming.id}",
+        incoming.caller.number,
+        filename
+      ],
       callerId: incoming.caller.number,
     );
 
     return true;
   } catch (e, st) {
     print("Originate Error: $e\n$st");
-    await DbQueries.updateAgentStatus(
-        endpoint, AgentState.UNKNOWN, AgentState.UNKNOWN);
+    // await DbQueries.updateAgentStatus(
+    //     endpoint, AgentState.UNKNOWN, AgentState.UNKNOWN);
 
     Timer(const Duration(seconds: 5), () {
       _startAgentSearch(incoming, holdingBridge);
@@ -199,6 +204,10 @@ void _setupCallHandlers(
   String filename,
   int? rtpport,
 ) {
+  String dst = endpoint;
+  if (dst.startsWith("PJSIP/")) {
+    dst = dst.substring(6);
+  }
   voiceRecords[incoming.id] = CallRecording(
     file_name: filename,
     file_path: filename,
@@ -206,7 +215,7 @@ void _setupCallHandlers(
     phone_number: incoming.caller.number,
     answerdate: DateTime.now().toString(),
     src: incoming.caller.number,
-    dst: endpoint,
+    dst: dst,
     clid: incoming.caller.number,
   );
 
@@ -264,7 +273,9 @@ void _setupCallHandlers(
       await mixingBridge.destroy();
       if (voiceRecords[incoming.id] != null) {
         await voiceRecords[incoming.id]!.insertCallRecording();
+        voiceRecords.remove(incoming.id);
       }
+
       await _cleanupCall(incoming.id);
     });
   });
@@ -277,9 +288,9 @@ Future<void> _cleanupCall(String channelId) async {
   activeCalls[channelId]?.complete();
   activeCalls.remove(channelId);
 
-  voiceRecords.remove(channelId);
+  // voiceRecords.remove(channelId);
 
-  _cleanupEmptyBridges();
+  // _cleanupEmptyBridges();
 }
 
 Future<void> _safeHangup(Channel? channel) async {
