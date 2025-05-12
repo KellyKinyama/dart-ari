@@ -45,20 +45,20 @@ class DbQueries {
     return db;
   }
 
-  static Future<bool> setAgentStatuses(
+  static Future<bool> updateInactiveAgentStatuses(
       AgentState state, AgentState status) async {
     bool successful = false;
 
     final db = await getDbConnection();
 
     print("Updating agent status: $state, $status");
-    // final eightHoursAgo =
-    //     DateTime.now().subtract(Duration(hours: 48)).toIso8601String();
+    final eightHoursAgo =
+        DateTime.now().subtract(Duration(hours: 24)).toIso8601String();
 
     try {
       await db
           .table('agents')
-          // .where('updated_at', '>=', eightHoursAgo)
+          .where('updated_at', '<=', eightHoursAgo)
           .update({'state': state.toString(), 'status': status.toString()});
       successful = true;
     } catch (e) {
