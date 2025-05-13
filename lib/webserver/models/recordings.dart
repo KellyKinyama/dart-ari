@@ -2,10 +2,29 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dart_ari/webserver/models/base.dart';
-import 'package:events_emitter/events_emitter.dart';
 
 import '../../ari/api/enums.dart';
 import '../../ari/api/push/aors.dart';
+
+class AgentLockManager {
+  final Set<String> _lockedAgents = {};
+
+  bool isLocked(String agent) => _lockedAgents.contains(agent);
+
+  bool tryLock(String agent) {
+    if (_lockedAgents.contains(agent)) {
+      return false;
+    }
+    _lockedAgents.add(agent);
+    return true;
+  }
+
+  void unlock(String agent) {
+    _lockedAgents.remove(agent);
+  }
+}
+
+final agentLockManager = AgentLockManager();
 
 class Recordings extends Model {
   static String table = 'recordings';
@@ -78,7 +97,7 @@ Future<Map<String, AgentState>> idleAgents() async {
     }
     // }
   }
-  print("idle agents: ${res}");
+  print("idle agents: $res");
   return agentsStates;
 }
 
@@ -115,16 +134,18 @@ Future<Map<String, AgentState>> inactiveAgents() async {
     }
     // }
   }
-  print("idle agents: ${res}");
+  print("idle agents: $res");
   return agentsStates;
 }
 
 Future<String?> longestWaiting() async {
   List<String> loggedInAgents = (await idleAgents())
-      // .where((entry) => entry.value == AgentState.IDLE)
       .entries
       .where((entry) {
-        return entry.value == AgentState.LOGGEDIN;
+        if (agentLockManager.tryLock(entry.key)) {
+          return entry.value == AgentState.LOGGEDIN;
+        }
+        return false;
       })
       .map((entry) => entry.key)
       .toList();
@@ -135,6 +156,10 @@ Future<String?> longestWaiting() async {
   }
 
   final longestIdleAgent = await Recordings.getLongestIdleAgent(loggedInAgents);
+
+  for (String loggedInAgent in loggedInAgents) {
+    agentLockManager.unlock(loggedInAgent);
+  }
 
   if (longestIdleAgent != null) {
     print(
