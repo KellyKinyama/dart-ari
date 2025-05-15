@@ -275,6 +275,8 @@ void _setupCallHandlers(
         await voiceRecords[incoming.id]!.insertCallRecording();
         voiceRecords.remove(incoming.id);
       }
+      await DbQueries.updateAgentStatus(
+          endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
 
       await _cleanupCall(incoming.id);
     });
