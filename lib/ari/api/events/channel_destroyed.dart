@@ -1,4 +1,4 @@
-import '../Channels.dart';
+import '../channels.dart';
 import 'event.dart';
 
 class ChannelDestroyed extends Event {
