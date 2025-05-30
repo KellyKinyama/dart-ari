@@ -176,7 +176,7 @@ Future<bool> originate(
       appArgs: [
         'dialed',
         endpoint,
-        "channel${incoming.id}",
+        incoming.id,
         incoming.caller.number,
         filename
       ],
@@ -275,6 +275,8 @@ void _setupCallHandlers(
         await voiceRecords[incoming.id]!.insertCallRecording();
         voiceRecords.remove(incoming.id);
       }
+      await DbQueries.updateAgentStatus(
+          endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
 
       await _cleanupCall(incoming.id);
     });

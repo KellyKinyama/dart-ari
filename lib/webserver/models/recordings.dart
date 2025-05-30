@@ -142,8 +142,8 @@ Future<String?> longestWaiting() async {
   List<String> loggedInAgents = (await idleAgents())
       .entries
       .where((entry) {
-        if (agentLockManager.tryLock(entry.key)) {
-          return entry.value == AgentState.LOGGEDIN;
+        if (entry.value == AgentState.LOGGEDIN) {
+          return agentLockManager.tryLock(entry.key);
         }
         return false;
       })

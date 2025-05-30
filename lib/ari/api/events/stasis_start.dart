@@ -1,6 +1,6 @@
 import 'event.dart';
 
-import '../Channels.dart';
+import '../channels.dart';
 
 class StasisStart extends Event {
   StasisStart(this.args, this.timestamp, this.channel, this.json)
