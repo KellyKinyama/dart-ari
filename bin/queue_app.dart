@@ -242,7 +242,8 @@ void _setupCallHandlers(
     if (voiceRecords[incoming.id] != null) {
       voiceRecords[incoming.id]!
         ..duration_number = destroyedEvent.timestamp.toString()
-        ..hangupdate = destroyedEvent.timestamp.toString();
+        // ..hangupdate = destroyedEvent.timestamp.toString();
+        ..hangupdate = DateTime.now.toString();
     }
 
     await DbQueries.updateAgentStatus(
@@ -272,6 +273,7 @@ void _setupCallHandlers(
     dialed.on('StasisEnd', (_) async {
       await mixingBridge.destroy();
       if (voiceRecords[incoming.id] != null) {
+        voiceRecords[incoming.id]!.hangupdate = DateTime.now.toString();
         await voiceRecords[incoming.id]!.insertCallRecording();
         voiceRecords.remove(incoming.id);
       }
