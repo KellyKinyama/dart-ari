@@ -208,16 +208,6 @@ void _setupCallHandlers(
   if (dst.startsWith("PJSIP/")) {
     dst = dst.substring(6);
   }
-  voiceRecords[incoming.id] = CallRecording(
-    file_name: filename,
-    file_path: filename,
-    agent_number: dst,
-    phone_number: incoming.caller.number,
-    answerdate: DateTime.now().toString(),
-    src: incoming.caller.number,
-    dst: dst,
-    clid: incoming.caller.number,
-  );
 
   incoming.on('StasisEnd', (_) async {
     await _cleanupCall(incoming.id);
@@ -242,7 +232,8 @@ void _setupCallHandlers(
     if (voiceRecords[incoming.id] != null) {
       voiceRecords[incoming.id]!
         ..duration_number = destroyedEvent.timestamp.toString()
-        ..hangupdate = destroyedEvent.timestamp.toString();
+        // ..hangupdate = destroyedEvent.timestamp.toString();
+        ..hangupdate = DateTime.now.toString();
     }
 
     await DbQueries.updateAgentStatus(
@@ -252,6 +243,16 @@ void _setupCallHandlers(
 
   dialed.on('StasisStart', (_) async {
     await dialed.answer();
+    voiceRecords[incoming.id] = CallRecording(
+      file_name: filename,
+      file_path: filename,
+      agent_number: dst,
+      phone_number: incoming.caller.number,
+      answerdate: DateTime.now().toString(),
+      src: incoming.caller.number,
+      dst: dst,
+      clid: incoming.caller.number,
+    );
 
     final mixingBridge = await client.bridge(type: ['mixing']);
 
@@ -272,6 +273,7 @@ void _setupCallHandlers(
     dialed.on('StasisEnd', (_) async {
       await mixingBridge.destroy();
       if (voiceRecords[incoming.id] != null) {
+        voiceRecords[incoming.id]!.hangupdate = DateTime.now.toString();
         await voiceRecords[incoming.id]!.insertCallRecording();
         voiceRecords.remove(incoming.id);
       }

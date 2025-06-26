@@ -13,3 +13,6 @@
 // }
 
 // Map<String, CallRecording> voiceRecords = {};
+void main() {
+  print("Time now: ${DateTime.now().toIso8601String()}");
+}
