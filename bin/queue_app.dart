@@ -244,8 +244,7 @@ void _setupCallHandlers(
   });
 
   dialed.on('StasisStart', (event) async {
-    final (sStartEvent, _) =
-        event as (stasisStartEvent.StasisStartEvent, Channel);
+    final (sStartEvent, _) = event as (StasisStart, Channel);
     await dialed.answer();
     voiceRecords[incoming.id] = CallRecording(
       file_name: filename,
