@@ -274,9 +274,11 @@ void _setupCallHandlers(
     }
 
     dialed.on('StasisEnd', (_) async {
+      final (sEndEvent, _) = event as (StasisEnd, Channel);
       await mixingBridge.destroy();
       if (voiceRecords[incoming.id] != null) {
-        voiceRecords[incoming.id]!.hangupdate = DateTime.now.toString();
+        voiceRecords[incoming.id]!.hangupdate =
+            sEndEvent.timestamp.toIso8601String();
         await voiceRecords[incoming.id]!.insertCallRecording();
         voiceRecords.remove(incoming.id);
       }
