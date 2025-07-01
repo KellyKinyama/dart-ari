@@ -4,6 +4,8 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dart_ari/ari/api/enums.dart';
+import 'package:dart_ari/ari/api/events/stasis_start_event.dart'
+    as stasisStartEvent;
 import 'package:dart_ari/dart_ari.dart';
 import 'package:dart_ari/webserver/models/recordings.dart';
 import 'package:dotenv/dotenv.dart';
@@ -241,14 +243,16 @@ void _setupCallHandlers(
     await _cleanupCall(incoming.id);
   });
 
-  dialed.on('StasisStart', (_) async {
+  dialed.on('StasisStart', (event) async {
+    final (sStartEvent, _) =
+        event as (stasisStartEvent.StasisStartEvent, Channel);
     await dialed.answer();
     voiceRecords[incoming.id] = CallRecording(
       file_name: filename,
       file_path: filename,
       agent_number: dst,
       phone_number: incoming.caller.number,
-      answerdate: DateTime.now().toString(),
+      answerdate: sStartEvent.timestamp.toIso8601String(),
       src: incoming.caller.number,
       dst: dst,
       clid: incoming.caller.number,
