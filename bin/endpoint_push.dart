@@ -377,7 +377,7 @@ Map<String,dynamic> mytrunkAor=
         },
         {
             "attribute": "allow_unauthenticated_options",
-            "value": "false"
+            "value": "true"
         },
         {
             "attribute": "aors",
@@ -561,7 +561,7 @@ Map<String,dynamic> mytrunkAor=
         },
         {
             "attribute": "identify_by",
-            "value": "username,ip"
+            "value": "ip"
         },
         {
             "attribute": "ignore_183_without_sdp",
@@ -845,7 +845,7 @@ Map<String,dynamic> mytrunkAor=
         },
         {
             "attribute": "trust_id_inbound",
-            "value": "false"
+            "value": "true"
         },
         {
             "attribute": "trust_id_outbound",
@@ -873,3 +873,4 @@ Map<String,dynamic> mytrunkAor=
         }
     ]
 }
+
