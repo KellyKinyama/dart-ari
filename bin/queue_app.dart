@@ -228,14 +228,14 @@ void _setupCallHandlers(
     }
   });
 
-  dialed.on('ChannelDestroyed', (event) async {
-    final (destroyedEvent, _) = event as (ChannelDestroyed, Channel);
+  dialed.on('ChannelDestroyed', (cdEvent) async {
+    final (destroyedEvent, _) = cdEvent as (ChannelDestroyed, Channel);
 
     if (voiceRecords[incoming.id] != null) {
       voiceRecords[incoming.id]!
         ..duration_number = destroyedEvent.timestamp.toString()
         // ..hangupdate = destroyedEvent.timestamp.toString();
-        ..hangupdate = DateTime.now.toString();
+        ..hangupdate = destroyedEvent.timestamp.toString();
     }
 
     await DbQueries.updateAgentStatus(
@@ -243,8 +243,8 @@ void _setupCallHandlers(
     await _cleanupCall(incoming.id);
   });
 
-  dialed.on('StasisStart', (event) async {
-    final (sStartEvent, _) = event as (StasisStart, Channel);
+  dialed.on('StasisStart', (ssEvent) async {
+    final (sStartEvent, _) = ssEvent as (StasisStart, Channel);
     await dialed.answer();
     voiceRecords[incoming.id] = CallRecording(
       file_name: filename,
