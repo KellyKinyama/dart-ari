@@ -189,27 +189,28 @@ Future<String?> longestWaiting() async {
   return null;
 }
 
-// Future<void> main() async {
-//   String? free;
-//   Timer.periodic(Duration(seconds: 3), (timer) async {
-//     // channel.on('StasisEnd', (event) {
-//     timer.cancel();
-//     // channel.off();
-//     // });
-
-//     free = await longestWaiting();
-//     if (free != null) timer.cancel();
-//   });
-// }
-
 Future<void> main() async {
-  final aor = jsonDecode(await Aor.get("6004"));
-  // print("Aor: $aor");
+  String? free;
+  // Timer.periodic(Duration(seconds: 3), (timer) async {
+  //   // channel.on('StasisEnd', (event) {
+  //   timer.cancel();
+  // channel.off();
+  // });
 
-  for (var item in aor) {
-    if (item["attribute"] == "contact") {
-      print("Aor attribute: ${item["attribute"]}");
-      print("Aor: ${await Aor.contact("6004")}");
-    }
-  }
+  free = await longestWaiting();
+  print("Free agent: $free");
+  //   if (free != null) timer.cancel();
+  // });
 }
+
+// Future<void> main() async {
+//   final aor = jsonDecode(await Aor.get("6004"));
+//   // print("Aor: $aor");
+
+//   for (var item in aor) {
+//     if (item["attribute"] == "contact") {
+//       print("Aor attribute: ${item["attribute"]}");
+//       print("Aor: ${await Aor.contact("6004")}");
+//     }
+//   }
+// }
