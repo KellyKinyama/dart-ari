@@ -84,8 +84,11 @@ Future<void> findOrCreateBridge(Channel channel) async {
 
     await availableBridge.addChannel(channels: [channel.id]);
 
-    _startAgentSearch(channel, availableBridge);
-
+    try {
+      await availableBridge.startMoh();
+    } catch (e) {
+      print("Error starting MOH: $e");
+    }
     channel.on('StasisEnd', (_) async {
       await _cleanupCall(channel.id);
     });
@@ -93,6 +96,8 @@ Future<void> findOrCreateBridge(Channel channel) async {
     channel.on('ChannelDestroyed', (_) async {
       await _cleanupCall(channel.id);
     });
+
+    _startAgentSearch(channel, availableBridge);
 
     // How long client can be on hold start
 
@@ -299,7 +304,7 @@ Future<void> _cleanupCall(String channelId) async {
 
   // voiceRecords.remove(channelId);
 
-  // _cleanupEmptyBridges();
+  _cleanupEmptyBridges();
 }
 
 Future<void> _safeHangup(Channel? channel) async {
