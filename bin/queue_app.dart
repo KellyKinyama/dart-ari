@@ -163,11 +163,23 @@ Future<bool> originate(
   final endpoint = "PJSIP${agent.substring(agent.lastIndexOf("/"))}";
   print("Dialing agent: $endpoint");
 
+  // Check 1: Immediately before attempting to originate
+  if (activeCalls[incoming.id]?.isCompleted ?? true) {
+    print(
+        "WARNING: Attempted to originate for incoming channel ${incoming.id}, but it's already completed/destroyed. Aborting originate.");
+    return false; // The incoming call is no longer active, so don't try to dial an agent
+  }
+
   try {
     final rtpport = await rtpPort(filename);
     final dialed = await client.channel(endpoint: endpoint);
 
-    _setupCallHandlers(incoming, dialed, endpoint, filename, rtpport);
+    // Check 2: After getting RTP port, but before creating dialed channel (less critical, but good for defensive programming)
+    if (activeCalls[incoming.id]?.isCompleted ?? true) {
+      print(
+          "WARNING: Incoming channel ${incoming.id} completed/destroyed during RTP port retrieval. Aborting originate.");
+      return false;
+    }
 
     dialed.on('ChannelStateChange', (event) async {
       final (_, dialChannel) = event as (ChannelStateChange, Channel);
@@ -175,6 +187,8 @@ Future<bool> originate(
         await holdingBridge.removeChannel(channel: [incoming.id]);
       }
     });
+
+    _setupCallHandlers(incoming, dialed, endpoint, filename, rtpport);
 
     await dialed.originate(
       endpoint: endpoint,
@@ -191,13 +205,21 @@ Future<bool> originate(
 
     return true;
   } catch (e, st) {
-    print("Originate Error: $e\n$st");
-    // await DbQueries.updateAgentStatus(
-    //     endpoint, AgentState.UNKNOWN, AgentState.UNKNOWN);
+    print(
+        "ERROR: Originate Error dialing $endpoint for incoming channel ${incoming.id}: $e\n$st");
 
-    Timer(const Duration(seconds: 5), () {
-      _startAgentSearch(incoming, holdingBridge);
-    });
+    // Check 5: Before re-scheduling agent search on originate failure
+    if (activeCalls.containsKey(incoming.id) &&
+        !(activeCalls[incoming.id]?.isCompleted ?? true)) {
+      Timer(const Duration(seconds: 5), () {
+        print(
+            "INFO: Originate failed for channel ${incoming.id}. Retrying agent search in 5 seconds.");
+        _startAgentSearch(incoming, holdingBridge);
+      });
+    } else {
+      print(
+          "INFO: Originate failed for channel ${incoming.id}, but channel is no longer active. Not retrying search.");
+    }
 
     return false;
   }
@@ -304,7 +326,7 @@ Future<void> _cleanupCall(String channelId) async {
 
   // voiceRecords.remove(channelId);
 
-  _cleanupEmptyBridges();
+  // _cleanupEmptyBridges();
 }
 
 Future<void> _safeHangup(Channel? channel) async {
