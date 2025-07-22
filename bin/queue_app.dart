@@ -4,8 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dart_ari/ari/api/enums.dart';
-import 'package:dart_ari/ari/api/events/stasis_start_event.dart'
-    as stasisStartEvent;
+
 import 'package:dart_ari/dart_ari.dart';
 import 'package:dart_ari/webserver/models/recordings.dart';
 import 'package:dotenv/dotenv.dart';
