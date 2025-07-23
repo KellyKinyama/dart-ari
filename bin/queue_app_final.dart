@@ -59,9 +59,12 @@ Future<void> findOrCreateBridge(Channel channel) async {
 
   var bridgesList = await Bridge.list();
 
-  Bridge? holdingBridge = bridgesList.firstWhere((Bridge candidate) {
-    return candidate.bridge_type == 'holding';
-  });
+  Bridge? holdingBridge = bridgesList
+      .where((Bridge candidate) {
+        return candidate.bridge_type == 'holding';
+      })
+      .toList()
+      .firstOrNull;
   holdingBridge ??= await client.bridge(type: ['holding']);
   // activeBridges[availableBridge.id] = availableBridge;
   print("Created new holding bridge: ${holdingBridge.id}");
