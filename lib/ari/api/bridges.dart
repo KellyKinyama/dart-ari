@@ -471,6 +471,31 @@ class Bridge extends Resource {
     return false;
   }
 
+  static Future<List<Bridge>> list() async {
+    var resp = await BridgesAPI.list();
+
+    //resp.then((value) {
+    //print(value.resp);
+    List<Bridge> varBridges = [];
+    if (resp.statusCode != 404) {
+      var bridgesJson = json.decode(resp.resp);
+      //print("Bridges: ${value.resp.runtimeType}");
+      for (final e in bridgesJson) {
+        // Do something with the current element
+        //print(e);
+        Bridge brige = Bridge.fromJson(e);
+        // print(brige.bridge_type);
+        varBridges.add(brige);
+      }
+      //print("Bridges: ${varBridges.length}");
+      //callback(false, varBridges);
+    } else {
+      //callback(true, varBridges);
+    }
+    //});
+    return varBridges;
+  }
+
   Future<Bridge> create(
       {required List<String> type, String? bridgeId, String? name}) async {
     // List<String> types = [];
