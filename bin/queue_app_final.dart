@@ -227,10 +227,25 @@ Future<void> originate(
         await externalChannel.hangup();
       });
 
-      await mixingBridge
-          .addChannel(channels: [incoming.id, dialed.id, externalChannel.id]);
+      try {
+        await mixingBridge.addChannel(channels: [incoming.id]);
+        await mixingBridge.addChannel(channels: [dialed.id]);
+        await mixingBridge.addChannel(channels: [externalChannel.id]);
+      } catch (e, st) {
+        print("Error adding channels to bridge: $e, stacktrace: $st");
+        await dialed.hangup();
+        await externalChannel.hangup();
+        await mixingBridge.destroy();
+      }
     } else {
-      await mixingBridge.addChannel(channels: [incoming.id, dialed.id]);
+      try {
+        await mixingBridge.addChannel(channels: [incoming.id]);
+        await mixingBridge.addChannel(channels: [dialed.id]);
+      } catch (e, st) {
+        print("Error adding channels to bridge: $e, stacktrace: $st");
+        await dialed.hangup();
+        await mixingBridge.destroy();
+      }
     }
   });
 
