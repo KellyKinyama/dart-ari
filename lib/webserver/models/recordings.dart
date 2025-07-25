@@ -340,11 +340,41 @@ Future<String?> longestWaiting() async {
   }
 
   // Always unlock agents after determining the candidate
+  // for (String agentToUnlock in loggedInAgents) {
+  //   agentLockManager.unlock(agentToUnlock);
+  // }
+
+  // Unlock only the agents that were considered but *not* selected.
+  // The selected agent should remain locked by this function.
   for (String agentToUnlock in loggedInAgents) {
-    agentLockManager.unlock(agentToUnlock);
+    if (agentToUnlock != finalBestAgentFullString) {
+      agentLockManager.unlock(agentToUnlock);
+    }
   }
 
   return finalBestAgentFullString;
+}
+
+/// Unlocks a specific agent that was previously locked.
+/// This function should be called when the selected agent is no longer needed
+/// or the operation involving them has completed/failed.
+void releaseAgentLock(String agentFullString) {
+  print("Releasing lock for agent: $agentFullString");
+  agentLockManager.unlock(agentFullString);
+}
+
+Future<void> main() async {
+  String? free;
+  free = await longestWaiting();
+  print("Free agent: $free");
+
+  // Example of how to use the new releaseAgentLock function:
+  if (free != null) {
+    // Simulate some work with the agent
+    print("Performing work with agent: $free...");
+    await Future.delayed(Duration(seconds: 2)); // Simulate work
+    releaseAgentLock(free); // Release the lock when done
+  }
 }
 
 // Future<String?> longestWaiting() async {
@@ -462,19 +492,19 @@ Future<String?> longestWaiting() async {
 //   return finalBestAgentFullString;
 // }
 
-Future<void> main() async {
-  String? free;
-  // Timer.periodic(Duration(seconds: 3), (timer) async {
-  //   // channel.on('StasisEnd', (event) {
-  //   timer.cancel();
-  // channel.off();
-  // });
+// Future<void> main() async {
+//   String? free;
+//   // Timer.periodic(Duration(seconds: 3), (timer) async {
+//   //   // channel.on('StasisEnd', (event) {
+//   //   timer.cancel();
+//   // channel.off();
+//   // });
 
-  free = await longestWaiting();
-  print("Free agent: $free");
-  //   if (free != null) timer.cancel();
-  // });
-}
+//   free = await longestWaiting();
+//   print("Free agent: $free");
+//   //   if (free != null) timer.cancel();
+//   // });
+// }
 
 // Future<void> main() async {
 //   final aor = jsonDecode(await Aor.get("6004"));

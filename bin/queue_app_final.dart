@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:dart_ari/ari/api/enums.dart';
+import 'package:dart_ari/ari/api/misc.dart';
 import 'package:dart_ari/webserver/models/recordings.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:dart_ari/dart_ari.dart';
@@ -148,8 +149,12 @@ Future<void> originate(
       await voiceRecord!.insertCallRecording();
     }
 
-    await DbQueries.updateAgentStatus(
-        endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+    setTimeout(() async {
+      await DbQueries.updateAgentStatus(
+          endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+
+      releaseAgentLock(freeAgent);
+    }, 10000);
   });
 
   incoming.on('StasisEnd', (_) async {
@@ -170,8 +175,12 @@ Future<void> originate(
     incoming.hangup();
     await holdingBridge.removeChannel(channel: [incoming.id]);
 
-    await DbQueries.updateAgentStatus(
-        endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+    setTimeout(() async {
+      await DbQueries.updateAgentStatus(
+          endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+
+      releaseAgentLock(freeAgent);
+    }, 10000);
   });
 
   dialed.on('ChannelStateChange', (event) async {
