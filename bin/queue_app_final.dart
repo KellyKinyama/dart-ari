@@ -140,9 +140,9 @@ Future<void> originate(
 
   dialed.on('StasisEnd', (ssEndevent) async {
     final (sEndEvent, _) = ssEndevent as (StasisEnd, Channel);
-    await mixingBridge.destroy();
+    // await mixingBridge.destroy();
     // incoming.hangup();
-    await holdingBridge.removeChannel(channel: [incoming.id]);
+    // await holdingBridge.removeChannel(channel: [incoming.id]);
     if (voiceRecord != null) {
       voiceRecord!.hangupdate = sEndEvent.timestamp.toIso8601String();
 
@@ -171,9 +171,9 @@ Future<void> originate(
         // ..hangupdate = destroyedEvent.timestamp.toString();
         ..hangupdate = destroyedEvent.timestamp.toString();
     }
-    await mixingBridge.destroy();
+    // await mixingBridge.destroy();
     // incoming.hangup();
-    await holdingBridge.removeChannel(channel: [incoming.id]);
+    // await holdingBridge.removeChannel(channel: [incoming.id]);
 
     setTimeout(() async {
       await DbQueries.updateAgentStatus(
