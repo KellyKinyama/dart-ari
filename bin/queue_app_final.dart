@@ -172,7 +172,7 @@ Future<void> originate(
         ..hangupdate = destroyedEvent.timestamp.toString();
     }
     await mixingBridge.destroy();
-    incoming.hangup();
+    // incoming.hangup();
     await holdingBridge.removeChannel(channel: [incoming.id]);
 
     setTimeout(() async {
