@@ -160,7 +160,7 @@ Future<void> originate(
   incoming.on('StasisEnd', (_) async {
     await mixingBridge.destroy();
     dialed.hangup();
-    await holdingBridge.removeChannel(channel: [incoming.id]);
+    // await holdingBridge.removeChannel(channel: [incoming.id]);
   });
 
   dialed.on('ChannelDestroyed', (cdEvent) async {
