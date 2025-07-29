@@ -283,4 +283,46 @@ void queueApp(ARI ari) {
     print("Channel ${channel.id} entered application");
     unawaited(stasisStart(stasisStartEvent, channel));
   });
+
+  unawaited(activeConversations());
+
+  client.on("StasisStart", (event) {
+    final (stasisStartEvent, channel) = event as (StasisStart, Channel);
+    print("Channel ${channel.id} entered application");
+    unawaited(stasisStart(stasisStartEvent, channel));
+  });
+}
+
+Future<void> activeConversations() async {
+  var bridgesList = await Bridge.list();
+
+  bridgesList = bridgesList.where((Bridge candidate) {
+    return candidate.bridge_type == 'mixing';
+  }).toList();
+
+  client.on("StasisEnd", (event) async {
+    final (stasisStartEvent, channel) = event as (StasisEnd, Channel);
+    print("Channel ${channel.id} entered application");
+
+    Bridge? mixingBridge = bridgesList
+        .where((Bridge candidate) {
+          return candidate.channels.contains(channel.id);
+        })
+        .toList()
+        .firstOrNull;
+
+    if (mixingBridge != null) {
+      for (var ch in mixingBridge.channels) {
+        if (ch != channel.id) {
+          channel.hangup();
+        } else {
+          await ChannelsApi.hangup(ch);
+        }
+      }
+    }
+  });
+}
+
+Future<void> main() async {
+  await activeConversations();
 }
