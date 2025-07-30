@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:dart_ari/ari/api/enums.dart';
-import 'package:dart_ari/ari/api/misc.dart';
 import 'package:dart_ari/webserver/models/recordings.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:dart_ari/dart_ari.dart';
@@ -56,8 +55,6 @@ Future<void> stasisStart(StasisStart event, Channel channel) async {
 }
 
 Future<void> findOrCreateBridge(Channel channel) async {
-  // final holdingBridge = await client.bridge(type: ['holding']);
-
   var bridgesList = await Bridge.list();
 
   Bridge? holdingBridge = bridgesList
@@ -67,7 +64,6 @@ Future<void> findOrCreateBridge(Channel channel) async {
       .toList()
       .firstOrNull;
   holdingBridge ??= await client.bridge(type: ['holding']);
-  // activeBridges[availableBridge.id] = availableBridge;
   print("Created new holding bridge: ${holdingBridge.id}");
 
   try {
@@ -84,7 +80,7 @@ Future<String> pickAgent(
 ) async {
   Completer<String> completer = Completer<String>();
   Timer? timer; // Declare a Timer variable to hold the periodic timer
-  incoming.on('StasisEnd', (_) async {
+  incoming.on('StasisEnd', (_) {
     if (timer != null) {
       timer.cancel();
       completer.complete("");
@@ -100,8 +96,7 @@ Future<String> pickAgent(
       print("pickAgent: Agent found! $freeAgent. Cancelling timer...");
       t.cancel(); // Cancel the periodic timer as soon as an agent is found
 
-      // Now, complete the main Completer with the found agent after your desired 2-second delay
-      // Future.delayed(Duration(seconds: 2), () {
+      // Now, complete the main Completer with the found agent
       incoming.off();
       completer.complete(freeAgent);
       // });
@@ -149,17 +144,17 @@ Future<void> originate(
       await voiceRecord!.insertCallRecording();
     }
 
-    setTimeout(() async {
-      await DbQueries.updateAgentStatus(
-          endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+    await Future.delayed(Duration(seconds: 15));
 
-      releaseAgentLock(freeAgent);
-    }, 10000);
+    await DbQueries.updateAgentStatus(
+        endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+
+    releaseAgentLock(freeAgent);
   });
 
   incoming.on('StasisEnd', (_) async {
     await mixingBridge.destroy();
-    dialed.hangup();
+    await dialed.hangup();
     // await holdingBridge.removeChannel(channel: [incoming.id]);
   });
 
@@ -168,19 +163,18 @@ Future<void> originate(
     if (voiceRecord != null) {
       voiceRecord!
         ..duration_number = destroyedEvent.timestamp.toString()
-        // ..hangupdate = destroyedEvent.timestamp.toString();
         ..hangupdate = destroyedEvent.timestamp.toString();
     }
     // await mixingBridge.destroy();
     // incoming.hangup();
     // await holdingBridge.removeChannel(channel: [incoming.id]);
 
-    setTimeout(() async {
-      await DbQueries.updateAgentStatus(
-          endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+    await Future.delayed(Duration(seconds: 15));
 
-      releaseAgentLock(freeAgent);
-    }, 10000);
+    await DbQueries.updateAgentStatus(
+        endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+
+    releaseAgentLock(freeAgent);
   });
 
   dialed.on('ChannelStateChange', (event) async {
@@ -284,9 +278,9 @@ void queueApp(ARI ari) {
     unawaited(stasisStart(stasisStartEvent, channel));
   });
 
-  unawaited(activeConversations());
+  // unawaited(activeConversations());
 
-  client.on("StasisStart", (event) {
+  client.on("StasisEnd", (event) {
     final (stasisStartEvent, channel) = event as (StasisStart, Channel);
     print("Channel ${channel.id} entered application");
     unawaited(stasisStart(stasisStartEvent, channel));
@@ -314,15 +308,11 @@ Future<void> activeConversations() async {
     if (mixingBridge != null) {
       for (var ch in mixingBridge.channels) {
         if (ch != channel.id) {
-          channel.hangup();
+          await channel.hangup();
         } else {
           await ChannelsApi.hangup(ch);
         }
       }
     }
   });
-}
-
-Future<void> main() async {
-  await activeConversations();
 }

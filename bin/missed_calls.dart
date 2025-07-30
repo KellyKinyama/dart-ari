@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dart_ari/ari/api/events/dial_event.dart';
-import 'package:dart_ari/ari/api/events/stasis_end_event.dart';
 import 'package:dart_ari/dart_ari.dart';
 
 class WsClient {

@@ -65,11 +65,6 @@ extension ARIPart1 on ARI {
           }
         case 'ChannelStateChange':
           {
-            String channelId = e['channel']['id'];
-
-            // if (channels[channelId] == null) {
-            //   throw ("channel is not present");
-            // }
             ChannelStateChange channelStateChangeEvent =
                 ChannelStateChange.fromJson(e);
             Channel ch = channelFactory(e);
