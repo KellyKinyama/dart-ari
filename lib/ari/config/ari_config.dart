@@ -1,4 +1,3 @@
-import 'package:dart_ari/dart_ari.dart' as dart_ari;
 
 import 'package:dotenv/dotenv.dart';
 
