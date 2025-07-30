@@ -279,12 +279,6 @@ void queueApp(ARI ari) {
   });
 
   // unawaited(activeConversations());
-
-  client.on("StasisEnd", (event) {
-    final (stasisStartEvent, channel) = event as (StasisStart, Channel);
-    print("Channel ${channel.id} entered application");
-    unawaited(stasisStart(stasisStartEvent, channel));
-  });
 }
 
 Future<void> activeConversations() async {
@@ -295,7 +289,7 @@ Future<void> activeConversations() async {
   }).toList();
 
   client.on("StasisEnd", (event) async {
-    final (stasisStartEvent, channel) = event as (StasisEnd, Channel);
+    final (stasisEndEvent, channel) = event as (StasisEnd, Channel);
     print("Channel ${channel.id} entered application");
 
     Bridge? mixingBridge = bridgesList
