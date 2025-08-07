@@ -47,7 +47,7 @@ Future<Map<String, AgentState>> idleAgents() async {
       // .whereIn('agent_number', loggedInAgents)
       .where('updated_at', '>=', eightHoursAgo)
       .whereIn('status', ['IDLE', 'AgentState.IDLE'])
-      // .orWhere('status', '=', 'AgentState.IDLE')
+      .whereIn('user_status', ['IDLE', 'AgentState.IDLE'])
       .groupBy('endpoint')
       .orderBy('updated_at', 'asc')
       // .limit(1)
@@ -64,41 +64,40 @@ Future<Map<String, AgentState>> idleAgents() async {
   return agentsStates;
 }
 
-Future<Map<String, AgentState>> inactiveAgents() async {
-  Map<String, AgentState> agentsStates = {
-    // 'SIP/7000/6003': AgentState.LOGGEDIN,
-    // 'SIP/7000/8923': AgentState.LOGGEDIN,
-    // 'SIP/7000/1061': AgentState.LOGGEDIN
-  };
-  String table = 'agents';
+// Future<Map<String, AgentState>> inactiveAgents() async {
+//   Map<String, AgentState> agentsStates = {
+//     // 'SIP/7000/6003': AgentState.LOGGEDIN,
+//     // 'SIP/7000/8923': AgentState.LOGGEDIN,
+//     // 'SIP/7000/1061': AgentState.LOGGEDIN
+//   };
+//   String table = 'agents';
 
-  final db = await Model.getDbConnection();
-  final eightHoursAgo =
-      DateTime.now().subtract(Duration(hours: 24)).toIso8601String();
+//   final db = await Model.getDbConnection();
+//   final eightHoursAgo =
+//       DateTime.now().subtract(Duration(hours: 24)).toIso8601String();
 
-  List<Map<String, dynamic>> res = await db
-      .table(table)
-      .select(['endpoint', 'state', 'status', 'updated_at'])
-      // .whereIn('agent_number', loggedInAgents)
-      .where('updated_at', '<=', eightHoursAgo)
-      .whereIn('state', ['IDLE', 'AgentState.IDLE'])
-      // .orWhere('status', '=', 'AgentState.IDLE')
-      .groupBy('endpoint')
-      .orderBy('updated_at', 'asc')
-      // .limit(1)
-      .get();
+//   List<Map<String, dynamic>> res = await db
+//       .table(table)
+//       .select(['endpoint', 'state', 'status', 'updated_at'])
+//       // .whereIn('agent_number', loggedInAgents)
+//       .where('updated_at', '<=', eightHoursAgo)
+//       .whereIn('state', ['IDLE', 'AgentState.IDLE'])
+//       // .orWhere('status', '=', 'AgentState.IDLE')
+//       .groupBy('endpoint')
+//       .orderBy('updated_at', 'asc')
+//       // .limit(1)
+//       .get();
 
-  await db.disconnect();
-  for (var element in res) {
-    if (await Aor.contact(element['endpoint'])) {
-      agentsStates["PJSIP/${element['endpoint']}"] = AgentState.LOGGEDIN;
-    }
-    // }
-  }
-  print("idle agents: $res");
-  return agentsStates;
-}
-
+//   await db.disconnect();
+//   for (var element in res) {
+//     if (await Aor.contact(element['endpoint'])) {
+//       agentsStates["PJSIP/${element['endpoint']}"] = AgentState.LOGGEDIN;
+//     }
+//     // }
+//   }
+//   print("idle agents: $res");
+//   return agentsStates;
+// }
 
 Future<String?> longestWaiting() async {
   // Step 1: Get all currently logged-in and idle agents
@@ -229,6 +228,7 @@ void releaseAgentLock(String agentFullString) {
 Future<void> main() async {
   String? free;
   free = await longestWaiting();
+  print("Agents locked: ${agentLockManager._lockedAgents}");
   print("Free agent: $free");
 
   // Example of how to use the new releaseAgentLock function:
@@ -239,4 +239,3 @@ Future<void> main() async {
     releaseAgentLock(free); // Release the lock when done
   }
 }
-
