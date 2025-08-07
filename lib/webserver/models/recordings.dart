@@ -144,7 +144,7 @@ Future<String?> longestWaiting() async {
       .table(Recordings.table) // Use Recordings.table
       .select(['agent_number', 'updated_at'])
       .whereIn('agent_number', cleanAgentNumbers) // Use clean numbers
-      .where('updated_at', '>=', fortyEightHoursAgo)
+      .where('updated_at', '<=', fortyEightHoursAgo)
       .groupBy('agent_number')
       .orderBy('updated_at', 'asc') // Oldest record first
       .get();
