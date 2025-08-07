@@ -45,7 +45,7 @@ Future<Map<String, AgentState>> idleAgents() async {
       .table(table)
       .select(['endpoint', 'state', 'status', 'updated_at'])
       // .whereIn('agent_number', loggedInAgents)
-      .where('updated_at', '>=', eightHoursAgo)
+      // .where('updated_at', '>=', eightHoursAgo)
       .whereIn('status', ['IDLE', 'AgentState.IDLE'])
       .whereIn('user_status', ['IDLE', 'AgentState.IDLE'])
       .groupBy('endpoint')
@@ -144,7 +144,7 @@ Future<String?> longestWaiting() async {
       .table(Recordings.table) // Use Recordings.table
       .select(['agent_number', 'updated_at'])
       .whereIn('agent_number', cleanAgentNumbers) // Use clean numbers
-      .where('updated_at', '<=', fortyEightHoursAgo)
+      // .where('updated_at', '>=', fortyEightHoursAgo)
       .groupBy('agent_number')
       .orderBy('updated_at', 'asc') // Oldest record first
       .get();
