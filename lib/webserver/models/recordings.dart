@@ -64,41 +64,6 @@ Future<Map<String, AgentState>> idleAgents() async {
   return agentsStates;
 }
 
-// Future<Map<String, AgentState>> inactiveAgents() async {
-//   Map<String, AgentState> agentsStates = {
-//     // 'SIP/7000/6003': AgentState.LOGGEDIN,
-//     // 'SIP/7000/8923': AgentState.LOGGEDIN,
-//     // 'SIP/7000/1061': AgentState.LOGGEDIN
-//   };
-//   String table = 'agents';
-
-//   final db = await Model.getDbConnection();
-//   final eightHoursAgo =
-//       DateTime.now().subtract(Duration(hours: 24)).toIso8601String();
-
-//   List<Map<String, dynamic>> res = await db
-//       .table(table)
-//       .select(['endpoint', 'state', 'status', 'updated_at'])
-//       // .whereIn('agent_number', loggedInAgents)
-//       .where('updated_at', '<=', eightHoursAgo)
-//       .whereIn('state', ['IDLE', 'AgentState.IDLE'])
-//       // .orWhere('status', '=', 'AgentState.IDLE')
-//       .groupBy('endpoint')
-//       .orderBy('updated_at', 'asc')
-//       // .limit(1)
-//       .get();
-
-//   await db.disconnect();
-//   for (var element in res) {
-//     if (await Aor.contact(element['endpoint'])) {
-//       agentsStates["PJSIP/${element['endpoint']}"] = AgentState.LOGGEDIN;
-//     }
-//     // }
-//   }
-//   print("idle agents: $res");
-//   return agentsStates;
-// }
-
 Future<String?> longestWaiting() async {
   // Step 1: Get all currently logged-in and idle agents
   List<String> loggedInAgents = (await idleAgents())
@@ -140,30 +105,6 @@ Future<String?> longestWaiting() async {
       DateTime.now().subtract(Duration(hours: 8)).toIso8601String();
 
   // Query recordings for agents within the valid list and time range
-  agentsWithRecentRecords = await dbRecordings
-      .table(Recordings.table) // Use Recordings.table
-      .select(['agent_number', 'updated_at'])
-      .whereIn('agent_number', cleanAgentNumbers) // Use clean numbers
-      .where('updated_at', '>=', eightHoursAgo)
-      .groupBy('agent_number')
-      .orderBy('updated_at', 'asc') // Oldest record first
-      .latest() // Get the latest record for each agent
-      .get();
-
-  // The corrected query:
-//   agentsWithRecentRecords =
-//       await dbRecordings.table(Recordings.table).fromRaw("""
-//   SELECT
-//     agent_number,
-//     MAX(updated_at) as updated_at
-//   WHERE
-//     agent_number IN (${cleanAgentNumbers.map((e) => "'$e'").join(', ')})
-//     AND updated_at >= '$eightHoursAgo'
-//   GROUP BY
-//     agent_number
-//   ORDER BY
-//     MAX(updated_at) ASC
-// """).get();
 
   agentsWithRecentRecords = await dbRecordings
       .table(Recordings.table)
@@ -174,27 +115,6 @@ Future<String?> longestWaiting() async {
       .groupBy('agent_number')
       .orderByRaw('MAX(updated_at) ASC')
       .get();
-  // ('agent_number')
-  //   .joinSub(subQuery, 'grupos', (JoinClause join) {
-  //     join.on('grupos.numero_cliente', '=', 'clientes.numero');
-  //   })
-  //   .join('public.clientes_grupos', 'clientes_grupos.numero_cliente', '=',
-  //       'clientes.numero')
-  //   .where('clientes_grupos.numero_grupo', '=', '2')
-  //   //.whereRaw('clientes.numero in ( SELECT clientes_grupos.numero_cliente FROM public.clientes_grupos WHERE clientes_grupos.
-  //   .get();
-  // dbRecordings.rawQuery(sql);
-  // Use an aggregate function to get the latest timestamp for each agent
-  //     .select([dbRecordings.raw('agent_number, MAX(updated_at) as updated_at')])
-  //     .whereIn('agent_number', cleanAgentNumbers)
-  //     .where('updated_at', '>=', eightHoursAgo)
-  //     .groupBy('agent_number')
-  //     .fromRaw(expression)
-  //     .orderBy(dbRecordings.raw('MAX(updated_at)'),
-  //         'asc') // Sort by the oldest of the latest timestamps
-  //     .get();
-
-  // dbRecordings.('MAX(updated_at)');
   await dbRecordings.disconnect();
 
   print("records: $agentsWithRecentRecords");
