@@ -151,15 +151,50 @@ Future<String?> longestWaiting() async {
       .get();
 
   // The corrected query:
-// agentsWithRecentRecords = await dbRecordings
-//       .table(Recordings.table)
-//       // Use an aggregate function to get the latest timestamp for each agent
-//       .select([dbRecordings.raw('agent_number, MAX(updated_at) as updated_at')])
-//       .whereIn('agent_number', cleanAgentNumbers)
-//       .where('updated_at', '>=', eightHoursAgo)
-//       .groupBy('agent_number')
-//       .orderBy(dbRecordings.raw('MAX(updated_at)'), 'asc') // Sort by the oldest of the latest timestamps
-//       .get();
+//   agentsWithRecentRecords =
+//       await dbRecordings.table(Recordings.table).fromRaw("""
+//   SELECT
+//     agent_number,
+//     MAX(updated_at) as updated_at
+//   WHERE
+//     agent_number IN (${cleanAgentNumbers.map((e) => "'$e'").join(', ')})
+//     AND updated_at >= '$eightHoursAgo'
+//   GROUP BY
+//     agent_number
+//   ORDER BY
+//     MAX(updated_at) ASC
+// """).get();
+
+  agentsWithRecentRecords = await dbRecordings
+      .table(Recordings.table)
+      .selectRaw('agent_number, MAX(updated_at) as updated_at')
+      .whereRaw(
+          "agent_number IN (${cleanAgentNumbers.map((e) => "'$e'").join(', ')}) "
+          "AND updated_at >= '$eightHoursAgo'")
+      .groupBy('agent_number')
+      .orderByRaw('MAX(updated_at) ASC')
+      .get();
+  // ('agent_number')
+  //   .joinSub(subQuery, 'grupos', (JoinClause join) {
+  //     join.on('grupos.numero_cliente', '=', 'clientes.numero');
+  //   })
+  //   .join('public.clientes_grupos', 'clientes_grupos.numero_cliente', '=',
+  //       'clientes.numero')
+  //   .where('clientes_grupos.numero_grupo', '=', '2')
+  //   //.whereRaw('clientes.numero in ( SELECT clientes_grupos.numero_cliente FROM public.clientes_grupos WHERE clientes_grupos.
+  //   .get();
+  // dbRecordings.rawQuery(sql);
+  // Use an aggregate function to get the latest timestamp for each agent
+  //     .select([dbRecordings.raw('agent_number, MAX(updated_at) as updated_at')])
+  //     .whereIn('agent_number', cleanAgentNumbers)
+  //     .where('updated_at', '>=', eightHoursAgo)
+  //     .groupBy('agent_number')
+  //     .fromRaw(expression)
+  //     .orderBy(dbRecordings.raw('MAX(updated_at)'),
+  //         'asc') // Sort by the oldest of the latest timestamps
+  //     .get();
+
+  // dbRecordings.('MAX(updated_at)');
   await dbRecordings.disconnect();
 
   print("records: $agentsWithRecentRecords");
@@ -208,10 +243,9 @@ Future<String?> longestWaiting() async {
     print("All agents have recent records. Selecting oldest record holder.");
     // If we reach here, it means all loggedInAgents have recent recordings.
     // We will select the agent with the oldest `updated_at` from the recordings.
-    print("loggedInAgents: $loggedInAgents");
     // `agentsWithRecentRecords` is already sorted by `updated_at` ascending.
-    // String bestCleanAgent = agentsWithRecentRecords.first['agent_number'];
-    finalBestAgentFullString = loggedInAgents.first;
+    String bestCleanAgent = agentsWithRecentRecords.first['agent_number'];
+    finalBestAgentFullString = cleanToFullAgentMap[bestCleanAgent];
     print(
         "Selected agent (longest idle from recordings): $finalBestAgentFullString");
   } else {
