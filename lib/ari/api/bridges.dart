@@ -208,36 +208,36 @@ class BridgesAPI {
 
     //var uri = Uri.http(baseUrl, '/bridges/${bridgeId}/addChannel', queryParams);
 
-    try {
-      /// print(uri); // http://example.org/path?q=dart
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
+    // try {
+    /// print(uri); // http://example.org/path?q=dart
+    HttpClientRequest request = await client.postUrl(uri);
+    HttpClientResponse response = await request.close();
+    //print(response);
 
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      switch (response.statusCode) {
-        case 400:
-          throw Exception("Channel: $channels not found");
+    final String stringData = await response.transform(utf8.decoder).join();
+    //print(response.statusCode);
+    //print(stringData);
+    switch (response.statusCode) {
+      case 400:
+        throw Exception("Channel: $channels not found");
 
-        case 404:
-          throw Exception("Bridge: $bridgeId not found");
-        case 409:
-          throw Exception(
-              "Channel: $channels Bridge not in Stasis application; Channel currently recording");
-        case 422:
-          throw Exception("Channel: $channels not in Stasis application");
-        default:
-          // Handle other status codes if necessary, or do nothing
-          break;
-      }
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
+      case 404:
+        throw Exception("Bridge: $bridgeId not found");
+      case 409:
+        throw Exception(
+            "Channel: $channels Bridge not in Stasis application; Channel currently recording");
+      case 422:
+        throw Exception("Channel: $channels not in Stasis application");
+      default:
+        // Handle other status codes if necessary, or do nothing
+        break;
     }
+    return (statusCode: response.statusCode, resp: stringData);
+    // } catch (err, stackTrace) {
+    // logger.severe('Caught an error', err, stackTrace);
+    // print("Error: $err, stacktrace: $stackTrace");
+    // return (statusCode: null, resp: null, err: err);
+    // }
   }
 
   static Future<dynamic> removeChannel(
