@@ -215,18 +215,22 @@ Future<void> originate(
       );
 
       dialed.on('ChannelDestroyed', (_) async {
+        releaseAgentLock(freeAgent);
         await externalChannel.hangup();
       });
 
       dialed.on('StasisEnd', (_) async {
+        releaseAgentLock(freeAgent);
         await externalChannel.hangup();
       });
 
       incoming.on('ChannelDestroyed', (_) async {
+        releaseAgentLock(freeAgent);
         await externalChannel.hangup();
       });
 
       incoming.on('StasisEnd', (_) async {
+        releaseAgentLock(freeAgent);
         await externalChannel.hangup();
       });
 
@@ -239,6 +243,7 @@ Future<void> originate(
         await dialed.hangup();
         await externalChannel.hangup();
         await mixingBridge.destroy();
+        releaseAgentLock(freeAgent);
       }
     } else {
       try {
@@ -248,6 +253,7 @@ Future<void> originate(
         print("Error adding channels to bridge: $e, stacktrace: $st");
         await dialed.hangup();
         await mixingBridge.destroy();
+        releaseAgentLock(freeAgent);
       }
     }
   });
