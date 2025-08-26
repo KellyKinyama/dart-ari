@@ -112,7 +112,7 @@ class WebServer {
       endpoint = endpoint.replaceAll(RegExp(r'/$'), '');
 
       print('Endpoint: $endpoint');
-      releaseAgentLock("PJSIP/$endpoint");
+      releaseAgentLock("PJSIP/${endpoint.substring(9)}");
       // Return a JSON response
       return Response.ok(
         jsonEncode(agentLockManager.lockedAgents),
