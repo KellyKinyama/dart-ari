@@ -6,20 +6,20 @@ import '../../ari/api/enums.dart';
 import '../../ari/api/push/aors.dart';
 
 class AgentLockManager {
-  final Set<String> _lockedAgents = {};
+  final Set<String> lockedAgents = {};
 
-  bool isLocked(String agent) => _lockedAgents.contains(agent);
+  bool isLocked(String agent) => lockedAgents.contains(agent);
 
   bool tryLock(String agent) {
-    if (_lockedAgents.contains(agent)) {
+    if (lockedAgents.contains(agent)) {
       return false;
     }
-    _lockedAgents.add(agent);
+    lockedAgents.add(agent);
     return true;
   }
 
   void unlock(String agent) {
-    _lockedAgents.remove(agent);
+    lockedAgents.remove(agent);
   }
 }
 
@@ -197,7 +197,7 @@ void releaseAgentLock(String agentFullString) {
 Future<void> main() async {
   String? free;
   free = await longestWaiting();
-  print("Agents locked: ${agentLockManager._lockedAgents}");
+  print("Agents locked: ${agentLockManager.lockedAgents}");
   print("Free agent: $free");
 
   // Example of how to use the new releaseAgentLock function:

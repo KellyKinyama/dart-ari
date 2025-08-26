@@ -11,6 +11,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'package:redis/redis.dart';
 
+import '../models/recordings.dart';
+
 class WebServer {
   String serverIp;
   int serverPort;
@@ -100,6 +102,32 @@ class WebServer {
           'endpoint': endpoint,
           'status': contactStatus,
         }),
+        headers: {'Content-Type': 'application/json'},
+      );
+    });
+    // --- New HTTP GET endpoint ---
+    router.post('/unlocked/<endpoint|.*>',
+        (Request req, String endpoint) async {
+      // Remove any trailing slashes from endpoint
+      endpoint = endpoint.replaceAll(RegExp(r'/$'), '');
+
+      print('Endpoint: $endpoint');
+      releaseAgentLock("PJSIP/$endpoint");
+      // Return a JSON response
+      return Response.ok(
+        jsonEncode(agentLockManager.lockedAgents),
+        headers: {'Content-Type': 'application/json'},
+      );
+    });
+    router.get('/locked/endpoints', (Request req, String endpoint) async {
+      // Remove any trailing slashes from endpoint
+      // endpoint = endpoint.replaceAll(RegExp(r'/$'), '');
+
+      // print('Endpoint: $endpoint');
+
+      // Return a JSON response
+      return Response.ok(
+        jsonEncode(agentLockManager.lockedAgents),
         headers: {'Content-Type': 'application/json'},
       );
     });

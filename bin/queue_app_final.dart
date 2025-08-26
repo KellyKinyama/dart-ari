@@ -121,6 +121,8 @@ Future<void> originate(
   final freeAgent = await pickAgent(incoming);
   final endpoint = freeAgent;
 
+  bool callSucceeded = false;
+
   String dst = endpoint;
   if (dst.startsWith("PJSIP/")) {
     dst = dst.substring(6);
@@ -156,6 +158,12 @@ Future<void> originate(
     await mixingBridge.destroy();
     await dialed.hangup();
     // await holdingBridge.removeChannel(channel: [incoming.id]);
+    releaseAgentLock(freeAgent);
+  });
+
+  incoming.on('ChannelDestroyed', (_) async {
+    // await holdingBridge.removeChannel(channel: [incoming.id]);
+    releaseAgentLock(freeAgent);
   });
 
   dialed.on('ChannelDestroyed', (cdEvent) async {
