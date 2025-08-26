@@ -119,7 +119,7 @@ class WebServer {
         headers: {'Content-Type': 'application/json'},
       );
     });
-    router.get('/locked/endpoints', (Request req, String endpoint) async {
+    router.get('/locked/endpoints', (Request req) async {
       // Remove any trailing slashes from endpoint
       // endpoint = endpoint.replaceAll(RegExp(r'/$'), '');
 
