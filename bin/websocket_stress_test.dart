@@ -79,6 +79,8 @@ Future<void> main() async {
   print('\n--- Test Complete ---');
   print('✅ Successful connections: $successfulConnections');
   print('❌ Failed connections:     $failedConnections');
+  print(
+      '✅ Percent success:        ${(successfulConnections / (successfulConnections + failedConnections)) * 100}%');
   print('-----------------------');
 
   // Keep the script running to hold the sockets open
