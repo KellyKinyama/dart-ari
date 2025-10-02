@@ -877,6 +877,7 @@ class ChannelsApi {
       //print(response.statusCode);
       //print(stringData);
       //return response;
+      response.certificate;
       return (statusCode: response.statusCode, resp: stringData);
     } catch (err, stackTrace) {
       // logger.severe('Caught an error', err, stackTrace);
