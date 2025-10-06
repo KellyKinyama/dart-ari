@@ -13,7 +13,7 @@ void main(List<String> arguments) async {
   await ari.connect();
   queueApp(ari);
 
-  final apiServer = WebServer("10.44.0.56", 8001);
+  final apiServer = WebServer("10.44.0.70", 8001);
 
   await apiServer.serve();
 
