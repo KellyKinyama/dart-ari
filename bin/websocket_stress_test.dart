@@ -39,8 +39,8 @@ Future<ConnectionResult> connectSingleWebSocket(String url, int id) async {
 
 Future<void> main() async {
   // --- Configuration ---
-  // const String serverUrl = 'ws://10.44.0.56:8001/ws';
-  const String serverUrl = 'wss://ivr.zesco.co.zm/ws';
+  const String serverUrl = 'ws://10.44.0.70:8001/ws';
+  // const String serverUrl = 'wss://ivr.zesco.co.zm/ws';
   const int numberOfSocketsToOpen = 65536; // Your target limit
   const int progressUpdateFrequency = 500; // How often to print progress
 
