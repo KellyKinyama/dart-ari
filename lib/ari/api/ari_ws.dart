@@ -82,8 +82,15 @@ extension ARIPart1 on ARI {
             // print("Unhandled event: ${e['type']}");
           }
       }
-    }, onError: (err, stackTrace) {
+    }, onError: (err, stackTrace) async {
       print("Error: $err, stacktrace: $stackTrace");
+      await Future.delayed(Duration(seconds: 5));
+      connect();
+    }, onDone: () async {
+      print("Websocket closed");
+      await Future.delayed(Duration(seconds: 5));
+      connect();
+      // Reconnect logic can be added here if needed
     });
     print("Connected to websocket");
   }
