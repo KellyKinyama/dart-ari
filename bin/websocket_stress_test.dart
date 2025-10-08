@@ -55,6 +55,9 @@ Future<void> main() async {
   // Launch all connection attempts concurrently
   for (int i = 1; i <= numberOfSocketsToOpen; i++) {
     connectionFutures.add(connectSingleWebSocket(serverUrl, i));
+    if (i % 500 == 0) {
+      await Future.delayed(Duration(milliseconds: 200)); // short delay
+    }
   }
 
   int successfulConnections = 0;

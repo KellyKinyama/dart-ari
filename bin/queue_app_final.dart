@@ -75,38 +75,80 @@ Future<void> findOrCreateBridge(Channel channel) async {
   await originate(channel, holdingBridge);
 }
 
+// Future<String> pickAgent(
+//   Channel incoming,
+// ) async {
+//   Completer<String> completer = Completer<String>();
+//   Timer? timer; // Declare a Timer variable to hold the periodic timer
+//   incoming.on('StasisEnd', (_) {
+//     if (timer != null) {
+//       timer.cancel();
+//       completer.complete("");
+//     }
+//   });
+//   // Start the periodic timer
+//   timer = Timer.periodic(Duration(seconds: 2), (Timer t) async {
+//     print("pickAgent: Timer tick. Attempting to find an agent...");
+//     final freeAgent =
+//         await longestWaiting(); // Await the result of longestWaiting
+
+//     if (freeAgent != null) {
+//       print("pickAgent: Agent found! $freeAgent. Cancelling timer...");
+//       t.cancel(); // Cancel the periodic timer as soon as an agent is found
+
+//       // Now, complete the main Completer with the found agent
+//       incoming.off();
+//       completer.complete(freeAgent);
+//       // });
+//     } else {
+//       print("pickAgent: No agent found this tick. Will retry...");
+//     }
+//   });
+
+//   // Return the Future associated with the completer.
+//   // This Future will only complete when completer.complete() is called inside the timer's callback.
+//   return completer.future;
+// }
+
 Future<String> pickAgent(
   Channel incoming,
 ) async {
   Completer<String> completer = Completer<String>();
-  Timer? timer; // Declare a Timer variable to hold the periodic timer
+  Timer? timer;
+
   incoming.on('StasisEnd', (_) {
-    if (timer != null) {
-      timer.cancel();
-      completer.complete("");
+    // --- FIX APPLIED HERE ---
+    // Only attempt to complete the Completer if it hasn't been completed yet.
+    if (!completer.isCompleted) {
+      if (timer != null) {
+        timer.cancel();
+        completer.complete("");
+      }
     }
   });
+
   // Start the periodic timer
   timer = Timer.periodic(Duration(seconds: 2), (Timer t) async {
     print("pickAgent: Timer tick. Attempting to find an agent...");
-    final freeAgent =
-        await longestWaiting(); // Await the result of longestWaiting
+    final freeAgent = await longestWaiting();
 
     if (freeAgent != null) {
       print("pickAgent: Agent found! $freeAgent. Cancelling timer...");
-      t.cancel(); // Cancel the periodic timer as soon as an agent is found
+      t.cancel();
 
-      // Now, complete the main Completer with the found agent
-      incoming.off();
-      completer.complete(freeAgent);
-      // });
+      // --- FIX APPLIED HERE ---
+      // Although the StasisEnd event is less likely to beat the agent logic,
+      // it is safer to check here as well for race conditions.
+      if (!completer.isCompleted) {
+        incoming.off();
+        completer.complete(freeAgent);
+      }
     } else {
       print("pickAgent: No agent found this tick. Will retry...");
     }
   });
 
   // Return the Future associated with the completer.
-  // This Future will only complete when completer.complete() is called inside the timer's callback.
   return completer.future;
 }
 

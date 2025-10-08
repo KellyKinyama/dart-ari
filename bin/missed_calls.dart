@@ -36,7 +36,7 @@ class WsClient {
   }
 
   static void connect() async {
-    const url = 'ws://10.44.0.70:8001/ws';
+    const url = 'ws://10.44.0.56:8001/ws';
     final socket = await WebSocket.connect(url);
     print('🔌 Connected to $url');
 
