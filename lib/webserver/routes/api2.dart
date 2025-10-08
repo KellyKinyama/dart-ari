@@ -57,7 +57,7 @@ class WebServer {
       final connection = RedisConnection();
       Command command = await connection.connect(redisIp, redisPort);
 
-      final result = await command.send_object(["AUTH", redisPassword]);
+      await command.send_object(["AUTH", redisPassword]);
 
       PubSub pubsub = PubSub(command);
       pubsub.subscribe(["monkey"]);
