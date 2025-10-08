@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dart_ari/ari/api/push/aors.dart';
@@ -67,9 +68,11 @@ class WebServer {
       }, onDone: () {
         print('Client disconnected.');
         pubsub.unsubscribe(["monkey"]);
+        unawaited(connection.close());
       }, onError: (error) {
         print('Error: $error');
         pubsub.unsubscribe(["monkey"]);
+        unawaited(connection.close());
       });
 
       final stream = pubsub.getStream();

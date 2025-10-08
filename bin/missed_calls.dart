@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dart_ari/ari/api/events/dial_event.dart';
 import 'package:dart_ari/dart_ari.dart';
+import 'package:dotenv/dotenv.dart';
 
 class WsClient {
   static Future<void> handleMessage(String message) async {
@@ -36,7 +37,11 @@ class WsClient {
   }
 
   static void connect() async {
-    const url = 'ws://10.44.0.56:8001/ws';
+    final env = DotEnv(includePlatformEnvironment: true)..load();
+    final serverIp = env['SERVER_IP']!;
+    final serverPort = int.parse(env['SERVER_PORT']!);
+
+    final url = 'ws://$serverIp:$serverPort/ws';
     final socket = await WebSocket.connect(url);
     print('🔌 Connected to $url');
 

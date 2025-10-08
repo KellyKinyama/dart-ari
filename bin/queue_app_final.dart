@@ -142,9 +142,15 @@ Future<String> pickAgent(
       if (!completer.isCompleted) {
         incoming.off();
         completer.complete(freeAgent);
+      } else {
+        t.cancel();
       }
     } else {
       print("pickAgent: No agent found this tick. Will retry...");
+
+      if (completer.isCompleted) {
+        t.cancel();
+      }
     }
   });
 
