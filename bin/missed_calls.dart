@@ -44,8 +44,14 @@ class WsClient {
     socket.listen((message) {
       // print('📩 Received from server: $message');
       handleMessage(message);
-    }, onDone: () {
+    }, onDone: () async {
       print('❌ Connection closed by server.');
+      await Future.delayed(Duration(seconds: 5));
+      connect(); // Reconnect
+    }, onError: (error) async {
+      print('❌ Connection error: $error');
+      await Future.delayed(Duration(seconds: 5));
+      connect(); // Reconnect
     });
 
     // Send a message to the server
