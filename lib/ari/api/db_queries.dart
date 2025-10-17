@@ -87,7 +87,7 @@ class DbQueries {
       await db
           .table('agents')
           .where('endpoint', '=', endpoint)
-          .whereNotIn('agent_status', ['ON_BREAK']).update(
+          .whereNotIn('user_status', ['ON_BREAK']).update(
               {'state': state.toString(), 'status': status.toString()});
       successful = true;
     } catch (e) {
