@@ -146,7 +146,7 @@ Future<String> pickAgent(
         t.cancel();
       }
     } else {
-      print("pickAgent: No agent found this tick. Will retry...");
+      print("pickAgent: No agent found in this tick. Will retry...");
 
       if (completer.isCompleted) {
         t.cancel();
@@ -168,8 +168,6 @@ Future<void> originate(
   final rtpport = await rtpPort(filename);
   final freeAgent = await pickAgent(incoming);
   final endpoint = freeAgent;
-
-  bool callSucceeded = false;
 
   String dst = endpoint;
   if (dst.startsWith("PJSIP/")) {
@@ -241,9 +239,11 @@ Future<void> originate(
     if (dialChannel.state == 'Up') {
       await DbQueries.updateAgentStatus(
           endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
+      releaseAgentLock(freeAgent);
     } else if (dialChannel.state == 'Ringing') {
       await DbQueries.updateAgentStatus(
           endpoint, AgentState.LOGGEDIN, AgentState.RINGING);
+      releaseAgentLock(freeAgent);
     }
   });
 
