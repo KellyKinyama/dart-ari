@@ -591,8 +591,9 @@ Future<void> originate(
 
     // Attempt to clean up the incoming channel (the caller) and holding bridge
     try {
-      await incoming.hangup();
-      await holdingBridge.destroy();
+      //What to do next with an incoming call that failed to originate?
+      // await incoming.hangup();
+      // await holdingBridge.destroy();
     } catch (_) {
       // Ignore hangup/destroy errors during error handling
     }

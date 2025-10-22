@@ -108,7 +108,8 @@ class WebServer {
         headers: {'Content-Type': 'application/json'},
       );
     });
-    // --- New HTTP GET endpoint ---
+
+    // --- HTTP POST endpoint: Unlock agent and view all locked agents ---
     router.post('/unlocked/<endpoint|.*>',
         (Request req, String endpoint) async {
       // Remove any trailing slashes from endpoint
@@ -116,21 +117,25 @@ class WebServer {
 
       print('Endpoint: $endpoint');
       releaseAgentLock("PJSIP/${endpoint.substring(9)}");
+
+      // FIX: Convert Set to List before JSON encoding
+      final lockedList = agentLockManager.lockedAgents.toList();
+
       // Return a JSON response
       return Response.ok(
-        jsonEncode(agentLockManager.lockedAgents),
+        jsonEncode(lockedList), // Encode the List
         headers: {'Content-Type': 'application/json'},
       );
     });
-    router.get('/locked/endpoints', (Request req) async {
-      // Remove any trailing slashes from endpoint
-      // endpoint = endpoint.replaceAll(RegExp(r'/$'), '');
 
-      // print('Endpoint: $endpoint');
+    // --- HTTP GET endpoint: View all locked agents ---
+    router.get('/locked/endpoints', (Request req) async {
+      // FIX: Convert Set to List before JSON encoding
+      final lockedList = agentLockManager.lockedAgents.toList();
 
       // Return a JSON response
       return Response.ok(
-        jsonEncode(agentLockManager.lockedAgents),
+        jsonEncode(lockedList), // Encode the List
         headers: {'Content-Type': 'application/json'},
       );
     });

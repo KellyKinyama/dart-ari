@@ -85,11 +85,11 @@ extension ARIPart1 on ARI {
     }, onError: (err, stackTrace) async {
       print("Error: $err, stacktrace: $stackTrace");
       await Future.delayed(Duration(seconds: 5));
-      connect();
+      await connect();
     }, onDone: () async {
       print("Websocket closed");
       await Future.delayed(Duration(seconds: 5));
-      connect();
+      await connect();
       // Reconnect logic can be added here if needed
     });
     print("Connected to websocket");
