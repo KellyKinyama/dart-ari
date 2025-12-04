@@ -53,6 +53,8 @@ Future<Map<String, AgentState>> idleAgents() async {
       // .limit(1)
       .get();
 
+  print("Idle agents before checking contact: $res");
+
   await db.disconnect();
   for (var element in res) {
     if (await Aor.contact(element['endpoint'])) {
@@ -60,7 +62,7 @@ Future<Map<String, AgentState>> idleAgents() async {
     }
     // }
   }
-  print("idle agents: $res");
+  print("idle agents after checking contact: $res");
   return agentsStates;
 }
 
