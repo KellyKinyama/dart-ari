@@ -30,11 +30,7 @@ class Recordings extends Model {
 }
 
 Future<Map<String, AgentState>> idleAgents() async {
-  Map<String, AgentState> agentsStates = {
-    // 'SIP/7000/6003': AgentState.LOGGEDIN,
-    // 'SIP/7000/8923': AgentState.LOGGEDIN,
-    // 'SIP/7000/1061': AgentState.LOGGEDIN
-  };
+  Map<String, AgentState> agentsStates = {};
   String table = 'agents';
 
   final db = await Model.getDbConnection();
@@ -66,119 +62,139 @@ Future<Map<String, AgentState>> idleAgents() async {
   return agentsStates;
 }
 
-Future<String?> longestWaiting() async {
-  // Step 1: Get all currently logged-in and idle agents
-  List<String> loggedInAgents = (await idleAgents())
-      .entries
-      .where((entry) {
-        if (entry.value == AgentState.LOGGEDIN) {
-          // Attempt to lock the agent; only consider if successful
-          return agentLockManager.tryLock(entry.key);
-        }
-        return false;
-      })
-      .map((entry) => entry.key)
-      .toList();
+// --------------------------------------------------------------------------
+// --- REFACTORED FUNCTION: longestWaiting ---
+// --------------------------------------------------------------------------
+Future<String?> longestWaiting({Set<String>? triedAgents}) async {
+  // Declare these variables OUTSIDE the loop so they persist when the loop breaks.
+  List<String> loggedInAgents = [];
+  final Map<String, String> cleanToFullAgentMap = {};
 
-  if (loggedInAgents.isEmpty) {
-    print("No idle agents available.");
-    return null;
-  }
-
-  // Prepare clean agent numbers (without PJSIP/ prefix) for database queries
-  final Map<String, String> cleanToFullAgentMap =
-      {}; // Map clean_number -> PJSIP/clean_number
-  final List<String> cleanAgentNumbers = loggedInAgents.map((fullAgentString) {
-    int index = fullAgentString.indexOf("/");
-    String cleanNumber =
-        index != -1 ? fullAgentString.substring(index + 1) : fullAgentString;
-    cleanToFullAgentMap[cleanNumber] = fullAgentString; // Store mapping
-    return cleanNumber;
-  }).toList();
-
-  print("Probbing Recordings table with agent numbers: $cleanAgentNumbers");
-
-  // Step 2: Find which of these agents have recent records in the 'recordings' table
-  // This will return only agents that have records within the 48-hour window.
-  List<Map<String, dynamic>> agentsWithRecentRecords = [];
-  final dbRecordings = await Model.getDbConnection();
-  // Using DateTime.now() to ensure it's current time for 48 hours ago calculation
-  final eightHoursAgo =
-      DateTime.now().subtract(Duration(hours: 8)).toIso8601String();
-
-  // Query recordings for agents within the valid list and time range
-
-  agentsWithRecentRecords = await dbRecordings
-      .table(Recordings.table)
-      .selectRaw('agent_number, MAX(updated_at) as updated_at')
-      .whereRaw(
-          "agent_number IN (${cleanAgentNumbers.map((e) => "'$e'").join(', ')}) "
-          "AND updated_at >= '$eightHoursAgo'")
-      .groupBy('agent_number')
-      .orderByRaw('MAX(updated_at) ASC')
-      .get();
-  await dbRecordings.disconnect();
-
-  print("records: $agentsWithRecentRecords");
-
-  // Step 3: Categorize agents into those with and without recent records
-  final Set<String> cleanAgentsWithRecordsSet =
-      agentsWithRecentRecords.map((e) => e['agent_number'] as String).toSet();
-
-  final List<String> cleanAgentsWithoutRecentRecords = cleanAgentNumbers
-      .where((agentNum) => !cleanAgentsWithRecordsSet.contains(agentNum))
-      .toList();
-
+  Set<String> excludedAgents = triedAgents ?? <String>{};
   String? finalBestAgentFullString;
+  bool isFirstPass = true;
 
-  // Step 4: Prioritize agents who have no recent records (truest longest idle)
-  if (cleanAgentsWithoutRecentRecords.isNotEmpty) {
-    print(
-        "Candidates with no recent records: $cleanAgentsWithoutRecentRecords");
+  do {
+    // --- Step 1: Get all currently logged-in and idle agents ---
+    loggedInAgents = (await idleAgents()) // ASSIGNMENT, NOT DECLARATION
+        .entries
+        .where((entry) {
+          final agentFullString = entry.key;
 
-    // To pick the "longest idle" among those with no recent records,
-    // we need to look at their `updated_at` in the `agents` table.
-    final dbAgents = await Model.getDbConnection();
-    List<Map<String, dynamic>> trulyLongestIdleFromAgents = await dbAgents
-        .table('agents') // Assuming 'agents' is the table for agent status
-        .select(['endpoint', 'updated_at'])
-        .whereIn('endpoint', cleanAgentsWithoutRecentRecords)
-        .orderBy('updated_at', 'asc') // Oldest update in 'agents' table
-        .limit(1) // Just need the single longest
+          if (isFirstPass && excludedAgents.contains(agentFullString)) {
+            return false;
+          }
+
+          if (entry.value == AgentState.LOGGEDIN) {
+            // Attempt to lock the agent; only consider if successful
+            return agentLockManager.tryLock(agentFullString);
+          }
+          return false;
+        })
+        .map((entry) => entry.key)
+        .toList();
+
+    if (loggedInAgents.isEmpty) {
+      if (isFirstPass && excludedAgents.isNotEmpty) {
+        print(
+            "No available agents found after excluding tried agents. Resetting exclusion list and trying all agents again.");
+        isFirstPass = false;
+        excludedAgents = <String>{};
+        continue;
+      } else {
+        print("No idle agents available or all are currently locked/excluded.");
+        finalBestAgentFullString = null;
+        break; // Exit the do-while loop
+      }
+    }
+
+    // --- Steps 2-5: Selection Logic (Only runs if loggedInAgents is NOT empty) ---
+
+    // Prepare clean agent numbers (without PJSIP/ prefix) for database queries
+    cleanToFullAgentMap.clear(); // Clear for the current loop run
+    final List<String> cleanAgentNumbers =
+        loggedInAgents.map((fullAgentString) {
+      int index = fullAgentString.indexOf("/");
+      String cleanNumber =
+          index != -1 ? fullAgentString.substring(index + 1) : fullAgentString;
+      cleanToFullAgentMap[cleanNumber] = fullAgentString;
+      return cleanNumber;
+    }).toList();
+
+    print("Probbing Recordings table with agent numbers: $cleanAgentNumbers");
+
+    // Step 2: Find which of these agents have recent records in the 'recordings' table
+    List<Map<String, dynamic>> agentsWithRecentRecords = [];
+    final dbRecordings = await Model.getDbConnection();
+    final eightHoursAgo =
+        DateTime.now().subtract(Duration(hours: 8)).toIso8601String();
+
+    agentsWithRecentRecords = await dbRecordings
+        .table(Recordings.table)
+        .selectRaw('agent_number, MAX(updated_at) as updated_at')
+        .whereRaw(
+            "agent_number IN (${cleanAgentNumbers.map((e) => "'$e'").join(', ')}) "
+            "AND updated_at >= '$eightHoursAgo'")
+        .groupBy('agent_number')
+        .orderByRaw('MAX(updated_at) ASC')
         .get();
-    await dbAgents.disconnect();
+    await dbRecordings.disconnect();
 
-    if (trulyLongestIdleFromAgents.isNotEmpty) {
-      String bestCleanAgent = trulyLongestIdleFromAgents.first['endpoint'];
+    print("records: $agentsWithRecentRecords");
+
+    // Step 3: Categorize agents into those with and without recent records
+    final Set<String> cleanAgentsWithRecordsSet =
+        agentsWithRecentRecords.map((e) => e['agent_number'] as String).toSet();
+
+    final List<String> cleanAgentsWithoutRecentRecords = cleanAgentNumbers
+        .where((agentNum) => !cleanAgentsWithRecordsSet.contains(agentNum))
+        .toList();
+
+    // Step 4: Prioritize agents who have no recent records (truest longest idle)
+    if (cleanAgentsWithoutRecentRecords.isNotEmpty) {
+      print(
+          "Candidates with no recent records: $cleanAgentsWithoutRecentRecords");
+
+      final dbAgents = await Model.getDbConnection();
+      List<Map<String, dynamic>> trulyLongestIdleFromAgents = await dbAgents
+          .table('agents')
+          .select(['endpoint', 'updated_at'])
+          .whereIn('endpoint', cleanAgentsWithoutRecentRecords)
+          .orderBy('updated_at', 'asc')
+          .limit(1)
+          .get();
+      await dbAgents.disconnect();
+
+      if (trulyLongestIdleFromAgents.isNotEmpty) {
+        String bestCleanAgent = trulyLongestIdleFromAgents.first['endpoint'];
+        finalBestAgentFullString = cleanToFullAgentMap[bestCleanAgent];
+        print(
+            "Selected agent (no recent recording history, oldest agent table update): $finalBestAgentFullString");
+      } else {
+        finalBestAgentFullString =
+            cleanToFullAgentMap[cleanAgentsWithoutRecentRecords.first];
+        print(
+            "Selected agent (no recent recording history, first in list as fallback): $finalBestAgentFullString");
+      }
+    } else if (agentsWithRecentRecords.isNotEmpty) {
+      // Step 5: Fallback to agent with oldest record if all agents have records
+      print("All agents have recent records. Selecting oldest record holder.");
+      String bestCleanAgent = agentsWithRecentRecords.first['agent_number'];
       finalBestAgentFullString = cleanToFullAgentMap[bestCleanAgent];
       print(
-          "Selected agent (no recent recording history, oldest agent table update): $finalBestAgentFullString");
+          "Selected agent (longest idle from recordings): $finalBestAgentFullString");
     } else {
-      // Fallback if query on agents table fails for some reason, pick first.
-      finalBestAgentFullString =
-          cleanToFullAgentMap[cleanAgentsWithoutRecentRecords.first];
-      print(
-          "Selected agent (no recent recording history, first in list as fallback): $finalBestAgentFullString");
+      print("No suitable idle agents found based on any criteria.");
     }
-  } else if (agentsWithRecentRecords.isNotEmpty) {
-    // Step 5: Fallback to agent with oldest record if all agents have records
-    print("All agents have recent records. Selecting oldest record holder.");
-    // If we reach here, it means all loggedInAgents have recent recordings.
-    // We will select the agent with the oldest `updated_at` from the recordings.
-    // `agentsWithRecentRecords` is already sorted by `updated_at` ascending.
-    String bestCleanAgent = agentsWithRecentRecords.first['agent_number'];
-    finalBestAgentFullString = cleanToFullAgentMap[bestCleanAgent];
-    print(
-        "Selected agent (longest idle from recordings): $finalBestAgentFullString");
-  } else {
-    // This case should only happen if loggedInAgents was not empty, but neither
-    // categories yielded any results, which implies `idleAgents` returned agents
-    // that couldn't be matched in either db table queries (highly unlikely).
-    print("No suitable idle agents found based on any criteria.");
-  }
 
-  // Unlock only the agents that were considered but *not* selected.
-  // The selected agent should remain locked by this function.
+    // Break the loop since a candidate was found
+    break;
+  } while (!isFirstPass);
+
+  // --- Final Cleanup (Accesses loggedInAgents and finalBestAgentFullString) ---
+
+  // Unlock only the agents that were considered (and potentially locked) but *not* selected.
+  // loggedInAgents retains the list from the last successful loop iteration.
   for (String agentToUnlock in loggedInAgents) {
     if (agentToUnlock != finalBestAgentFullString) {
       agentLockManager.unlock(agentToUnlock);
@@ -198,7 +214,15 @@ void releaseAgentLock(String agentFullString) {
 
 Future<void> main() async {
   String? free;
-  free = await longestWaiting();
+
+  // Example usage demonstrating exclusion:
+  final excluded = <String>{'PJSIP/7000', 'PJSIP/8000'};
+
+  // You would need to ensure your idleAgents function returns some values for this test to work.
+  // Assuming 'PJSIP/9000' is available.
+
+  free = await longestWaiting(triedAgents: excluded);
+
   print("Agents locked: ${agentLockManager.lockedAgents}");
   print("Free agent: $free");
 
