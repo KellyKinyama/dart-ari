@@ -141,6 +141,8 @@ Future<void> originate(
   if (freeAgent.isEmpty) {
     print(
         "Originate: Agent string is empty (queue timed out or caller hung up). Exiting.");
+    // NOTE: If freeAgent is truly empty, we cannot release a lock based on it.
+    // Assuming the lock management system handles this edge case or it's guaranteed non-empty.
     return;
   }
 
@@ -171,7 +173,7 @@ Future<void> originate(
         // Ignore hangup failure
       }
 
-      // CRITICAL GUARANTEE: Agent status updated to IDLE
+      // CRITICAL GUARANTEE: Agent status updated to IDLE (Status Reset)
       await DbQueries.updateAgentStatus(
           endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
       releaseAgentLock(freeAgent); // CRITICAL: Release lock on dial timeout
@@ -242,6 +244,9 @@ Future<void> originate(
           await dialed.hangup();
           await externalChannel.hangup();
           await mixingBridge.destroy();
+          // FIX: Ensure status is IDLE before releasing lock on failure (Status Reset)
+          await DbQueries.updateAgentStatus(
+              endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
           releaseAgentLock(freeAgent);
           if (!dialCompleter.isCompleted) {
             dialCompleter.completeError(e);
@@ -256,6 +261,9 @@ Future<void> originate(
           print("Error adding channels to bridge: $e, stacktrace: $st");
           await dialed.hangup();
           await mixingBridge.destroy();
+          // FIX: Ensure status is IDLE before releasing lock on failure (Status Reset)
+          await DbQueries.updateAgentStatus(
+              endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
           releaseAgentLock(freeAgent);
           if (!dialCompleter.isCompleted) {
             dialCompleter.completeError(e);
@@ -295,7 +303,7 @@ Future<void> originate(
             "Call record inserted successfully after agent hangup/termination.");
       }
 
-      // CRITICAL GUARANTEE: Agent status updated to IDLE
+      // CRITICAL GUARANTEE: Agent status updated to IDLE (Status Reset)
       await Future.delayed(Duration(seconds: 15)); // Wrap-up time
       await DbQueries.updateAgentStatus(
           endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
@@ -307,7 +315,7 @@ Future<void> originate(
     // This path handles when the agent hangs up/rejects BEFORE answering.
     timer.cancel();
 
-    // CRITICAL GUARANTEE: Agent status updated to IDLE
+    // CRITICAL GUARANTEE: Agent status updated to IDLE (Status Reset)
     await Future.delayed(Duration(seconds: 15)); // Wrap-up time
     await DbQueries.updateAgentStatus(
         endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
@@ -340,7 +348,7 @@ Future<void> originate(
         await dialed.hangup(); // Hang up agent's ringing channel
       } catch (_) {}
 
-      // CRITICAL GUARANTEE: Agent status updated to IDLE (MISSING in original code)
+      // CRITICAL GUARANTEE: Agent status updated to IDLE (Status Reset)
       await DbQueries.updateAgentStatus(
           endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
       releaseAgentLock(freeAgent);
@@ -361,7 +369,7 @@ Future<void> originate(
         ..hangupdate = destroyedEvent.timestamp.toString();
     }
 
-    // CRITICAL GUARANTEE: Agent status updated to IDLE
+    // CRITICAL GUARANTEE: Agent status updated to IDLE (Status Reset)
     await Future.delayed(Duration(seconds: 15)); // Wrap-up time
     await DbQueries.updateAgentStatus(
         endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
@@ -405,6 +413,9 @@ Future<void> originate(
   } catch (e, st) {
     // Catch errors during the initial ARI originate command execution itself.
     timer.cancel();
+    // FIX: Ensure status is IDLE before releasing lock on command failure (Status Reset)
+    await DbQueries.updateAgentStatus(
+        endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
     releaseAgentLock(freeAgent);
     if (!dialCompleter.isCompleted) {
       dialCompleter.completeError(Exception("Originate command failed: $e"));
@@ -413,8 +424,7 @@ Future<void> originate(
 
   // CRITICAL: Wait for the result of the dial attempt (success or failure).
   return dialCompleter.future;
-} // --------------------------------------------------------------------------
-// --- QUEUE MANAGER LOGIC ---
+} // --- QUEUE MANAGER LOGIC ---
 // --------------------------------------------------------------------------
 
 Future<void> manageQueueAndOriginate(
