@@ -5,8 +5,10 @@ import 'package:dotenv/dotenv.dart';
 import 'queue_app_final.dart';
 import 'missed_calls.dart';
 
+late ARI ari;
+
 void main(List<String> arguments) async {
-  ARI ari = ARI.fromConfigs();
+  ari = ARI.fromConfigs();
 
   await DbQueries.updateInactiveAgentStatuses(
       AgentState.LOGGEDOUT, AgentState.LOGGEDOUT);

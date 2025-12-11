@@ -101,6 +101,11 @@ class ARI extends EventEmitter {
   /// @type {ChannelsAPI}
   Map<String, Channel> channels = {};
 
+  Channel? stsisChannel(Channel channel) {
+    // TODO: implement stsisChannet
+    return channels[channel.id];
+  }
+
   //Params params = Params('asterisk', 'asterisk', '10.44.0.55');
 
   // String username;

@@ -5,6 +5,7 @@ import 'package:dart_ari/ari/api/enums.dart';
 import 'package:dart_ari/webserver/models/recordings.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:dart_ari/dart_ari.dart';
+import 'dart_ari.dart';
 import 'package:uuid/uuid.dart';
 
 late String voiceLoggerIp;
@@ -207,7 +208,14 @@ Future<String> pickAgent(
       return;
     }
 
-    print("pickAgent: Timer tick. Attempting to find an agent...");
+    Channel? stillThere = ari.stsisChannel(incoming);
+
+    if (stillThere == null) {
+      print("pickAgent: Incoming channel no longer exists.");
+      cleanupAndComplete("");
+      return;
+    }
+
     final freeAgent =
         await longestWaiting(); // Assuming this is defined elsewhere
 
@@ -223,176 +231,6 @@ Future<String> pickAgent(
   // Return the Future that resolves upon agent found, hangup, or timeout.
   return completer.future;
 }
-
-// Future<void> originate(
-//   Channel incoming,
-//   Bridge holdingBridge,
-//   // String agent,
-// ) async {
-//   final filename = Uuid().v1();
-//   // final endpoint = "PJSIP${agent.substring(agent.lastIndexOf("/"))}";
-//   final rtpport = await rtpPort(filename);
-//   final freeAgent = await pickAgent(incoming);
-//   final endpoint = freeAgent;
-
-//   String dst = endpoint;
-//   if (dst.startsWith("PJSIP/")) {
-//     dst = dst.substring(6);
-//   }
-
-//   CallRecording? voiceRecord;
-//   print("Dialing agent: $endpoint");
-
-//   final dialed = await client.channel(endpoint: endpoint);
-
-//   final mixingBridge = await client.bridge(type: ['mixing']);
-
-//   dialed.on('StasisEnd', (ssEndevent) async {
-//     final (sEndEvent, _) = ssEndevent as (StasisEnd, Channel);
-//     // await mixingBridge.destroy();
-//     // incoming.hangup();
-//     // await holdingBridge.removeChannel(channel: [incoming.id]);
-//     if (voiceRecord != null) {
-//       voiceRecord!.hangupdate = sEndEvent.timestamp.toIso8601String();
-
-//       await voiceRecord!.insertCallRecording();
-//     }
-
-//     await Future.delayed(Duration(seconds: 15));
-
-//     await DbQueries.updateAgentStatus(
-//         endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
-
-//     releaseAgentLock(freeAgent);
-//   });
-
-//   incoming.on('StasisEnd', (_) async {
-//     await mixingBridge.destroy();
-//     await dialed.hangup();
-//     // await holdingBridge.removeChannel(channel: [incoming.id]);
-//     releaseAgentLock(freeAgent);
-//   });
-
-//   incoming.on('ChannelDestroyed', (_) async {
-//     // await holdingBridge.removeChannel(channel: [incoming.id]);
-//     releaseAgentLock(freeAgent);
-//   });
-
-//   dialed.on('ChannelDestroyed', (cdEvent) async {
-//     final (destroyedEvent, _) = cdEvent as (ChannelDestroyed, Channel);
-//     if (voiceRecord != null) {
-//       voiceRecord!
-//         ..duration_number = destroyedEvent.timestamp.toString()
-//         ..hangupdate = destroyedEvent.timestamp.toString();
-//     }
-//     // await mixingBridge.destroy();
-//     // incoming.hangup();
-//     // await holdingBridge.removeChannel(channel: [incoming.id]);
-
-//     await Future.delayed(Duration(seconds: 15));
-
-//     await DbQueries.updateAgentStatus(
-//         endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
-
-//     releaseAgentLock(freeAgent);
-//   });
-
-//   dialed.on('ChannelStateChange', (event) async {
-//     final (_, dialChannel) = event as (ChannelStateChange, Channel);
-//     if (dialChannel.state == 'Up') {
-//       await holdingBridge.removeChannel(channel: [incoming.id]);
-//     }
-//     if (dialChannel.state == 'Up') {
-//       await DbQueries.updateAgentStatus(
-//           endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
-//       releaseAgentLock(freeAgent);
-//     } else if (dialChannel.state == 'Ringing') {
-//       await DbQueries.updateAgentStatus(
-//           endpoint, AgentState.LOGGEDIN, AgentState.RINGING);
-//       releaseAgentLock(freeAgent);
-//     }
-//   });
-
-//   dialed.on('StasisStart', (ssEvent) async {
-//     final (sStartEvent, _) = ssEvent as (StasisStart, Channel);
-//     await dialed.answer();
-
-//     voiceRecord = CallRecording(
-//       file_name: filename,
-//       file_path: filename,
-//       agent_number: dst,
-//       phone_number: incoming.caller.number,
-//       answerdate: sStartEvent.timestamp.toIso8601String(),
-//       src: incoming.caller.number,
-//       dst: dst,
-//       clid: incoming.caller.number,
-//     );
-//     if (rtpport != null) {
-//       final externalChannel = await client.externalMedia(
-//         (err, _) => err ? throw err : null,
-//         app: 'hello',
-//         variables: {'CALLERID(name)': endpoint, 'recording': 'yes'},
-//         external_host: '$voiceLoggerIp:$rtpport',
-//         format: 'alaw',
-//       );
-
-//       dialed.on('ChannelDestroyed', (_) async {
-//         releaseAgentLock(freeAgent);
-//         await externalChannel.hangup();
-//       });
-
-//       dialed.on('StasisEnd', (_) async {
-//         releaseAgentLock(freeAgent);
-//         await externalChannel.hangup();
-//       });
-
-//       incoming.on('ChannelDestroyed', (_) async {
-//         releaseAgentLock(freeAgent);
-//         await externalChannel.hangup();
-//       });
-
-//       incoming.on('StasisEnd', (_) async {
-//         releaseAgentLock(freeAgent);
-//         await externalChannel.hangup();
-//       });
-
-//       try {
-//         await mixingBridge.addChannel(channels: [dialed.id]);
-//         await mixingBridge.addChannel(channels: [externalChannel.id]);
-//         await mixingBridge.addChannel(channels: [incoming.id]);
-//       } catch (e, st) {
-//         print("Error adding channels to bridge: $e, stacktrace: $st");
-//         await dialed.hangup();
-//         await externalChannel.hangup();
-//         await mixingBridge.destroy();
-//         releaseAgentLock(freeAgent);
-//       }
-//     } else {
-//       try {
-//         await mixingBridge.addChannel(channels: [dialed.id]);
-//         await mixingBridge.addChannel(channels: [incoming.id]);
-//       } catch (e, st) {
-//         print("Error adding channels to bridge: $e, stacktrace: $st");
-//         await dialed.hangup();
-//         await mixingBridge.destroy();
-//         releaseAgentLock(freeAgent);
-//       }
-//     }
-//   });
-
-//   await dialed.originate(
-//     endpoint: endpoint,
-//     app: 'hello',
-//     appArgs: [
-//       'dialed',
-//       endpoint,
-//       incoming.id,
-//       incoming.caller.number,
-//       filename
-//     ],
-//     callerId: incoming.caller.number,
-//   );
-// }
 
 Future<void> originate(
   Channel incoming,
@@ -447,6 +285,8 @@ Future<void> originate(
       await DbQueries.updateAgentStatus(
           endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
 
+      await incoming.hangup();
+
       releaseAgentLock(freeAgent);
     });
 
@@ -477,6 +317,8 @@ Future<void> originate(
 
       await DbQueries.updateAgentStatus(
           endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+
+      await incoming.hangup();
 
       releaseAgentLock(freeAgent);
     });
@@ -527,11 +369,13 @@ Future<void> originate(
         dialed.on('ChannelDestroyed', (_) async {
           releaseAgentLock(freeAgent);
           await externalChannel.hangup();
+          await incoming.hangup();
         });
 
         dialed.on('StasisEnd', (_) async {
           releaseAgentLock(freeAgent);
           await externalChannel.hangup();
+          await incoming.hangup();
         });
 
         incoming.on('ChannelDestroyed', (_) async {
