@@ -208,8 +208,16 @@ Future<String?> longestWaiting({Set<String>? triedAgents}) async {
 /// This function should be called when the selected agent is no longer needed
 /// or the operation involving them has completed/failed.
 void releaseAgentLock(String agentFullString) {
-  print("Releasing lock for agent: $agentFullString");
-  agentLockManager.unlock(agentFullString);
+  // If we unlock the second the call ends,
+  // longestWaiting() might pick them again before Asterisk
+  // has fully torn down the previous channel.
+
+  print("Holding memory lock for $agentFullString for 3s (Cooldown)...");
+
+  Timer(Duration(seconds: 3), () {
+    agentLockManager.unlock(agentFullString);
+    print("Agent $agentFullString is now truly available in memory.");
+  });
 }
 
 Future<void> main() async {

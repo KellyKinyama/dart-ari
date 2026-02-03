@@ -5,7 +5,6 @@ import 'package:dart_ari/ari/api/enums.dart';
 import 'package:dart_ari/webserver/models/recordings.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:dart_ari/dart_ari.dart';
-import 'dart_ari.dart';
 import 'package:uuid/uuid.dart';
 
 late String voiceLoggerIp;
@@ -80,82 +79,65 @@ Future<void> findOrCreateBridge(Channel channel) async {
 //   Channel incoming,
 // ) async {
 //   Completer<String> completer = Completer<String>();
-//   Timer? timer; // Declare a Timer variable to hold the periodic timer
-//   incoming.on('StasisEnd', (_) {
-//     if (timer != null) {
-//       timer.cancel();
-//       completer.complete("");
+//   Timer? periodicTimer; // Timer for the 2-second agent check
+//   Timer? timeoutTimer; // Timer for the 10-minute max duration
+
+//   const maxDuration = Duration(minutes: 10);
+//   const checkInterval = Duration(seconds: 2);
+
+//   // Function to clean up both timers and complete the completer with a result.
+//   // This is the single, safe entry point for completing the process.
+//   void cleanupAndComplete(String result) {
+//     if (!completer.isCompleted) {
+//       periodicTimer?.cancel();
+//       timeoutTimer?.cancel();
+//       // Crucially, remove the event listener once done.
+//       incoming.off();
+//       print("pickAgent: Completing with result: '$result'. Timers cancelled.");
+//       completer.complete(result);
+//     } else {
+//       // Just in case a cleanup call is slightly delayed after completion.
+//       periodicTimer?.cancel();
+//       timeoutTimer?.cancel();
 //     }
+//   }
+
+//   // 1. Set up the 10-minute timeout timer
+//   timeoutTimer = Timer(maxDuration, () {
+//     print("pickAgent: 10-minute timeout reached. No agent found.");
+//     // Complete with an empty string on timeout.
+//     cleanupAndComplete("");
 //   });
-//   // Start the periodic timer
-//   timer = Timer.periodic(Duration(seconds: 2), (Timer t) async {
+
+//   // 2. Listener for StasisEnd (Incoming channel hangs up)
+//   // This ensures a cleanup if the caller hangs up while waiting.
+//   incoming.on('StasisEnd', (_) {
+//     print("pickAgent: Incoming channel hung up (StasisEnd).");
+//     cleanupAndComplete("");
+//   });
+
+//   // 3. Start the periodic timer for agent checking
+//   periodicTimer = Timer.periodic(checkInterval, (Timer t) async {
+//     // If we somehow get a tick after cleanup, stop the timer immediately.
+//     if (completer.isCompleted) {
+//       t.cancel();
+//       return;
+//     }
+
 //     print("pickAgent: Timer tick. Attempting to find an agent...");
 //     final freeAgent =
-//         await longestWaiting(); // Await the result of longestWaiting
+//         await longestWaiting(); // Assuming this is defined elsewhere
 
 //     if (freeAgent != null) {
-//       print("pickAgent: Agent found! $freeAgent. Cancelling timer...");
-//       t.cancel(); // Cancel the periodic timer as soon as an agent is found
-
-//       // Now, complete the main Completer with the found agent
-//       incoming.off();
-//       completer.complete(freeAgent);
-//       // });
-//     } else {
-//       print("pickAgent: No agent found this tick. Will retry...");
-//     }
-//   });
-
-//   // Return the Future associated with the completer.
-//   // This Future will only complete when completer.complete() is called inside the timer's callback.
-//   return completer.future;
-// }
-
-// Future<String> pickAgent(
-//   Channel incoming,
-// ) async {
-//   Completer<String> completer = Completer<String>();
-//   Timer? timer;
-
-//   incoming.on('StasisEnd', (_) {
-//     // --- FIX APPLIED HERE ---
-//     // Only attempt to complete the Completer if it hasn't been completed yet.
-//     if (!completer.isCompleted) {
-//       if (timer != null) {
-//         timer.cancel();
-//         completer.complete("");
-//       }
-//     }
-//   });
-
-//   // Start the periodic timer
-//   timer = Timer.periodic(Duration(seconds: 2), (Timer t) async {
-//     print("pickAgent: Timer tick. Attempting to find an agent...");
-//     final freeAgent = await longestWaiting();
-
-//     if (freeAgent != null) {
-//       print("pickAgent: Agent found! $freeAgent. Cancelling timer...");
-//       t.cancel();
-
-//       // --- FIX APPLIED HERE ---
-//       // Although the StasisEnd event is less likely to beat the agent logic,
-//       // it is safer to check here as well for race conditions.
-//       if (!completer.isCompleted) {
-//         incoming.off();
-//         completer.complete(freeAgent);
-//       } else {
-//         t.cancel();
-//       }
+//       print("pickAgent: Agent found! $freeAgent. Cancelling timers...");
+//       // Agent found, complete with the agent endpoint
+//       cleanupAndComplete(freeAgent);
 //     } else {
 //       print("pickAgent: No agent found in this tick. Will retry...");
-
-//       if (completer.isCompleted) {
-//         t.cancel();
-//       }
 //     }
 //   });
 
-//   // Return the Future associated with the completer.
+//   // Return the Future that resolves upon agent found, hangup, or timeout.
 //   return completer.future;
 // }
 
@@ -163,72 +145,67 @@ Future<String> pickAgent(
   Channel incoming,
 ) async {
   Completer<String> completer = Completer<String>();
-  Timer? periodicTimer; // Timer for the 2-second agent check
+  Timer? searchTimer; // Holds the reference for the next scheduled search
   Timer? timeoutTimer; // Timer for the 10-minute max duration
 
   const maxDuration = Duration(minutes: 10);
   const checkInterval = Duration(seconds: 2);
 
-  // Function to clean up both timers and complete the completer with a result.
-  // This is the single, safe entry point for completing the process.
+  // Single entry point for cleanup and completion
   void cleanupAndComplete(String result) {
     if (!completer.isCompleted) {
-      periodicTimer?.cancel();
+      searchTimer?.cancel();
       timeoutTimer?.cancel();
-      // Crucially, remove the event listener once done.
-      incoming.off();
-      print("pickAgent: Completing with result: '$result'. Timers cancelled.");
+      incoming.off(); // Remove listeners from the channel
+      print("pickAgent: Completing with result: '$result'. Search stopped.");
       completer.complete(result);
-    } else {
-      // Just in case a cleanup call is slightly delayed after completion.
-      periodicTimer?.cancel();
-      timeoutTimer?.cancel();
     }
   }
 
-  // 1. Set up the 10-minute timeout timer
+  // 1. 10-minute timeout
   timeoutTimer = Timer(maxDuration, () {
-    print("pickAgent: 10-minute timeout reached. No agent found.");
-    // Complete with an empty string on timeout.
+    print("pickAgent: 10-minute timeout reached.");
     cleanupAndComplete("");
   });
 
-  // 2. Listener for StasisEnd (Incoming channel hangs up)
-  // This ensures a cleanup if the caller hangs up while waiting.
+  // 2. Listener for Incoming hangup
   incoming.on('StasisEnd', (_) {
     print("pickAgent: Incoming channel hung up (StasisEnd).");
     cleanupAndComplete("");
   });
 
-  // 3. Start the periodic timer for agent checking
-  periodicTimer = Timer.periodic(checkInterval, (Timer t) async {
-    // If we somehow get a tick after cleanup, stop the timer immediately.
-    if (completer.isCompleted) {
-      t.cancel();
-      return;
+  // 3. Recursive Search Function
+  Future<void> startSearch() async {
+    // Stop if the caller hung up or timed out while we were waiting for DB
+    if (completer.isCompleted) return;
+
+    print("pickAgent: Starting agent search tick...");
+
+    try {
+      final freeAgent = await longestWaiting();
+
+      if (freeAgent != null) {
+        print("pickAgent: Agent found! $freeAgent.");
+        cleanupAndComplete(freeAgent);
+      } else {
+        print(
+            "pickAgent: No agent found. Retrying in ${checkInterval.inSeconds}s...");
+        // Schedule the next search ONLY if we haven't completed yet
+        if (!completer.isCompleted) {
+          searchTimer = Timer(checkInterval, startSearch);
+        }
+      }
+    } catch (e) {
+      print("pickAgent: Error during search: $e. Retrying...");
+      if (!completer.isCompleted) {
+        searchTimer = Timer(checkInterval, startSearch);
+      }
     }
+  }
 
-    Channel? stillThere = ari.stsisChannel(incoming);
+  // Initial call to start the loop
+  startSearch();
 
-    if (stillThere == null) {
-      print("pickAgent: Incoming channel no longer exists.");
-      cleanupAndComplete("");
-      return;
-    }
-
-    final freeAgent =
-        await longestWaiting(); // Assuming this is defined elsewhere
-
-    if (freeAgent != null) {
-      print("pickAgent: Agent found! $freeAgent. Cancelling timers...");
-      // Agent found, complete with the agent endpoint
-      cleanupAndComplete(freeAgent);
-    } else {
-      print("pickAgent: No agent found in this tick. Will retry...");
-    }
-  });
-
-  // Return the Future that resolves upon agent found, hangup, or timeout.
   return completer.future;
 }
 
@@ -285,8 +262,6 @@ Future<void> originate(
       await DbQueries.updateAgentStatus(
           endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
 
-      await incoming.hangup();
-
       releaseAgentLock(freeAgent);
     });
 
@@ -317,8 +292,6 @@ Future<void> originate(
 
       await DbQueries.updateAgentStatus(
           endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
-
-      await incoming.hangup();
 
       releaseAgentLock(freeAgent);
     });
@@ -369,13 +342,11 @@ Future<void> originate(
         dialed.on('ChannelDestroyed', (_) async {
           releaseAgentLock(freeAgent);
           await externalChannel.hangup();
-          await incoming.hangup();
         });
 
         dialed.on('StasisEnd', (_) async {
           releaseAgentLock(freeAgent);
           await externalChannel.hangup();
-          await incoming.hangup();
         });
 
         incoming.on('ChannelDestroyed', (_) async {
@@ -414,17 +385,17 @@ Future<void> originate(
 
     // This is the final step that might fail before all events are guaranteed to fire.
     await dialed.originate(
-        endpoint: endpoint,
-        app: 'hello',
-        appArgs: [
-          'dialed',
-          endpoint,
-          incoming.id,
-          incoming.caller.number,
-          filename
-        ],
-        callerId: incoming.caller.number,
-        timeout: -1);
+      endpoint: endpoint,
+      app: 'hello',
+      appArgs: [
+        'dialed',
+        endpoint,
+        incoming.id,
+        incoming.caller.number,
+        filename
+      ],
+      callerId: incoming.caller.number,
+    );
   } catch (e, st) {
     // 2. GUARANTEED RELEASE PATH (Call Setup Failure)
     print(
