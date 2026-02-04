@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:dart_ari/ari/api/enums.dart';
-import 'package:dart_ari/webserver/models/recordings.dart';
+import 'package:dart_ari/webserver/models/recordings2.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:dart_ari/dart_ari.dart';
 import 'package:uuid/uuid.dart';
@@ -141,71 +141,123 @@ Future<void> findOrCreateBridge(Channel channel) async {
 //   return completer.future;
 // }
 
+// Future<String> pickAgent(
+//   Channel incoming,
+// ) async {
+//   Completer<String> completer = Completer<String>();
+//   Timer? searchTimer; // Holds the reference for the next scheduled search
+//   Timer? timeoutTimer; // Timer for the 10-minute max duration
+
+//   const maxDuration = Duration(minutes: 10);
+//   const checkInterval = Duration(seconds: 2);
+
+//   // Single entry point for cleanup and completion
+//   void cleanupAndComplete(String result) {
+//     if (!completer.isCompleted) {
+//       searchTimer?.cancel();
+//       timeoutTimer?.cancel();
+//       incoming.off(); // Remove listeners from the channel
+//       print("pickAgent: Completing with result: '$result'. Search stopped.");
+//       completer.complete(result);
+//     }
+//   }
+
+//   // 1. 10-minute timeout
+//   timeoutTimer = Timer(maxDuration, () {
+//     print("pickAgent: 10-minute timeout reached.");
+//     cleanupAndComplete("");
+//   });
+
+//   // 2. Listener for Incoming hangup
+//   incoming.on('StasisEnd', (_) {
+//     print("pickAgent: Incoming channel hung up (StasisEnd).");
+//     cleanupAndComplete("");
+//   });
+
+//   // 3. Recursive Search Function
+//   Future<void> startSearch() async {
+//     // Stop if the caller hung up or timed out while we were waiting for DB
+//     if (completer.isCompleted) return;
+
+//     print("pickAgent: Starting agent search tick...");
+
+//     try {
+//       final freeAgent = await longestWaiting();
+
+//       if (freeAgent != null) {
+//         print("pickAgent: Agent found! $freeAgent.");
+//         cleanupAndComplete(freeAgent);
+//       } else {
+//         print(
+//             "pickAgent: No agent found. Retrying in ${checkInterval.inSeconds}s...");
+//         // Schedule the next search ONLY if we haven't completed yet
+//         if (!completer.isCompleted) {
+//           searchTimer = Timer(checkInterval, startSearch);
+//         }
+//       }
+//     } catch (e) {
+//       print("pickAgent: Error during search: $e. Retrying...");
+//       if (!completer.isCompleted) {
+//         searchTimer = Timer(checkInterval, startSearch);
+//       }
+//     }
+//   }
+
+//   // Initial call to start the loop
+//   startSearch();
+
+//   return completer.future;
+// }
+
 Future<String> pickAgent(
   Channel incoming,
 ) async {
   Completer<String> completer = Completer<String>();
-  Timer? searchTimer; // Holds the reference for the next scheduled search
-  Timer? timeoutTimer; // Timer for the 10-minute max duration
+  Timer? searchTimer;
+  Timer? timeoutTimer;
 
   const maxDuration = Duration(minutes: 10);
   const checkInterval = Duration(seconds: 2);
 
-  // Single entry point for cleanup and completion
   void cleanupAndComplete(String result) {
     if (!completer.isCompleted) {
       searchTimer?.cancel();
       timeoutTimer?.cancel();
-      incoming.off(); // Remove listeners from the channel
-      print("pickAgent: Completing with result: '$result'. Search stopped.");
+      incoming.off();
       completer.complete(result);
     }
   }
 
-  // 1. 10-minute timeout
-  timeoutTimer = Timer(maxDuration, () {
-    print("pickAgent: 10-minute timeout reached.");
-    cleanupAndComplete("");
-  });
+  timeoutTimer = Timer(maxDuration, () => cleanupAndComplete(""));
+  incoming.on('StasisEnd', (_) => cleanupAndComplete(""));
 
-  // 2. Listener for Incoming hangup
-  incoming.on('StasisEnd', (_) {
-    print("pickAgent: Incoming channel hung up (StasisEnd).");
-    cleanupAndComplete("");
-  });
-
-  // 3. Recursive Search Function
   Future<void> startSearch() async {
-    // Stop if the caller hung up or timed out while we were waiting for DB
     if (completer.isCompleted) return;
-
-    print("pickAgent: Starting agent search tick...");
 
     try {
       final freeAgent = await longestWaiting();
 
       if (freeAgent != null) {
-        print("pickAgent: Agent found! $freeAgent.");
+        // --- PREVENT DOUBLE CALLS HERE ---
+        // We update the DB status BEFORE completing the future.
+        // This ensures the very next DB query from another call sees this agent as busy.
+        await DbQueries.updateAgentStatus(
+            freeAgent, AgentState.LOGGEDIN, AgentState.RINGING);
+
         cleanupAndComplete(freeAgent);
       } else {
-        print(
-            "pickAgent: No agent found. Retrying in ${checkInterval.inSeconds}s...");
-        // Schedule the next search ONLY if we haven't completed yet
         if (!completer.isCompleted) {
           searchTimer = Timer(checkInterval, startSearch);
         }
       }
     } catch (e) {
-      print("pickAgent: Error during search: $e. Retrying...");
       if (!completer.isCompleted) {
         searchTimer = Timer(checkInterval, startSearch);
       }
     }
   }
 
-  // Initial call to start the loop
   startSearch();
-
   return completer.future;
 }
 
@@ -564,6 +616,9 @@ Future<void> originate(
     );
   } catch (e, st) {
     print("Originate Setup FATAL ERROR for agent $freeAgent: $e\n$st");
+    // If dial fails before event handlers are set, reset the agent
+    await DbQueries.updateAgentStatus(
+        freeAgent, AgentState.LOGGEDIN, AgentState.IDLE);
     releaseAgentLock(freeAgent);
   }
 }
