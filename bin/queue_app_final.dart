@@ -209,6 +209,214 @@ Future<String> pickAgent(
   return completer.future;
 }
 
+// Future<void> originate(
+//   Channel incoming,
+//   Bridge holdingBridge,
+// ) async {
+//   final filename = Uuid().v1();
+//   final rtpport = await rtpPort(filename);
+
+//   // 1. ACQUIRE AGENT (Agent selection and locking happens inside pickAgent/longestWaiting)
+//   final freeAgent = await pickAgent(incoming);
+
+//   // If pickAgent returns an empty string (timeout or incoming hangup), exit early.
+//   // No lock was successfully acquired that needs releasing.
+//   if (freeAgent.isEmpty) {
+//     print(
+//         "Originate: No agent picked or queue timed out/caller hung up. Exiting.");
+//     return;
+//   }
+
+//   // --- Start of GUARANTEED Execution Block ---
+//   // The try-catch block ensures that if any ARI or system exception occurs
+//   // before the event handlers are fully registered, the lock is released.
+//   try {
+//     // Standardize endpoint reference
+//     final endpoint = freeAgent;
+
+//     String dst = endpoint;
+//     if (dst.startsWith("PJSIP/")) {
+//       dst = dst.substring(6);
+//     }
+
+//     CallRecording? voiceRecord;
+//     print("Dialing agent: $endpoint");
+
+//     // This line might throw if the endpoint is invalid or ARI is down.
+//     final dialed = await client.channel(endpoint: endpoint);
+
+//     final mixingBridge = await client.bridge(type: ['mixing']);
+
+//     // --- EVENT HANDLERS FOR SUCCESSFUL RELEASE (Call Completion) ---
+
+//     // RELEASE PATH 1: Dialed channel ends (Agent hangs up/ARI terminates call)
+//     dialed.on('StasisEnd', (ssEndevent) async {
+//       final (sEndEvent, _) = ssEndevent as (StasisEnd, Channel);
+//       await incoming.hangup();
+//       if (voiceRecord != null) {
+//         voiceRecord!.hangupdate = sEndEvent.timestamp.toIso8601String();
+//         await voiceRecord!.insertCallRecording();
+//       }
+
+//       await Future.delayed(Duration(seconds: 15)); // Wrap-up time
+
+//       await DbQueries.updateAgentStatus(
+//           endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+
+//       releaseAgentLock(freeAgent);
+//     });
+
+//     // RELEASE PATH 2: Incoming channel ends (Customer hangs up)
+//     incoming.on('StasisEnd', (_) async {
+//       await mixingBridge.destroy();
+//       await dialed.hangup();
+//       // await holdingBridge.removeChannel(channel: [incoming.id]); // Covered by destroy
+//       releaseAgentLock(freeAgent);
+//     });
+
+//     // RELEASE PATH 3: Incoming channel is destroyed (External system action)
+//     incoming.on('ChannelDestroyed', (_) async {
+//       // await holdingBridge.removeChannel(channel: [incoming.id]); // Covered by destroy
+//       releaseAgentLock(freeAgent);
+//     });
+
+//     // RELEASE PATH 4: Dialed channel is destroyed (Agent drops call prematurely)
+//     dialed.on('ChannelDestroyed', (cdEvent) async {
+//       final (destroyedEvent, _) = cdEvent as (ChannelDestroyed, Channel);
+//       if (voiceRecord != null) {
+//         voiceRecord!
+//           ..duration_number = destroyedEvent.timestamp.toString()
+//           ..hangupdate = destroyedEvent.timestamp.toString();
+//       }
+
+//       await Future.delayed(Duration(seconds: 15)); // Wrap-up time
+
+//       await DbQueries.updateAgentStatus(
+//           endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+
+//       releaseAgentLock(freeAgent);
+//     });
+
+//     // --- Agent State Updates (Lock is KEPT in these states) ---
+
+//     dialed.on('ChannelStateChange', (event) async {
+//       final (_, dialChannel) = event as (ChannelStateChange, Channel);
+//       if (dialChannel.state == 'Up') {
+//         await holdingBridge.removeChannel(channel: [incoming.id]);
+//         await DbQueries.updateAgentStatus(
+//             endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
+//         // Lock is correctly kept while ONCONVERSATION
+//       } else if (dialChannel.state == 'Ringing') {
+//         await DbQueries.updateAgentStatus(
+//             endpoint, AgentState.LOGGEDIN, AgentState.RINGING);
+//         // Lock is correctly kept while RINGING
+//       }
+//       // Removed: releaseAgentLock was here, which was incorrect as the agent is still busy.
+//     });
+
+//     // --- StasisStart (Channel Answered/Connected) ---
+
+//     dialed.on('StasisStart', (ssEvent) async {
+//       final (sStartEvent, _) = ssEvent as (StasisStart, Channel);
+//       await dialed.answer();
+
+//       voiceRecord = CallRecording(
+//         file_name: filename,
+//         file_path: filename,
+//         agent_number: dst,
+//         phone_number: incoming.caller.number,
+//         answerdate: sStartEvent.timestamp.toIso8601String(),
+//         src: incoming.caller.number,
+//         dst: dst,
+//         clid: incoming.caller.number,
+//       );
+//       if (rtpport != null) {
+//         final externalChannel = await client.externalMedia(
+//           (err, _) => err ? throw err : null,
+//           app: 'hello',
+//           variables: {'CALLERID(name)': endpoint, 'recording': 'yes'},
+//           external_host: '$voiceLoggerIp:$rtpport',
+//           format: 'alaw',
+//         );
+
+//         // RELEASE PATHS for External Channel
+//         dialed.on('ChannelDestroyed', (_) async {
+//           releaseAgentLock(freeAgent);
+//           await externalChannel.hangup();
+//         });
+
+//         dialed.on('StasisEnd', (_) async {
+//           releaseAgentLock(freeAgent);
+//           await incoming.hangup();
+//           await externalChannel.hangup();
+//         });
+
+//         incoming.on('ChannelDestroyed', (_) async {
+//           releaseAgentLock(freeAgent);
+//           await externalChannel.hangup();
+//         });
+
+//         incoming.on('StasisEnd', (_) async {
+//           releaseAgentLock(freeAgent);
+//           await externalChannel.hangup();
+//         });
+
+//         try {
+//           await mixingBridge.addChannel(channels: [dialed.id]);
+//           await mixingBridge.addChannel(channels: [externalChannel.id]);
+//           await mixingBridge.addChannel(channels: [incoming.id]);
+//         } catch (e, st) {
+//           print("Error adding channels to bridge: $e, stacktrace: $st");
+//           await dialed.hangup();
+//           await externalChannel.hangup();
+//           await mixingBridge.destroy();
+//           releaseAgentLock(freeAgent); // Nested catch also releases lock
+//         }
+//       } else {
+//         try {
+//           await mixingBridge.addChannel(channels: [dialed.id]);
+//           await mixingBridge.addChannel(channels: [incoming.id]);
+//         } catch (e, st) {
+//           print("Error adding channels to bridge: $e, stacktrace: $st");
+//           await dialed.hangup();
+//           await mixingBridge.destroy();
+//           releaseAgentLock(freeAgent); // Nested catch also releases lock
+//         }
+//       }
+//     });
+
+//     // This is the final step that might fail before all events are guaranteed to fire.
+//     await dialed.originate(
+//       endpoint: endpoint,
+//       app: 'hello',
+//       appArgs: [
+//         'dialed',
+//         endpoint,
+//         incoming.id,
+//         incoming.caller.number,
+//         filename
+//       ],
+//       callerId: incoming.caller.number,
+//     );
+//   } catch (e, st) {
+//     // 2. GUARANTEED RELEASE PATH (Call Setup Failure)
+//     print(
+//         "Originate Setup FATAL ERROR for agent $freeAgent: $e\n$st. Releasing agent lock.");
+
+//     // This is the CRITICAL line to ensure the lock is always released on setup failure
+//     releaseAgentLock(freeAgent);
+
+//     // Attempt to clean up the incoming channel (the caller) and holding bridge
+//     try {
+//       //What to do next with an incoming call that failed to originate?
+//       // await incoming.hangup();
+//       // await holdingBridge.destroy();
+//     } catch (_) {
+//       // Ignore hangup/destroy errors during error handling
+//     }
+//   }
+// }
+
 Future<void> originate(
   Channel incoming,
   Bridge holdingBridge,
@@ -216,105 +424,92 @@ Future<void> originate(
   final filename = Uuid().v1();
   final rtpport = await rtpPort(filename);
 
-  // 1. ACQUIRE AGENT (Agent selection and locking happens inside pickAgent/longestWaiting)
+  // 1. ACQUIRE AGENT
   final freeAgent = await pickAgent(incoming);
 
-  // If pickAgent returns an empty string (timeout or incoming hangup), exit early.
-  // No lock was successfully acquired that needs releasing.
   if (freeAgent.isEmpty) {
     print(
         "Originate: No agent picked or queue timed out/caller hung up. Exiting.");
     return;
   }
 
-  // --- Start of GUARANTEED Execution Block ---
-  // The try-catch block ensures that if any ARI or system exception occurs
-  // before the event handlers are fully registered, the lock is released.
-  try {
-    // Standardize endpoint reference
-    final endpoint = freeAgent;
+  // --- CRITICAL MINIMAL CHANGE: PRUNE OLD LISTENERS ---
+  // This ensures that if Agent A missed the call, its listeners don't
+  // interfere with Agent B's attempt on this same 'incoming' channel.
+  incoming.off();
 
-    String dst = endpoint;
-    if (dst.startsWith("PJSIP/")) {
-      dst = dst.substring(6);
-    }
+  try {
+    final endpoint = freeAgent;
+    String dst =
+        endpoint.startsWith("PJSIP/") ? endpoint.substring(6) : endpoint;
 
     CallRecording? voiceRecord;
     print("Dialing agent: $endpoint");
 
-    // This line might throw if the endpoint is invalid or ARI is down.
     final dialed = await client.channel(endpoint: endpoint);
-
     final mixingBridge = await client.bridge(type: ['mixing']);
 
-    // --- EVENT HANDLERS FOR SUCCESSFUL RELEASE (Call Completion) ---
+    // --- EVENT HANDLERS WITH GUARANTEED RELEASE (try/finally) ---
 
-    // RELEASE PATH 1: Dialed channel ends (Agent hangs up/ARI terminates call)
+    // RELEASE PATH 1: Dialed channel ends (Agent hangs up/Missed Call)
     dialed.on('StasisEnd', (ssEndevent) async {
-      final (sEndEvent, _) = ssEndevent as (StasisEnd, Channel);
-      if (voiceRecord != null) {
-        voiceRecord!.hangupdate = sEndEvent.timestamp.toIso8601String();
-        await voiceRecord!.insertCallRecording();
+      try {
+        final (sEndEvent, _) = ssEndevent as (StasisEnd, Channel);
+
+        // Hang up customer since this agent attempt is over
+        await incoming.hangup().catchError((e) => null);
+
+        if (voiceRecord != null) {
+          voiceRecord!.hangupdate = sEndEvent.timestamp.toIso8601String();
+          await voiceRecord!.insertCallRecording();
+        }
+
+        await Future.delayed(Duration(seconds: 15)); // Wrap-up
+        await DbQueries.updateAgentStatus(
+            endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+      } finally {
+        // GUARANTEED RELEASE
+        await mixingBridge.destroy().catchError((e) => null);
+        releaseAgentLock(freeAgent);
       }
-
-      await Future.delayed(Duration(seconds: 15)); // Wrap-up time
-
-      await DbQueries.updateAgentStatus(
-          endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
-
-      releaseAgentLock(freeAgent);
     });
 
     // RELEASE PATH 2: Incoming channel ends (Customer hangs up)
     incoming.on('StasisEnd', (_) async {
-      await mixingBridge.destroy();
-      await dialed.hangup();
-      // await holdingBridge.removeChannel(channel: [incoming.id]); // Covered by destroy
-      releaseAgentLock(freeAgent);
-    });
-
-    // RELEASE PATH 3: Incoming channel is destroyed (External system action)
-    incoming.on('ChannelDestroyed', (_) async {
-      // await holdingBridge.removeChannel(channel: [incoming.id]); // Covered by destroy
-      releaseAgentLock(freeAgent);
-    });
-
-    // RELEASE PATH 4: Dialed channel is destroyed (Agent drops call prematurely)
-    dialed.on('ChannelDestroyed', (cdEvent) async {
-      final (destroyedEvent, _) = cdEvent as (ChannelDestroyed, Channel);
-      if (voiceRecord != null) {
-        voiceRecord!
-          ..duration_number = destroyedEvent.timestamp.toString()
-          ..hangupdate = destroyedEvent.timestamp.toString();
+      try {
+        await mixingBridge.destroy().catchError((e) => null);
+        await dialed.hangup().catchError((e) => null);
+      } finally {
+        releaseAgentLock(freeAgent);
       }
-
-      await Future.delayed(Duration(seconds: 15)); // Wrap-up time
-
-      await DbQueries.updateAgentStatus(
-          endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
-
-      releaseAgentLock(freeAgent);
     });
 
-    // --- Agent State Updates (Lock is KEPT in these states) ---
+    // RELEASE PATH 3 & 4: Channel Destroyed
+    incoming.on('ChannelDestroyed', (_) => releaseAgentLock(freeAgent));
+    dialed.on('ChannelDestroyed', (cdEvent) async {
+      try {
+        await DbQueries.updateAgentStatus(
+            endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
+      } finally {
+        releaseAgentLock(freeAgent);
+      }
+    });
 
+    // --- Agent State Updates ---
     dialed.on('ChannelStateChange', (event) async {
       final (_, dialChannel) = event as (ChannelStateChange, Channel);
       if (dialChannel.state == 'Up') {
-        await holdingBridge.removeChannel(channel: [incoming.id]);
+        await holdingBridge
+            .removeChannel(channel: [incoming.id]).catchError((e) => null);
         await DbQueries.updateAgentStatus(
             endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
-        // Lock is correctly kept while ONCONVERSATION
       } else if (dialChannel.state == 'Ringing') {
         await DbQueries.updateAgentStatus(
             endpoint, AgentState.LOGGEDIN, AgentState.RINGING);
-        // Lock is correctly kept while RINGING
       }
-      // Removed: releaseAgentLock was here, which was incorrect as the agent is still busy.
     });
 
-    // --- StasisStart (Channel Answered/Connected) ---
-
+    // --- StasisStart (Connected) ---
     dialed.on('StasisStart', (ssEvent) async {
       final (sStartEvent, _) = ssEvent as (StasisStart, Channel);
       await dialed.answer();
@@ -329,61 +524,32 @@ Future<void> originate(
         dst: dst,
         clid: incoming.caller.number,
       );
-      if (rtpport != null) {
-        final externalChannel = await client.externalMedia(
-          (err, _) => err ? throw err : null,
-          app: 'hello',
-          variables: {'CALLERID(name)': endpoint, 'recording': 'yes'},
-          external_host: '$voiceLoggerIp:$rtpport',
-          format: 'alaw',
-        );
 
-        // RELEASE PATHS for External Channel
-        dialed.on('ChannelDestroyed', (_) async {
-          releaseAgentLock(freeAgent);
-          await externalChannel.hangup();
-        });
+      try {
+        await mixingBridge.addChannel(channels: [dialed.id, incoming.id]);
 
-        dialed.on('StasisEnd', (_) async {
-          releaseAgentLock(freeAgent);
-          await externalChannel.hangup();
-        });
-
-        incoming.on('ChannelDestroyed', (_) async {
-          releaseAgentLock(freeAgent);
-          await externalChannel.hangup();
-        });
-
-        incoming.on('StasisEnd', (_) async {
-          releaseAgentLock(freeAgent);
-          await externalChannel.hangup();
-        });
-
-        try {
-          await mixingBridge.addChannel(channels: [dialed.id]);
+        if (rtpport != null) {
+          final externalChannel = await client.externalMedia(
+            (err, _) => err ? throw err : null,
+            app: 'hello',
+            variables: {'CALLERID(name)': endpoint, 'recording': 'yes'},
+            external_host: '$voiceLoggerIp:$rtpport',
+            format: 'alaw',
+          );
           await mixingBridge.addChannel(channels: [externalChannel.id]);
-          await mixingBridge.addChannel(channels: [incoming.id]);
-        } catch (e, st) {
-          print("Error adding channels to bridge: $e, stacktrace: $st");
-          await dialed.hangup();
-          await externalChannel.hangup();
-          await mixingBridge.destroy();
-          releaseAgentLock(freeAgent); // Nested catch also releases lock
+
+          // Cleanup for external channel
+          dialed.on('StasisEnd',
+              (_) => externalChannel.hangup().catchError((e) => null));
         }
-      } else {
-        try {
-          await mixingBridge.addChannel(channels: [dialed.id]);
-          await mixingBridge.addChannel(channels: [incoming.id]);
-        } catch (e, st) {
-          print("Error adding channels to bridge: $e, stacktrace: $st");
-          await dialed.hangup();
-          await mixingBridge.destroy();
-          releaseAgentLock(freeAgent); // Nested catch also releases lock
-        }
+      } catch (e) {
+        print("Bridge Error: $e");
+        await dialed.hangup().catchError((e) => null);
+        releaseAgentLock(freeAgent);
       }
     });
 
-    // This is the final step that might fail before all events are guaranteed to fire.
+    // Execute Dial
     await dialed.originate(
       endpoint: endpoint,
       app: 'hello',
@@ -397,21 +563,8 @@ Future<void> originate(
       callerId: incoming.caller.number,
     );
   } catch (e, st) {
-    // 2. GUARANTEED RELEASE PATH (Call Setup Failure)
-    print(
-        "Originate Setup FATAL ERROR for agent $freeAgent: $e\n$st. Releasing agent lock.");
-
-    // This is the CRITICAL line to ensure the lock is always released on setup failure
+    print("Originate Setup FATAL ERROR for agent $freeAgent: $e\n$st");
     releaseAgentLock(freeAgent);
-
-    // Attempt to clean up the incoming channel (the caller) and holding bridge
-    try {
-      //What to do next with an incoming call that failed to originate?
-      // await incoming.hangup();
-      // await holdingBridge.destroy();
-    } catch (_) {
-      // Ignore hangup/destroy errors during error handling
-    }
   }
 }
 

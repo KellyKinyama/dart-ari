@@ -214,10 +214,10 @@ void releaseAgentLock(String agentFullString) {
 
   print("Holding memory lock for $agentFullString for 3s (Cooldown)...");
 
-  Timer(Duration(seconds: 3), () {
-    agentLockManager.unlock(agentFullString);
-    print("Agent $agentFullString is now truly available in memory.");
-  });
+  // Timer(Duration(seconds: 3), () {
+  agentLockManager.unlock(agentFullString);
+  print("Agent $agentFullString is now truly available in memory.");
+  // });
 }
 
 Future<void> main() async {
