@@ -71,26 +71,22 @@ Future<String?> longestWaiting({Set<String>? triedAgents}) async {
   // 1. Get snapshot of agents currently IDLE in the database
   final idleMap = await idleAgents();
 
-  // Filter candidates that aren't in the exclusion list and aren't locally locked
+  // Filter candidates: ignore those we already tried or those currently locked in memory
   List<String> candidates = idleMap.keys.where((agent) {
     return !excludedAgents.contains(agent) && !agentLockManager.isLocked(agent);
   }).toList();
 
-  if (candidates.isEmpty) {
-    print("longestWaiting: No valid idle candidates found.");
-    return null;
-  }
+  if (candidates.isEmpty) return null;
 
-  // Map for translation between clean endpoint and full ARI endpoint
+  // 2. Selection Logic (Prioritize based on history)
   final Map<String, String> cleanToFull = {
     for (var full in candidates)
       (full.contains('/') ? full.split('/')[1] : full): full
   };
 
-  // 2. Selection Logic: Determine priority based on recording history
   final db = await Model.getDbConnection();
   final records = await db
-      .table(Recordings.table)
+      .table('recordings')
       .selectRaw('agent_number, MAX(updated_at) as last_call')
       .whereRaw(
           "agent_number IN (${cleanToFull.keys.map((e) => "'$e'").join(',')})")
@@ -101,32 +97,22 @@ Future<String?> longestWaiting({Set<String>? triedAgents}) async {
 
   final Set<String> withRecords =
       records.map((e) => e['agent_number'] as String).toSet();
-
-  // Sort: Agents with NO records (longest idle) first, then by oldest record
-  List<String> sortedCleanNumbers = [
+  List<String> sortedClean = [
     ...cleanToFull.keys.where((e) => !withRecords.contains(e)),
     ...records.map((e) => e['agent_number'] as String)
   ];
 
-  // 3. THE ATOMIC CLAIM LOOP
-  for (String cleanNumber in sortedCleanNumbers) {
-    String fullAgent = cleanToFull[cleanNumber]!;
+  // 3. TRY TO CLAIM ONE BY ONE
+  for (String clean in sortedClean) {
+    String fullAgent = cleanToFull[clean]!;
 
-    // Final memory lock check
-    if (agentLockManager.isLocked(fullAgent)) continue;
-
-    // Try to claim the agent globally in the DB
-    bool success = await claimAgentAtomic(fullAgent);
-
-    if (success) {
-      // If DB claim succeeds, set the local memory lock and return
+    // ATOMIC CLAIM: This is the moment Call A wins and Call B fails.
+    if (await claimAgentAtomic(fullAgent)) {
+      // ONLY NOW do we lock in memory to prevent other internal async tasks
       agentLockManager.tryLock(fullAgent);
-      print("longestWaiting: Agent $fullAgent claimed and locked.");
       return fullAgent;
     }
-
-    // If claim returns false, another instance grabbed them. Move to next.
-    print("longestWaiting: $fullAgent was snatched. Trying next candidate...");
+    // If claimAgentAtomic was false, someone else got them. Loop moves to next agent.
   }
 
   return null;
@@ -150,26 +136,21 @@ void releaseAgentLock(String agentFullString) {
 
 Future<bool> claimAgentAtomic(String endpoint) async {
   final db = await Model.getDbConnection();
-
-  // Normalize endpoint (strip PJSIP/ prefix for DB lookup)
   final cleanEndpoint =
       endpoint.contains('/') ? endpoint.split('/')[1] : endpoint;
 
   try {
-    // ATOMIC UPDATE: The 'whereIn' ensures we only succeed if the agent is still IDLE.
+    // This query is atomic. Only one process can update 'IDLE' to 'RINGING'.
     final affectedRows = await db
         .table('agents')
         .where('endpoint', '=', cleanEndpoint)
-        .whereIn('status', ['IDLE', 'AgentState.IDLE']).whereNotIn(
-            'user_status', ['ON_BREAK', 'AgentState.ON_BREAK']).update({
-      'state': AgentState.LOGGEDIN.toString(),
+        .whereIn('status', ['IDLE', 'AgentState.IDLE']).update({
       'status': AgentState.RINGING.toString(),
       'updated_at': DateTime.now().toIso8601String(),
     });
 
     return (affectedRows ?? 0) > 0;
   } catch (e) {
-    print("Atomic Claim Error: $e");
     return false;
   } finally {
     await db.disconnect();
@@ -185,7 +166,8 @@ Future<void> main() async {
   // You would need to ensure your idleAgents function returns some values for this test to work.
   // Assuming 'PJSIP/9000' is available.
 
-  free = await longestWaiting(triedAgents: excluded);
+  // free = await longestWaiting(triedAgents: excluded);
+  free = await longestWaiting();
 
   print("Agents locked: ${agentLockManager.lockedAgents}");
   print("Free agent: $free");
