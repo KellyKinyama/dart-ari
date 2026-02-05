@@ -2,7 +2,7 @@ import 'package:dart_ari/ari/api/enums.dart';
 import 'package:dart_ari/dart_ari.dart';
 import 'package:dart_ari/webserver/routes/api2.dart';
 import 'package:dotenv/dotenv.dart';
-import 'queue_app_final.dart';
+import 'queue_app_main.dart';
 import 'missed_calls.dart';
 
 late ARI ari;
@@ -10,8 +10,8 @@ late ARI ari;
 void main(List<String> arguments) async {
   ari = ARI.fromConfigs();
 
-  await DbQueries.updateInactiveAgentStatuses(
-      AgentState.LOGGEDOUT, AgentState.LOGGEDOUT);
+  // await DbQueries.updateInactiveAgentStatuses(
+  //     AgentState.LOGGEDOUT, AgentState.LOGGEDOUT);
 
   await ari.connect();
   queueApp(ari);
