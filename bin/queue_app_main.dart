@@ -177,6 +177,8 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
     {Set<String>? triedAgents}) async {
   if (!client.channels.containsKey(incoming.id)) return;
 
+  Channel? externalChannel; // ADD THIS: track the recording channel
+
   incoming.off();
   bool lockedAgent = false;
 
@@ -198,6 +200,11 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
     isReleased = true;
 
     try {
+      // 1. Kill the recording channel immediately if it exists
+      if (externalChannel != null) {
+        await externalChannel!.hangup().catchError((e) => null);
+        print("Finalizer: Recording channel for $endpoint disconnected.");
+      }
       if (isSuccess) {
         print("Finalizer: Success for $endpoint. 15s breathing space.");
         await Future.delayed(Duration(seconds: 15));
@@ -298,7 +305,12 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
 
     dialed.on('StasisStart', (event) async {
       watchdog.cancel();
+
       wasConnected = true;
+
+      if (!client.channels.containsKey(incoming.id)) {
+        throw Exception("Incoming channel: ${incoming.id} was deleted");
+      }
 
       // Update to ONCONVERSATION only when they successfully enter Stasis
       await DbQueries.updateAgentStatus(
@@ -324,7 +336,7 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
         }
 
         if (rtpport != null) {
-          final externalChannel = await client.externalMedia(
+          externalChannel = await client.externalMedia(
             (err, _) => err ? throw err : null,
             app: 'hello',
             variables: {'CALLERID(name)': endpoint, 'recording': 'yes'},
@@ -333,11 +345,11 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
           );
 
           if (mixingBridge != null) {
-            await mixingBridge!.addChannel(channels: [externalChannel.id]);
+            await mixingBridge!.addChannel(channels: [externalChannel!.id]);
           }
 
           dialed.on('StasisEnd', (_) async {
-            await externalChannel.hangup().catchError((e) => null);
+            await externalChannel!.hangup().catchError((e) => null);
           });
         }
       } catch (e) {
