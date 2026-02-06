@@ -11,6 +11,8 @@ late String voiceLoggerIp;
 late int voiceLoggerPort;
 late ARI client;
 
+Map<String, String> dialedAgents = {};
+
 final HttpClient httpRtpClient = HttpClient()
   ..connectionTimeout = const Duration(seconds: 10)
   ..maxConnectionsPerHost = 1000;
@@ -75,7 +77,7 @@ Future<void> findOrCreateBridge(Channel channel) async {
   await originate(channel, holdingBridge);
 }
 
-Future<String> pickAgent(Channel incoming) async {
+Future<String> pickAgent(Channel incoming, {Set<String>? triedAgents}) async {
   Completer<String> completer = Completer<String>();
   Timer? searchTimer;
   Timer? timeoutTimer;
@@ -109,7 +111,7 @@ Future<String> pickAgent(Channel incoming) async {
     isSearching = true;
     try {
       // 1. Attempt Atomic DB Claim
-      final freeAgent = await longestWaiting();
+      final freeAgent = await longestWaiting(triedAgents: triedAgents);
 
       // === NEW HIGHLIGHTED LOGIC: THE LATE-CANCEL GUARD ===
       // Check if the search was cancelled (timeout or hangup)
@@ -171,23 +173,18 @@ Future<String> pickAgent(Channel incoming) async {
   return completer.future;
 }
 
-Future<void> originate(
-  Channel incoming,
-  Bridge holdingBridge,
-) async {
-  // GUARD: Don't start if customer already left
+Future<void> originate(Channel incoming, Bridge holdingBridge,
+    {Set<String>? triedAgents}) async {
   if (!client.channels.containsKey(incoming.id)) return;
 
-  // Clear previous attempt's listeners so they don't stack
   incoming.off();
+  bool lockedAgent = false;
 
-  final freeAgent = await pickAgent(incoming);
+  final freeAgent = await pickAgent(incoming, triedAgents: triedAgents);
   if (freeAgent.isEmpty) return;
 
   final filename = Uuid().v1();
   final rtpport = await rtpPort(filename);
-
-  // IMPORTANT: incoming.off() was called inside pickAgent already.
 
   final endpoint = freeAgent;
   String dst = endpoint.startsWith("PJSIP/") ? endpoint.substring(6) : endpoint;
@@ -208,27 +205,45 @@ Future<void> originate(
         print("Finalizer: Call failed for $endpoint. Immediate release.");
       }
 
-      await DbQueries.updateAgentStatus(
-          endpoint, AgentState.LOGGEDIN, AgentState.IDLE);
-
       if (mixingBridge != null) {
         await mixingBridge!.destroy().catchError((e) => null);
       }
     } catch (e) {
       print("Finalizer Error: $e");
     } finally {
+      // ENSURE DB IS UPDATED REGARDLESS OF ERRORS
+      await DbQueries.updateAgentStatus(
+              endpoint, AgentState.LOGGEDIN, AgentState.IDLE)
+          .catchError((e) => null);
+
+      if (lockedAgent) {
+        dialedAgents.remove(freeAgent);
+      }
       releaseAgentLock(freeAgent);
 
-      // === THE RETRY LOGIC ===
-      // If the agent didn't answer AND customer is still on the line
+      if (triedAgents == null) {
+        triedAgents = {freeAgent};
+      } else {
+        triedAgents!.add(freeAgent);
+      }
+
       if (!isSuccess && client.channels.containsKey(incoming.id)) {
+        await Future.delayed(Duration(seconds: 5));
         print("Retry: Attempting next agent for customer ${incoming.id}...");
-        unawaited(originate(incoming, holdingBridge));
+        unawaited(originate(incoming, holdingBridge, triedAgents: triedAgents));
       }
     }
   }
 
   try {
+    if (dialedAgents[freeAgent] == null) {
+      dialedAgents[freeAgent] = incoming.id;
+      lockedAgent = true;
+    } else {
+      throw Exception(
+          "dialed agent: $freeAgent is already taken by: ${dialedAgents[freeAgent]}");
+    }
+
     final dialed = await client.channel(endpoint: endpoint);
     mixingBridge = await client.bridge(type: ['mixing']);
     CallRecording? voiceRecord;
@@ -244,7 +259,6 @@ Future<void> originate(
     dialed.on('StasisEnd', (event) async {
       watchdog.cancel();
       try {
-        // ONLY hang up the customer if a conversation actually happened
         if (wasConnected) {
           final (sEnd, _) = event as (StasisEnd, Channel);
           await incoming.hangup().catchError((e) => null);
@@ -273,11 +287,9 @@ Future<void> originate(
       final (_, dialChannel) = event as (ChannelStateChange, Channel);
       if (dialChannel.state == 'Up') {
         watchdog.cancel();
-        // Remove customer from MOH bridge only when agent answers
         await holdingBridge
             .removeChannel(channel: [incoming.id]).catchError((e) => null);
-        await DbQueries.updateAgentStatus(
-            endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
+        // NOTE: We do NOT update to ONCONVERSATION here to prevent race conditions
       } else if (dialChannel.state == 'Ringing') {
         await DbQueries.updateAgentStatus(
             endpoint, AgentState.LOGGEDIN, AgentState.RINGING);
@@ -287,6 +299,10 @@ Future<void> originate(
     dialed.on('StasisStart', (event) async {
       watchdog.cancel();
       wasConnected = true;
+
+      // Update to ONCONVERSATION only when they successfully enter Stasis
+      await DbQueries.updateAgentStatus(
+          endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
 
       final (sStart, _) = event as (StasisStart, Channel);
       await dialed.answer().catchError((e) => null);
@@ -325,24 +341,28 @@ Future<void> originate(
           });
         }
       } catch (e) {
-        print("StasisStart Error: $e");
+        print("StasisStart Inner Error: $e");
         await dialed.hangup().catchError((e) => null);
         await cleanUp(isSuccess: false);
       }
     });
 
+    if (!client.channels.containsKey(incoming.id)) {
+      throw Exception("Incoming channel: ${incoming.id} was deleted");
+    }
+
     await dialed.originate(
-      endpoint: endpoint,
-      app: 'hello',
-      appArgs: [
-        'dialed',
-        endpoint,
-        incoming.id,
-        incoming.caller.number,
-        filename
-      ],
-      callerId: incoming.caller.number,
-    );
+        endpoint: endpoint,
+        app: 'hello',
+        appArgs: [
+          'dialed',
+          endpoint,
+          incoming.id,
+          incoming.caller.number,
+          filename
+        ],
+        callerId: incoming.caller.number,
+        timeout: 10);
   } catch (e) {
     print("Originate Fatal Error: $e");
     await cleanUp(isSuccess: false);

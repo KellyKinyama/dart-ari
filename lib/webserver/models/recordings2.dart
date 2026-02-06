@@ -72,10 +72,19 @@ Future<String?> longestWaiting({Set<String>? triedAgents}) async {
   // This gives us a list of potential candidates to try.
   final idleMap = await idleAgents();
 
+  List<String> candidates = [];
+
   // Filter candidates: ignore those we already tried or those currently locked in local memory
-  List<String> candidates = idleMap.keys.where((agent) {
-    return !excludedAgents.contains(agent) && !agentLockManager.isLocked(agent);
-  }).toList();
+  if (idleMap.length <= 1) {
+    candidates = idleMap.keys
+        .where((agent) => agentLockManager.isLocked(agent) == false)
+        .toList();
+  } else {
+    candidates = idleMap.keys.where((agent) {
+      return !excludedAgents.contains(agent) &&
+          !agentLockManager.isLocked(agent);
+    }).toList();
+  }
 
   if (candidates.isEmpty) {
     print("longestWaiting: No idle candidates found in DB/Memory.");
