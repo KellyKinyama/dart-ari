@@ -170,6 +170,7 @@ Future<String> pickAgent(Channel incoming) async {
   startSearch();
   return completer.future;
 }
+
 Future<void> originate(
   Channel incoming,
   Bridge holdingBridge,
@@ -283,11 +284,22 @@ Future<void> originate(
 
     dialed.on('StasisStart', (event) async {
       watchdog.cancel();
-      wasConnected = true; // <--- The agent picked up! Mark as success.
+      wasConnected =
+          true; // Mark as success for the finalizer's breathing space
 
       final (sStart, _) = event as (StasisStart, Channel);
-      await dialed.answer().catchError((e) => null);
 
+      // 1. Immediate Answer
+      try {
+        await dialed.answer();
+      } catch (e) {
+        print("Error answering dialed channel: $e");
+        // If we can't answer the agent, we can't continue
+        await cleanUp(isSuccess: false);
+        return;
+      }
+
+      // 2. Setup Recording Metadata
       voiceRecord = CallRecording(
         file_name: filename,
         file_path: filename,
@@ -299,35 +311,58 @@ Future<void> originate(
         clid: incoming.caller.number,
       );
 
+      // 3. CRITICAL SECTION: Bridging the humans
       try {
         if (mixingBridge != null) {
-          await mixingBridge!.addChannel(channels: [dialed.id, incoming.id]);
+          // Final check: Is the caller still there before we bridge?
+          if (client.channels.containsKey(incoming.id)) {
+            await mixingBridge!.addChannel(channels: [dialed.id, incoming.id]);
+            print("Successfully bridged ${incoming.id} and ${dialed.id}");
+          } else {
+            throw Exception("Caller abandoned during agent pickup");
+          }
+        } else {
+          throw Exception("Mixing bridge was null at answer time");
         }
+      } catch (e) {
+        print("Critical Bridging Error: $e");
+        await dialed.hangup().catchError((e) => null);
+        await cleanUp(isSuccess: false);
+        return; // Exit here; the call is dead
+      }
 
+      // 4. AUXILIARY SECTION: External Media / Recording
+      // We wrap this in its own try-catch so a failure here doesn't drop the live call
+      try {
         if (rtpport != null) {
-          final externalChannel = await client.externalMedia(
-            (err, _) => err ? throw err : null,
-            app: 'hello',
-            variables: {'CALLERID(name)': endpoint, 'recording': 'yes'},
-            external_host: '$voiceLoggerIp:$rtpport',
-            format: 'alaw',
-          );
+          final externalChannel = await client
+              .externalMedia(
+                (err, _) => err
+                    ? throw Exception("ExternalMedia callback error")
+                    : null,
+                app: 'hello',
+                variables: {'CALLERID(name)': endpoint, 'recording': 'yes'},
+                external_host: '$voiceLoggerIp:$rtpport',
+                format: 'alaw',
+              )
+              .timeout(const Duration(seconds: 5));
 
           if (mixingBridge != null) {
             await mixingBridge!.addChannel(channels: [externalChannel.id]);
-          }
 
-          dialed.on('StasisEnd', (_) async {
-            await externalChannel.hangup().catchError((e) => null);
-          });
+            // Ensure recorder hangs up when the agent does
+            dialed.on('StasisEnd', (_) async {
+              await externalChannel.hangup().catchError((e) => null);
+            });
+            print("Recording started on port $rtpport");
+          }
         }
       } catch (e) {
-        print("StasisStart Error: $e");
-        await dialed.hangup().catchError((e) => null);
-        await cleanUp(isSuccess: false);
+        // We LOG the error, but DO NOT hang up the dialed/incoming channels.
+        // The agent and customer can still talk even if the recording fails.
+        print("Non-critical Recording Error (Call continuing): $e");
       }
     });
-
     // START THE DIAL
     await dialed.originate(
       endpoint: endpoint,
