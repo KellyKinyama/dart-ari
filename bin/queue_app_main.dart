@@ -305,20 +305,20 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
 
     dialed.on('StasisStart', (event) async {
       watchdog.cancel();
-
-      wasConnected = true;
-
-      if (!client.channels.containsKey(incoming.id)) {
-        throw Exception("Incoming channel: ${incoming.id} was deleted");
-      }
-
-      // Update to ONCONVERSATION only when they successfully enter Stasis
-      await DbQueries.updateAgentStatus(
-          endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
+      wasConnected = true; // Mark success so the agent gets their 15s break
 
       final (sStart, _) = event as (StasisStart, Channel);
-      await dialed.answer().catchError((e) => null);
 
+      // 1. Answer the agent first
+      try {
+        await dialed.answer();
+      } catch (e) {
+        print("Error answering dialed channel: $e");
+        await cleanUp(isSuccess: false);
+        return;
+      }
+
+      // 2. Prepare the DB record object
       voiceRecord = CallRecording(
         file_name: filename,
         file_path: filename,
@@ -330,35 +330,56 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
         clid: incoming.caller.number,
       );
 
+      // 3. BRIDGING (Critical: If this fails, the call fails)
       try {
         if (mixingBridge != null) {
-          await mixingBridge!.addChannel(channels: [dialed.id, incoming.id]);
-        }
-
-        if (rtpport != null) {
-          externalChannel = await client.externalMedia(
-            (err, _) => err ? throw err : null,
-            app: 'hello',
-            variables: {'CALLERID(name)': endpoint, 'recording': 'yes'},
-            external_host: '$voiceLoggerIp:$rtpport',
-            format: 'alaw',
-          );
-
-          if (mixingBridge != null) {
-            await mixingBridge!.addChannel(channels: [externalChannel!.id]);
+          // Double-check incoming channel still exists before bridging
+          if (client.channels.containsKey(incoming.id)) {
+            await mixingBridge!.addChannel(channels: [dialed.id, incoming.id]);
+          } else {
+            throw Exception("Incoming channel lost before bridge");
           }
-
-          dialed.on('StasisEnd', (_) async {
-            await externalChannel!.hangup().catchError((e) => null);
-          });
+        } else {
+          throw Exception("Mixing bridge was null");
         }
       } catch (e) {
-        print("StasisStart Inner Error: $e");
+        print("Critical Bridging Error: $e");
+        // Only hang up here because humans can't talk without a bridge
         await dialed.hangup().catchError((e) => null);
         await cleanUp(isSuccess: false);
+        return;
+      }
+
+      // 4. RECORDING (Non-Critical: If this fails, the humans keep talking)
+      try {
+        if (rtpport != null) {
+          final externalChannel = await client
+              .externalMedia(
+                (err, _) => err
+                    ? throw Exception("ExternalMedia callback error")
+                    : null,
+                app: 'hello',
+                variables: {'CALLERID(name)': endpoint, 'recording': 'yes'},
+                external_host: '$voiceLoggerIp:$rtpport',
+                format: 'alaw',
+              )
+              .timeout(const Duration(seconds: 5));
+
+          if (mixingBridge != null) {
+            await mixingBridge!.addChannel(channels: [externalChannel.id]);
+
+            // Link the external channel's life to the dialed channel
+            dialed.on('StasisEnd', (_) async {
+              await externalChannel.hangup().catchError((e) => null);
+            });
+          }
+        }
+      } catch (e) {
+        // We log the error but DO NOT hang up 'dialed'.
+        // This prevents "random hangups" caused by the logger server.
+        print("Recording setup failed (Call continuing): $e");
       }
     });
-
     if (!client.channels.containsKey(incoming.id)) {
       throw Exception("Incoming channel: ${incoming.id} was deleted");
     }
