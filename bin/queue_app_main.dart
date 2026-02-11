@@ -353,6 +353,8 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
 
             // C. Bridge the humans
             await mixingBridge!.addChannel(channels: [dialed.id, incoming.id]);
+            await DbQueries.updateAgentStatus(
+                freeAgent, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
             print("Human bridging successful: ${incoming.id} <-> ${dialed.id}");
           } else {
             throw Exception("Incoming channel lost before bridge");
