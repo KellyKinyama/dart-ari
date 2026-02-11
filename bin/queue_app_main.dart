@@ -305,13 +305,18 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
 
     dialed.on('StasisStart', (event) async {
       watchdog.cancel();
-      wasConnected = true; // Mark success so the agent gets their 15s break
+      wasConnected = true; // Mark success for the 15s agent breathing space
 
       final (sStart, _) = event as (StasisStart, Channel);
 
       // 1. Answer the agent first
       try {
         await dialed.answer();
+
+        // --- STABILIZATION DELAY 1 ---
+        // Give Asterisk 300ms to settle the SDP handshake and
+        // initialize the G.729/ALAW transcode path for the agent side.
+        await Future.delayed(const Duration(milliseconds: 300));
       } catch (e) {
         print("Error answering dialed channel: $e");
         await cleanUp(isSuccess: false);
@@ -330,12 +335,25 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
         clid: incoming.caller.number,
       );
 
-      // 3. BRIDGING (Critical: If this fails, the call fails)
+      // 3. BRIDGING (Critical: Human-to-Human path)
       try {
         if (mixingBridge != null) {
-          // Double-check incoming channel still exists before bridging
+          // Double-check incoming channel still exists
           if (client.channels.containsKey(incoming.id)) {
+            // A. Stop music on this channel specifically (safe for shared bridges)
+            // await incoming.stopMoh().catchError((e) => null);
+
+            // B. Pull from the shared holding bridge
+            await holdingBridge
+                .removeChannel(channel: [incoming.id]).catchError((e) => null);
+
+            // --- STABILIZATION DELAY 2 ---
+            // Small pause to ensure the customer's media buffer is clear of MOH packets
+            await Future.delayed(const Duration(milliseconds: 200));
+
+            // C. Bridge the humans
             await mixingBridge!.addChannel(channels: [dialed.id, incoming.id]);
+            print("Human bridging successful: ${incoming.id} <-> ${dialed.id}");
           } else {
             throw Exception("Incoming channel lost before bridge");
           }
@@ -344,11 +362,15 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
         }
       } catch (e) {
         print("Critical Bridging Error: $e");
-        // Only hang up here because humans can't talk without a bridge
         await dialed.hangup().catchError((e) => null);
         await cleanUp(isSuccess: false);
         return;
       }
+
+      // --- STABILIZATION DELAY 3 ---
+      // Give the human-to-human conversation 700ms to establish a steady
+      // RTP flow before injecting a THIRD leg (the recorder) into the bridge.
+      await Future.delayed(const Duration(milliseconds: 700));
 
       // 4. RECORDING (Non-Critical: If this fails, the humans keep talking)
       try {
@@ -372,14 +394,15 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
             dialed.on('StasisEnd', (_) async {
               await externalChannel.hangup().catchError((e) => null);
             });
+            print("Recording attached successfully on port $rtpport");
           }
         }
       } catch (e) {
-        // We log the error but DO NOT hang up 'dialed'.
-        // This prevents "random hangups" caused by the logger server.
-        print("Recording setup failed (Call continuing): $e");
+        // We log the error but DO NOT hang up. The humans are already talking.
+        print("Recording setup failed (Call continuing without recording): $e");
       }
     });
+
     if (!client.channels.containsKey(incoming.id)) {
       throw Exception("Incoming channel: ${incoming.id} was deleted");
     }
