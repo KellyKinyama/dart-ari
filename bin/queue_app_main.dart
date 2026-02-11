@@ -305,25 +305,20 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
 
     dialed.on('StasisStart', (event) async {
       watchdog.cancel();
-      wasConnected = true; // Mark success for the 15s agent breathing space
 
-      final (sStart, _) = event as (StasisStart, Channel);
+      wasConnected = true;
 
-      // 1. Answer the agent first
-      try {
-        await dialed.answer();
-
-        // --- STABILIZATION DELAY 1 ---
-        // Give Asterisk 300ms to settle the SDP handshake and
-        // initialize the G.729/ALAW transcode path for the agent side.
-        await Future.delayed(const Duration(milliseconds: 300));
-      } catch (e) {
-        print("Error answering dialed channel: $e");
-        await cleanUp(isSuccess: false);
-        return;
+      if (!client.channels.containsKey(incoming.id)) {
+        throw Exception("Incoming channel: ${incoming.id} was deleted");
       }
 
-      // 2. Prepare the DB record object
+      // Update to ONCONVERSATION only when they successfully enter Stasis
+      await DbQueries.updateAgentStatus(
+          endpoint, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
+
+      final (sStart, _) = event as (StasisStart, Channel);
+      await dialed.answer().catchError((e) => null);
+
       voiceRecord = CallRecording(
         file_name: filename,
         file_path: filename,
@@ -335,49 +330,29 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
         clid: incoming.caller.number,
       );
 
-      // 3. BRIDGING (Critical: Human-to-Human path)
+      // 3. BRIDGING (Critical: Humans must talk)
       try {
         if (mixingBridge != null) {
-          // Double-check incoming channel still exists
           if (client.channels.containsKey(incoming.id)) {
-            // A. Stop music on this channel specifically (safe for shared bridges)
-            // await incoming.stopMoh().catchError((e) => null);
-
-            // B. Pull from the shared holding bridge
             await holdingBridge
                 .removeChannel(channel: [incoming.id]).catchError((e) => null);
-
-            // --- STABILIZATION DELAY 2 ---
-            // Small pause to ensure the customer's media buffer is clear of MOH packets
             await Future.delayed(const Duration(milliseconds: 200));
-
-            // C. Bridge the humans
             await mixingBridge!.addChannel(channels: [dialed.id, incoming.id]);
-            await DbQueries.updateAgentStatus(
-                freeAgent, AgentState.LOGGEDIN, AgentState.ONCONVERSATION);
-            print("Human bridging successful: ${incoming.id} <-> ${dialed.id}");
           } else {
             throw Exception("Incoming channel lost before bridge");
           }
-        } else {
-          throw Exception("Mixing bridge was null");
         }
       } catch (e) {
-        print("Critical Bridging Error: $e");
+        print("CRITICAL: Human bridging failed: $e");
         await dialed.hangup().catchError((e) => null);
         await cleanUp(isSuccess: false);
-        return;
+        return; // Stop execution here
       }
 
-      // --- STABILIZATION DELAY 3 ---
-      // Give the human-to-human conversation 700ms to establish a steady
-      // RTP flow before injecting a THIRD leg (the recorder) into the bridge.
-      await Future.delayed(const Duration(milliseconds: 700));
-
-      // 4. RECORDING (Non-Critical: If this fails, the humans keep talking)
+      // 4. RECORDING (Non-Critical: Failure should NOT hang up the call)
       try {
         if (rtpport != null) {
-          final externalChannel = await client
+          externalChannel = await client
               .externalMedia(
                 (err, _) => err
                     ? throw Exception("ExternalMedia callback error")
@@ -387,21 +362,19 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
                 external_host: '$voiceLoggerIp:$rtpport',
                 format: 'alaw',
               )
-              .timeout(const Duration(seconds: 5));
+              .timeout(const Duration(seconds: 3));
 
           if (mixingBridge != null) {
-            await mixingBridge!.addChannel(channels: [externalChannel.id]);
+            await mixingBridge!.addChannel(channels: [externalChannel!.id]);
 
-            // Link the external channel's life to the dialed channel
             dialed.on('StasisEnd', (_) async {
-              await externalChannel.hangup().catchError((e) => null);
+              await externalChannel!.hangup().catchError((e) => null);
             });
-            print("Recording attached successfully on port $rtpport");
           }
         }
       } catch (e) {
-        // We log the error but DO NOT hang up. The humans are already talking.
-        print("Recording setup failed (Call continuing without recording): $e");
+        // We catch this error, print it, but DO NOT call dialed.hangup()
+        print("NON-CRITICAL: Recording setup failed (Call continuing): $e");
       }
     });
 
