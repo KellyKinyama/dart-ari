@@ -8,8 +8,32 @@ class AorAPI {
 
   static String scheme = "http";
   static late String apiKey = "asterisk:asterisk";
-  static late String host = "10.44.0.70";
+  static late String host = "10.1.101.155";
   static late int port = 8088;
+
+  // static Future<dynamic> get(String endpoint) async {
+  //   // baseUrl.path = baseUrl.path + '/channels';
+  //   // http://10.44.0.70:8088/ari/asterisk/config/dynamic/res_pjsip/aor/6004?api_key=asterisk:asterisk
+  //   var uri = Uri(
+  //       scheme: scheme,
+  //       userInfo: "",
+  //       host: host,
+  //       port: port,
+  //       path: "ari/asterisk/config/dynamic/res_pjsip/aor/$endpoint",
+  //       //Iterable<String>? pathSegments,
+  //       query: "",
+  //       queryParameters: {'api_key': apiKey}
+  //       //String? fragment
+  //       );
+  //   //var uri = Uri.http(baseUrl);
+  //   HttpClientRequest request = await client.getUrl(uri);
+  //   HttpClientResponse response = await request.close();
+  //   //print(response);
+  //   final String stringData = await response.transform(utf8.decoder).join();
+  //   //print(response.statusCode);
+  //   //print(stringData);
+  //   return (statusCode: response.statusCode, resp: stringData);
+  // }
 
   static Future<dynamic> get(String endpoint) async {
     // baseUrl.path = baseUrl.path + '/channels';
@@ -19,7 +43,7 @@ class AorAPI {
         userInfo: "",
         host: host,
         port: port,
-        path: "ari/asterisk/config/dynamic/res_pjsip/aor/$endpoint",
+        path: "/ari/endpoints/PJSIP/$endpoint",
         //Iterable<String>? pathSegments,
         query: "",
         queryParameters: {'api_key': apiKey}
@@ -120,15 +144,28 @@ class Aor {
     //});
   }
 
+  // static Future<bool> contact(String endpoint) async {
+  //   final aor = jsonDecode(await Aor.get(endpoint));
+  //   for (var item in aor) {
+  //     if (item["state"] == "online") {
+  //       print("value: ${item["value"]}");
+
+  //       return item["value"].length > 0;
+  //     }
+  //   }
+  //   return false;
+  // }
+
   static Future<bool> contact(String endpoint) async {
     final aor = jsonDecode(await Aor.get(endpoint));
-    for (var item in aor) {
-      if (item["attribute"] == "contact") {
-        print("value: ${item["value"]}");
+    print("object: $aor");
+    // for (var item in aor) {
+    if (aor["state"] == "online") {
+      print("state: ${aor["state"]}");
 
-        return item["value"].length > 0;
-      }
+      return true;
     }
+    // }
     return false;
   }
 }

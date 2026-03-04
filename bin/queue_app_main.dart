@@ -309,7 +309,9 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
       wasConnected = true;
 
       if (!client.channels.containsKey(incoming.id)) {
-        throw Exception("Incoming channel: ${incoming.id} was deleted");
+        // throw Exception("Incoming channel: ${incoming.id} was deleted");
+        await cleanUp(isSuccess: true);
+        return;
       }
 
       // Update to ONCONVERSATION only when they successfully enter Stasis

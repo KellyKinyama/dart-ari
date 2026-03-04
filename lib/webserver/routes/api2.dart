@@ -95,9 +95,10 @@ class WebServer {
       // Remove any trailing slashes from endpoint
       endpoint = endpoint.replaceAll(RegExp(r'/$'), '');
 
-      print('Endpoint: $endpoint');
+      // print('Endpoint: $endpoint');
 
       final contactStatus = await Aor.contact(endpoint);
+      print('Endpoint:$endpoint,Response $contactStatus');
 
       // Return a JSON response
       return Response.ok(
