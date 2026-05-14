@@ -24,5 +24,13 @@ class Config {
     dbConfigs[AST_DB_DATABASE] = env[AST_DB_DATABASE]!;
     dbConfigs[AST_DB_USERNAME] = env[AST_DB_USERNAME]!;
     dbConfigs[AST_DB_PASSWORD] = env[AST_DB_PASSWORD]!;
+
+    // Optional: tune the MySQL connection pool size used by Database.
+    // Defaults to Database.defaultPoolSize when unset. Keep small so we
+    // don't crowd out the Laravel dashboard sharing this database.
+    final poolSize = env['AST_DB_POOL_SIZE'];
+    if (poolSize != null && poolSize.isNotEmpty) {
+      dbConfigs['AST_DB_POOL_SIZE'] = poolSize;
+    }
   }
 }

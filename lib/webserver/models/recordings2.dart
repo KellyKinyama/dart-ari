@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dart_ari/webserver/models/base.dart';
 
+import '../../ari/api/database.dart';
 import '../../ari/api/enums.dart';
 import '../../ari/api/push/aors.dart';
 
@@ -51,7 +52,9 @@ Future<Map<String, AgentState>> idleAgents() async {
 
   print("Idle agents before checking contact: $res");
 
-  await db.disconnect();
+  // Pool stays open; release is a no-op that documents the intent.
+
+  await Database.release(db);
   for (var element in res) {
     if (await Aor.contact(element['endpoint'])) {
       agentsStates["PJSIP/${element['endpoint']}"] = AgentState.LOGGEDIN;
@@ -108,8 +111,8 @@ Future<String?> longestWaiting({Set<String>? triedAgents}) async {
       .groupBy('agent_number')
       .orderByRaw('MAX(updated_at) ASC')
       .get();
-  await db.disconnect();
-
+  // Pool stays open; release is a no-op that documents the intent.
+  await Database.release(db);
   final Set<String> withRecords =
       records.map((e) => e['agent_number'] as String).toSet();
 
@@ -191,7 +194,8 @@ Future<bool> claimAgentAtomic(String endpoint) async {
   } catch (e) {
     return false;
   } finally {
-    await db.disconnect();
+    // Pool stays open; release is a no-op that documents the intent.
+    await Database.release(db);
   }
 }
 

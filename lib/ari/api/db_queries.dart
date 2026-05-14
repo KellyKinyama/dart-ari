@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 // import 'package:dart_ari/ari/api/utils.dart';
-import 'package:dart_ari/dart_ari.dart';
 
+import 'database.dart';
 import 'enums.dart';
 // import 'globals.dart';
 import 'package:eloquent/eloquent.dart';
@@ -28,22 +28,9 @@ String formatDateTime(String input) {
 // Declarations
 
 class DbQueries {
-  static Future<Connection> getDbConnection() async {
-    var manager = Manager();
-    if (true) {
-      manager.addConnection({
-        'driver': 'mysql',
-        'host': config.dbConfigs[AST_DB_HOST],
-        'port': config.dbConfigs[AST_DB_PORT],
-        'database': config.dbConfigs[AST_DB_DATABASE],
-        'username': config.dbConfigs[AST_DB_USERNAME],
-        'password': config.dbConfigs[AST_DB_PASSWORD],
-      });
-      manager.setAsGlobal();
-    }
-    final db = await manager.connection();
-    return db;
-  }
+  /// Backwards-compatible accessor. Returns the process-wide pooled
+  /// connection. Do NOT call `disconnect()` on the result.
+  static Future<Connection> getDbConnection() => Database.connection();
 
   static Future<bool> updateInactiveAgentStatuses(
       AgentState state, AgentState status) async {
@@ -66,7 +53,8 @@ class DbQueries {
       // Handle reconnection logic if needed
       successful = false;
     } finally {
-      await db.disconnect();
+      // Pool stays open; release is a no-op that documents the intent.
+      await Database.release(db);
       // ignore: control_flow_in_finally
       return successful;
     }
@@ -95,7 +83,8 @@ class DbQueries {
       // Handle reconnection logic if needed
       successful = false;
     } finally {
-      await db.disconnect();
+      // Pool stays open; release is a no-op that documents the intent.
+      await Database.release(db);
       // ignore: control_flow_in_finally
       return successful;
     }
@@ -106,7 +95,8 @@ class DbQueries {
     var res = await db.table('agents').get();
 
     final resp = json.encode(res);
-    db.disconnect();
+    // Pool stays open; release is a no-op that documents the intent.
+    await Database.release(db);
     return resp;
   }
 
@@ -119,7 +109,8 @@ class DbQueries {
         .get();
 
     final resp = json.encode(res);
-    db.disconnect();
+    // Pool stays open; release is a no-op that documents the intent.
+    await Database.release(db);
     return resp;
   }
 
@@ -144,7 +135,8 @@ class DbQueries {
       print('Error: $e');
       return false; // Return false in case of error
     } finally {
-      await db.disconnect();
+      // Pool stays open; release is a no-op that documents the intent.
+      await Database.release(db);
     }
   }
 
@@ -199,7 +191,8 @@ class DbQueries {
       print('Insert Dial Event Error: $e, Stack trace: $st');
       success = false;
     } finally {
-      await db.disconnect();
+      // Pool stays open; release is a no-op that documents the intent.
+      await Database.release(db);
       return success;
     }
   }
@@ -252,7 +245,8 @@ class DbQueries {
       print('Insert StasisEnd Event Error: $e\nStack trace: $st');
       success = false;
     } finally {
-      await db.disconnect();
+      // Pool stays open; release is a no-op that documents the intent.
+      await Database.release(db);
       return success;
     }
   }
@@ -307,7 +301,8 @@ class DbQueries {
       print('Insert StasisStart Event Error: $e\nStack trace: $st');
       success = false;
     } finally {
-      await db.disconnect();
+      // Pool stays open; release is a no-op that documents the intent.
+      await Database.release(db);
       return success;
     }
   }

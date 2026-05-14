@@ -1,6 +1,8 @@
 import 'package:dart_ari/dart_ari.dart';
 import 'package:eloquent/eloquent.dart';
 
+import '../api/database.dart';
+
 class CallRecording {
   CallRecording(
       {required this.agent_number,
@@ -77,6 +79,7 @@ class CallRecording {
       "created_at": DateTime.now().toString(),
       "updated_at": DateTime.now().toString(),
     });
-    await db.disconnect();
+    // Pool stays open; release is a no-op that documents the intent.
+    await Database.release(db);
   }
 }

@@ -1,4 +1,4 @@
-
+import '../../ari/api/database.dart';
 import 'package:dart_ari/webserver/models/base.dart';
 
 class Agent extends Model {
@@ -16,7 +16,8 @@ class Agent extends Model {
       print('Error: $e');
       // Handle reconnection logic if needed
     } finally {
-      await db.disconnect();
+      // Pool stays open; release is a no-op that documents the intent.
+      await Database.release(db);
     }
   }
 
@@ -33,7 +34,8 @@ class Agent extends Model {
       res = "{'error: $e', stacktrace: $stackTrace}";
       // Handle reconnection logic if needed
     } finally {
-      await db.disconnect();
+      // Pool stays open; release is a no-op that documents the intent.
+      await Database.release(db);
     }
     return res;
   }

@@ -1,23 +1,14 @@
-import '../../ari/api/globals.dart';
 import 'package:eloquent/eloquent.dart';
 
-import '../../ari/config/constants.dart';
+import '../../ari/api/database.dart';
 
 abstract class Model {
-  static Future<Connection> getDbConnection() async {
-    var manager = Manager();
-    if (true) {
-      manager.addConnection({
-        'driver': 'mysql',
-        'host': config.dbConfigs[AST_DB_HOST],
-        'port': config.dbConfigs[AST_DB_PORT],
-        'database': config.dbConfigs[AST_DB_DATABASE],
-        'username': config.dbConfigs[AST_DB_USERNAME],
-        'password': config.dbConfigs[AST_DB_PASSWORD],
-      });
-      manager.setAsGlobal();
-    }
-    final db = await manager.connection();
-    return db;
-  }
+  /// Backwards-compatible accessor. Now returns the process-wide pooled
+  /// connection from [Database.connection] instead of opening a fresh
+  /// MySQL socket per call.
+  ///
+  /// IMPORTANT: callers must NOT call `db.disconnect()` on the returned
+  /// connection — that closes the shared pool. Use [Database.release]
+  /// (currently a no-op) to mark "I'm done" without tearing the pool down.
+  static Future<Connection> getDbConnection() => Database.connection();
 }
