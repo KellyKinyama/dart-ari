@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 
 import 'resource.dart';
+import 'ari_exception.dart';
 import 'globals.dart';
 
 // import 'models.dart';
@@ -36,20 +37,9 @@ class PlaybackApi {
         queryParameters: {'api_key': apiKey}
         //String? fragment
         );
-    try {
-      //var uri = Uri.http(baseUrl, '/playbacks/${id}');
-      HttpClientRequest request = await client.deleteUrl(uri);
-      HttpClientResponse response = await request.close();
-      print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    //var uri = Uri.http(baseUrl, '/playbacks/${id}');
+    final request = await client.deleteUrl(uri);
+    return await sendAriRequest(request);
   }
 
   // Future<HttpClientResponse> control(String id) async {

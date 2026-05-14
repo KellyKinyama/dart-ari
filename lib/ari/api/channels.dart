@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'ari_exception.dart';
 import 'globals.dart';
 
 //import 'package:dart_ari_proxy/ari_client/PlaybackApi.dart';
@@ -47,13 +48,8 @@ class ChannelsApi {
         //String? fragment
         );
     //var uri = Uri.http(baseUrl);
-    HttpClientRequest request = await client.getUrl(uri);
-    HttpClientResponse response = await request.close();
-    //print(response);
-    final String stringData = await response.transform(utf8.decoder).join();
-    //print(response.statusCode);
-    //print(stringData);
-    return (statusCode: response.statusCode, resp: stringData);
+    final request = await client.getUrl(uri);
+    return await sendAriRequest(request);
   }
 
   static Future<dynamic> originate(
@@ -113,19 +109,8 @@ class ChannelsApi {
         );
 
     //dsvar uri = Uri.http(baseUrl, '/channels', qParams);
-    try {
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
   }
 
   static Future<dynamic> create(
@@ -184,19 +169,8 @@ class ChannelsApi {
           'variables': variables ?? ""
         });
 
-    try {
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      //logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
   }
 
   static Future<dynamic> createWithId(
@@ -253,19 +227,8 @@ class ChannelsApi {
           'originator': originator ?? "",
         });
 
-    try {
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
   }
 
   static Future<HttpClientResponse> get(String channelId) async {
@@ -362,19 +325,8 @@ class ChannelsApi {
         );
     //var uri = Uri.http(baseUrl, '/channels/${channelId}');
 
-    try {
-      HttpClientRequest request = await client.deleteUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.deleteUrl(uri);
+    return await sendAriRequest(request);
   }
 
   static Future<dynamic> continueInDialplan(String channelId,
@@ -418,21 +370,8 @@ class ChannelsApi {
         );
 
     //var uri = Uri.http(baseUrl, '/channels/${channelId}/continue', qParams);
-    try {
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      // return response;
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-
-      print("Error: $err, $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
   }
 
   // static Future<HttpClientResponse> redirect(
@@ -481,20 +420,8 @@ class ChannelsApi {
 
 //HttpClientRequest request = await client.getUrl(uri);
     //var uri = Uri.http(baseUrl, '/channels/${channelId}/answer', qParams);
-    try {
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      // print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-
-      print("Error: $err, $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
   }
 
   // static Future<HttpClientResponse> ring(
@@ -870,21 +797,8 @@ class ChannelsApi {
         );
 
     //var uri = Uri(baseUrl);
-    try {
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      //return response;
-      response.certificate;
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
   }
 
   static Future<dynamic> playWithId(
@@ -924,19 +838,8 @@ class ChannelsApi {
         //String? fragment
         );
 
-    try {
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
   }
 
   // static Future<HttpClientResponse> record(
@@ -999,19 +902,8 @@ class ChannelsApi {
         //String? fragment
         );
 
-    try {
-      HttpClientRequest request = await client.getUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.getUrl(uri);
+    return await sendAriRequest(request);
   }
 
   // static Future<HttpClientResponse> setChannelVariable(
@@ -1123,19 +1015,8 @@ class ChannelsApi {
       //String? fragment
     );
 
-    try {
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print("External media channel: $stringData");
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
   }
 
   static Future<dynamic> externalMediaDelete(String id) async {
@@ -1180,19 +1061,8 @@ class ChannelsApi {
       //String? fragment
     );
 
-    try {
-      HttpClientRequest request = await client.deleteUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.deleteUrl(uri);
+    return await sendAriRequest(request);
   }
   // static Future<dynamic> externalMediaDelete(String channelId) async {
   //   // params: {
@@ -1328,8 +1198,16 @@ class Channel extends Resource {
     var caller = CallerID.fromJson(json['caller']);
 
     if (channel != null) {
-      channel.state = json['state'];
+      // Refresh mutable fields in place. `id` is intentionally NOT updated:
+      // channel ids are immutable and a different id implies a different
+      // channel entirely (caller of cacheChannel guarantees id match).
+      channel.name = json['name'] as String? ?? channel.name;
+      channel.accountcode =
+          json['accountcode'] as String? ?? channel.accountcode;
+      channel.state = json['state'] as String? ?? channel.state;
+      channel.caller = caller;
       channel.dialplan = json['dialplan'];
+      channel.language = json['language'] as String? ?? channel.language;
       channel.channelvars = json['channelvars'];
       channel.json = json;
       return channel;

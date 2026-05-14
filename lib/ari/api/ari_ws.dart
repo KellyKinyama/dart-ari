@@ -3,7 +3,9 @@ part of 'ari.dart';
 extension ARIPart1 on ARI {
   void listen(WebSocket ws) {
     late Command command;
-    RedisConnection().connect('10.44.0.56', 6379).then((connection) {
+    final env = DotEnv(includePlatformEnvironment: true)..load();
+    final serverIp = env['SERVER_IP']!;
+    RedisConnection().connect(serverIp, 6379).then((connection) {
       connection.send_object(["AUTH", "zsco@123deraboof"]).then((var response) {
         //print(response);
         command = connection;
@@ -96,16 +98,10 @@ extension ARIPart1 on ARI {
   }
 
   Channel channelFactory(dynamic jsonEventData) {
-    String channelId = jsonEventData['channel']['id'];
-    print("Channel id: $channelId");
-
-    if (channels[channelId] != null) {
-      updateChannel(channels[channelId]!, jsonEventData['channel']);
-      return channels[channelId]!;
-    } else {
-      channels[channelId] = Channel.fromJson(jsonEventData['channel']);
-      return channels[channelId]!;
-    }
+    // Single source of truth for caching channels by id. Guarantees one
+    // instance per channel id so event listeners attached anywhere in the
+    // codebase keep firing for subsequent WS events on the same channel.
+    return cacheChannel(jsonEventData['channel']);
   }
 
   void updateChannel(Channel ch, jsonChannelData) {

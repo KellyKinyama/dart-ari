@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'ari_exception.dart';
 import 'dart:convert';
 
 class EndpointsAPI {

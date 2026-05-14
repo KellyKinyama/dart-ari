@@ -152,17 +152,22 @@ Future<String?> longestWaiting({Set<String>? triedAgents}) async {
 /// Unlocks a specific agent that was previously locked.
 /// This function should be called when the selected agent is no longer needed
 /// or the operation involving them has completed/failed.
-void releaseAgentLock(String agentFullString) {
-  // If we unlock the second the call ends,
-  // longestWaiting() might pick them again before Asterisk
-  // has fully torn down the previous channel.
-
-  print("Holding memory lock for $agentFullString for 3s (Cooldown)...");
-
-  // Timer(Duration(seconds: 3), () {
-  agentLockManager.unlock(agentFullString);
-  print("Agent $agentFullString is now truly available in memory.");
-  // });
+///
+/// IMPORTANT: We hold the lock for a cooldown period AFTER the call ends so
+/// that Asterisk has time to fully tear down the previous channel. Without
+/// this delay, [longestWaiting] can immediately re-pick the same agent and
+/// trigger a second concurrent ring on a phone that is still cleaning up
+/// from the previous call.
+void releaseAgentLock(
+  String agentFullString, {
+  Duration cooldown = const Duration(seconds: 5),
+}) {
+  print(
+      "Holding memory lock for $agentFullString for ${cooldown.inSeconds}s (cooldown)...");
+  Timer(cooldown, () {
+    agentLockManager.unlock(agentFullString);
+    print("Agent $agentFullString is now truly available in memory.");
+  });
 }
 
 Future<bool> claimAgentAtomic(String endpoint) async {

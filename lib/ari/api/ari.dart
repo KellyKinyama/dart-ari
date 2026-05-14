@@ -1,5 +1,6 @@
 library ari_client;
 
+import 'package:dotenv/dotenv.dart';
 import 'package:redis/redis.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
@@ -16,6 +17,7 @@ import 'bridges.dart';
 import 'channels.dart';
 import 'device_state.dart';
 import 'endpoints.dart';
+import 'ari_exception.dart';
 import 'globals.dart';
 import 'playbacks.dart';
 
@@ -56,6 +58,13 @@ class ARI extends EventEmitter {
     DeviceStateApi.host = host;
     DeviceStateApi.port = port;
     DeviceStateApi.apiKey = apiKey;
+
+    // Register the cache helpers globally so static list/factory methods on
+    // Bridge and Channel (e.g. Bridge.list()) can dedupe against this
+    // instance's cache instead of returning fresh objects with ids we
+    // already track.
+    bridgeDeduper = cacheBridge;
+    channelDeduper = cacheChannel;
   }
 
   factory ARI.fromConfigs() {
@@ -104,6 +113,43 @@ class ARI extends EventEmitter {
   Channel? stsisChannel(Channel channel) {
     // TODO: implement stsisChannet
     return channels[channel.id];
+  }
+
+  /// Cache (or refresh) a Channel by id, guaranteeing a single instance per
+  /// channel id across the whole client.
+  ///
+  /// If a Channel with the same id already exists, its mutable fields are
+  /// updated in place from [channelJson] and the existing instance is
+  /// returned. This preserves every event listener (`.on('StasisStart', …)`,
+  /// `.on('StasisEnd', …)`, etc.) attached to the prior instance.
+  ///
+  /// If no instance exists, a new one is created from [channelJson] and
+  /// cached.
+  Channel cacheChannel(dynamic channelJson) {
+    final id = channelJson['id'] as String;
+    final existing = channels[id];
+    if (existing != null) {
+      Channel.fromJson(channelJson, channel: existing);
+      return existing;
+    }
+    final created = Channel.fromJson(channelJson);
+    channels[id] = created;
+    return created;
+  }
+
+  /// Cache (or refresh) a Bridge by id, guaranteeing a single instance per
+  /// bridge id and preserving previously attached event listeners. See
+  /// [cacheChannel] for the rationale.
+  Bridge cacheBridge(dynamic bridgeJson) {
+    final id = bridgeJson['id'] as String;
+    final existing = bridges[id];
+    if (existing != null) {
+      existing.updateFromJson(bridgeJson);
+      return existing;
+    }
+    final created = Bridge.fromJson(bridgeJson);
+    bridges[id] = created;
+    return created;
   }
 
   //Params params = Params('asterisk', 'asterisk', '10.44.0.55');
@@ -258,15 +304,12 @@ class ARI extends EventEmitter {
         otherChannelId: otherChannelId,
         originator: originator,
         variables: variables);
-    var channelJson;
     //resp.then((value) {
     //print(resp.resp);
-    channelJson = json.decode(resp.resp);
-    Channel channel = Channel.fromJson(channelJson);
-
-    channels[channel.id] = channel;
-
-    return channel;
+    final channelJson = json.decode(resp.resp);
+    // Use cacheChannel so we never replace an existing instance — keeping
+    // any event listeners the caller already attached intact.
+    return cacheChannel(channelJson);
     //});
     //return null;
   }
@@ -276,11 +319,10 @@ class ARI extends EventEmitter {
     var resp = await BridgesAPI.createOrUpdate(
         name: name, bridgeId: bridgeId, type: type);
     //print(resp.resp);
-    var bridgeJson = jsonDecode(resp.resp);
-    var bridge = Bridge.fromJson(bridgeJson);
-
-    bridges[bridge.id] = bridge;
-    return bridge;
+    final bridgeJson = jsonDecode(resp.resp);
+    // Asterisk's createOrUpdate may return an existing bridge with the same
+    // id — go through cacheBridge so we don't lose listeners on it.
+    return cacheBridge(bridgeJson);
   }
 
   Future<Channel> externalMedia(
@@ -306,12 +348,8 @@ class ARI extends EventEmitter {
 
     print("External media: ${resp.resp}");
 
-    var channelJson = jsonDecode(resp.resp);
-
-    Channel channel = Channel.fromJson(channelJson);
-
-    channels[channel.id] = channel;
-    return channel;
+    final channelJson = jsonDecode(resp.resp);
+    return cacheChannel(channelJson);
 
     // resp.then((value) {
     //   if (value.statusCode == 200 || value.statusCode == 204)

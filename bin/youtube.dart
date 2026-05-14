@@ -3,7 +3,7 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 void main() async {
   final yt = YoutubeExplode();
-  final videoUrl = 'https://youtu.be/86FAWCzIe_4';
+  final videoUrl = 'https://youtu.be/FMh8qNV3PHk';
 
   try {
     // 1. Get video metadata

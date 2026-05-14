@@ -11,7 +11,18 @@ late String voiceLoggerIp;
 late int voiceLoggerPort;
 late ARI client;
 
+/// Maps `agent endpoint -> incoming.id` for the agent currently being dialed.
+/// This is a SECONDARY in-process guard on top of [agentLockManager] and the
+/// atomic DB claim. Only the call that successfully inserts itself owns the
+/// agent and is allowed to release it.
 Map<String, String> dialedAgents = {};
+
+/// Tracks customer (incoming) channels that already have an active
+/// `originate()` flow in progress. Prevents a single customer channel from
+/// triggering multiple parallel agent picks (e.g. on Stasis re-entry,
+/// duplicate StasisStart events, etc.) which is a major source of
+/// "concurrent calls" complaints.
+final Set<String> _activeIncomingCalls = <String>{};
 
 final HttpClient httpRtpClient = HttpClient()
   ..connectionTimeout = const Duration(seconds: 10)
@@ -50,9 +61,15 @@ Future<void> stasisStart(StasisStart event, Channel channel) async {
       await findOrCreateBridge(channel);
     }
   } catch (e, st) {
+    // Any ARI HTTP failure (now surfaced as AriException) or unexpected
+    // error during call setup ends up here. Hang up the customer channel
+    // so they don't sit silently in Stasis with no progress.
     print("StasisStart Error: $e\n$st");
-    // await _safeHangup(channel);
-    // await _cleanupCall(channel.id);
+    try {
+      await channel.hangup();
+    } catch (hangupErr) {
+      print("StasisStart: hangup after error also failed: $hangupErr");
+    }
   }
 }
 
@@ -177,13 +194,29 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
     {Set<String>? triedAgents}) async {
   if (!client.channels.containsKey(incoming.id)) return;
 
+  // Re-entry guard: only one originate flow per customer channel at a time.
+  // Recursive retries from within cleanUp pass the same incoming.id, so we
+  // allow them by removing the marker in cleanUp BEFORE re-invoking.
+  if (!_activeIncomingCalls.add(incoming.id)) {
+    print(
+        "originate: skip duplicate flow for incoming ${incoming.id} (already active).");
+    return;
+  }
+
   Channel? externalChannel; // ADD THIS: track the recording channel
 
-  incoming.off();
+  // NOTE: Do NOT call `incoming.off()` here. It removes ALL listeners on the
+  // incoming channel, including ones registered by the previous originate()
+  // attempt's cleanup paths and pickAgent's StasisEnd guard. Listeners
+  // attached below are scoped to this attempt and will be no-ops once
+  // cleanUp's `isReleased` flag is set.
   bool lockedAgent = false;
 
   final freeAgent = await pickAgent(incoming, triedAgents: triedAgents);
-  if (freeAgent.isEmpty) return;
+  if (freeAgent.isEmpty) {
+    _activeIncomingCalls.remove(incoming.id);
+    return;
+  }
 
   final filename = Uuid().v1();
   final rtpport = await rtpPort(filename);
@@ -209,7 +242,12 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
         print("Finalizer: Success for $endpoint. 15s breathing space.");
         await Future.delayed(Duration(seconds: 15));
       } else {
-        print("Finalizer: Call failed for $endpoint. Immediate release.");
+        // Even on failure we MUST wait briefly before flipping the agent
+        // back to IDLE. Asterisk needs time to fully tear down the SIP
+        // dialog; flipping IDLE immediately allows the next pickAgent to
+        // re-dial a phone that is still ringing/clearing → concurrent ring.
+        print("Finalizer: Call failed for $endpoint. 5s breathing space.");
+        await Future.delayed(Duration(seconds: 5));
       }
 
       if (mixingBridge != null) {
@@ -218,15 +256,29 @@ Future<void> originate(Channel incoming, Bridge holdingBridge,
     } catch (e) {
       print("Finalizer Error: $e");
     } finally {
-      // ENSURE DB IS UPDATED REGARDLESS OF ERRORS
-      await DbQueries.updateAgentStatus(
-              endpoint, AgentState.LOGGEDIN, AgentState.IDLE)
-          .catchError((e) => null);
+      // Always clear the per-incoming guard so retries (or the next call on
+      // this customer channel) can proceed.
+      _activeIncomingCalls.remove(incoming.id);
 
+      // CRITICAL: Only touch the agent's DB status / in-memory lock /
+      // dialedAgents map if THIS originate attempt actually owned the agent.
+      // If `lockedAgent` is false we never got past the dialedAgents
+      // ownership check, which means another in-flight call owns this
+      // agent — touching it here would force-release a busy agent and is a
+      // primary cause of "agent receives concurrent calls".
       if (lockedAgent) {
+        await DbQueries.updateAgentStatus(
+                endpoint, AgentState.LOGGEDIN, AgentState.IDLE)
+            .catchError((e) => null);
+
         dialedAgents.remove(freeAgent);
+        // releaseAgentLock applies its own cooldown timer before the
+        // in-memory lock is actually cleared.
+        releaseAgentLock(freeAgent);
+      } else {
+        print(
+            "Finalizer: agent $endpoint not owned by this attempt — skipping DB/lock release.");
       }
-      releaseAgentLock(freeAgent);
 
       if (triedAgents == null) {
         triedAgents = {freeAgent};

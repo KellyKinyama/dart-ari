@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'ari_exception.dart';
 import 'globals.dart';
 import 'resource.dart';
 
@@ -39,19 +40,8 @@ class BridgesAPI {
         //String? fragment
         );
 
-    try {
-      HttpClientRequest request = await client.getUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.getUrl(uri);
+    return await sendAriRequest(request);
   }
 
   static Future<dynamic> create(
@@ -78,22 +68,8 @@ class BridgesAPI {
         );
     //var uri = Uri.http(baseUrl, '/bridges', queryParams);
 
-    /// print(uri); // http://example.org/path?q=dart
-    ///
-    try {
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
   }
 
   static Future<dynamic> createOrUpdate(
@@ -117,21 +93,8 @@ class BridgesAPI {
 
     // var uri = Uri.http(baseUrl, '/bridges/${bridgeId}', queryParams);
 
-    try {
-      /// print(uri); // http://example.org/path?q=dart
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
   }
 
   // static Future<HttpClientResponse> get(String bridgeId) async {
@@ -171,21 +134,8 @@ class BridgesAPI {
 
     //var uri = Uri.http(baseUrl, '/bridges/${bridgeId}', queryParams);
 
-    try {
-      /// print(uri); // http://example.org/path?q=dart
-      HttpClientRequest request = await client.deleteUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.deleteUrl(uri);
+    return await sendAriRequest(request);
   }
 
   static Future<dynamic> addChannel(
@@ -208,36 +158,26 @@ class BridgesAPI {
 
     //var uri = Uri.http(baseUrl, '/bridges/${bridgeId}/addChannel', queryParams);
 
-    // try {
-    /// print(uri); // http://example.org/path?q=dart
-    HttpClientRequest request = await client.postUrl(uri);
-    HttpClientResponse response = await request.close();
-    //print(response);
-
-    final String stringData = await response.transform(utf8.decoder).join();
-    //print(response.statusCode);
-    //print(stringData);
-    switch (response.statusCode) {
-      case 400:
-        throw Exception("Channel: $channels not found");
-
-      case 404:
-        throw Exception("Bridge: $bridgeId not found");
-      case 409:
-        throw Exception(
-            "Channel: $channels Bridge not in Stasis application; Channel currently recording");
-      case 422:
-        throw Exception("Channel: $channels not in Stasis application");
-      default:
-        // Handle other status codes if necessary, or do nothing
-        break;
+    final request = await client.postUrl(uri);
+    try {
+      return await sendAriRequest(request);
+    } on AriException catch (e) {
+      // Promote the well-known ARI status codes to descriptive errors so
+      // call sites can react to specific failure modes if they care to.
+      switch (e.statusCode) {
+        case 400:
+          throw Exception("Channel: $channels not found");
+        case 404:
+          throw Exception("Bridge: $bridgeId not found");
+        case 409:
+          throw Exception(
+              "Channel: $channels Bridge not in Stasis application; Channel currently recording");
+        case 422:
+          throw Exception("Channel: $channels not in Stasis application");
+        default:
+          rethrow;
+      }
     }
-    return (statusCode: response.statusCode, resp: stringData);
-    // } catch (err, stackTrace) {
-    // logger.severe('Caught an error', err, stackTrace);
-    // print("Error: $err, stacktrace: $stackTrace");
-    // return (statusCode: null, resp: null, err: err);
-    // }
   }
 
   static Future<dynamic> removeChannel(
@@ -260,21 +200,8 @@ class BridgesAPI {
     //var uri =
     //    Uri.http(baseUrl, '/bridges/${bridgeId}/removeChannel', queryParams);
 
-    try {
-      /// print(uri); // http://example.org/path?q=dart
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
   }
 
   static Future<dynamic> startMusicOnHold(String bridgeId) async {
@@ -295,21 +222,8 @@ class BridgesAPI {
 
     //var uri = Uri.http(baseUrl, '/bridges/${bridgeId}/moh', queryParams);
 
-    try {
-      /// print(uri); // http://example.org/path?q=dart
-      HttpClientRequest request = await client.postUrl(uri);
-      HttpClientResponse response = await request.close();
-      //print(response);
-
-      final String stringData = await response.transform(utf8.decoder).join();
-      //print(response.statusCode);
-      //print(stringData);
-      return (statusCode: response.statusCode, resp: stringData);
-    } catch (err, stackTrace) {
-      // logger.severe('Caught an error', err, stackTrace);
-      print("Error: $err, stacktrace: $stackTrace");
-      return (statusCode: null, resp: null, err: err);
-    }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
   }
 
   // static Future<HttpClientResponse> stopMusicOnHold(
@@ -494,12 +408,12 @@ class Bridge extends Resource {
     List<Bridge> varBridges = [];
     if (resp.statusCode != 404) {
       var bridgesJson = json.decode(resp.resp);
+      final dedup = bridgeDeduper;
       //print("Bridges: ${value.resp.runtimeType}");
       for (final e in bridgesJson) {
-        // Do something with the current element
-        //print(e);
-        Bridge brige = Bridge.fromJson(e);
-        // print(brige.bridge_type);
+        // Route through the cache so we return the live cached instance for
+        // any bridge id we already know about (preserves listeners).
+        Bridge brige = dedup != null ? dedup(e) as Bridge : Bridge.fromJson(e);
         varBridges.add(brige);
       }
       //print("Bridges: ${varBridges.length}");
@@ -522,7 +436,10 @@ class Bridge extends Resource {
     //var bridgesJson = json.decode(value.resp);
     //brg = Bridge.fromJson(bridgesJson);
     var bridgesJson = json.decode(resp.resp);
-    return Bridge.fromJson(bridgesJson);
+    final dedup = bridgeDeduper;
+    return dedup != null
+        ? dedup(bridgesJson) as Bridge
+        : Bridge.fromJson(bridgesJson);
     //if (resp.statusCode == 200) {
     //var bridgesJson = json.decode(value.resp);
     //brg = Bridge.fromJson(bridgesJson);
@@ -554,6 +471,30 @@ class Bridge extends Resource {
     //return;
   }
 
+  /// Refresh this bridge's mutable fields from a freshly fetched JSON
+  /// payload, preserving the existing instance identity (and therefore
+  /// every event listener already registered on it).
+  ///
+  /// `id` is intentionally NOT updated — bridge ids are immutable, and a
+  /// differing id signals a programming error (a different bridge entirely).
+  void updateFromJson(dynamic json) {
+    if (json['id'] != null && json['id'] != id) {
+      throw StateError(
+          "Bridge.updateFromJson: id mismatch ($id != ${json['id']})");
+    }
+    technology = json['technology'] as String? ?? technology;
+    bridge_type = json['bridge_type'] as String? ?? bridge_type;
+    bridge_class = json['bridge_class'] as String? ?? bridge_class;
+    creator = json['creator'] as String? ?? creator;
+    name = json['name'] as String? ?? name;
+    if (json['channels'] is List) {
+      channels = json['channels'] as List<dynamic>;
+    }
+    video_mode = json['video_mode'] as String? ?? video_mode;
+    video_source_id = json['video_source_id'] as String? ?? video_source_id;
+    jsonData = json;
+  }
+
   @override
   String toString() {
     // TODO: implement toString
@@ -570,12 +511,9 @@ class Bridges {
     List<Bridge> varBridges = [];
     if (resp.statusCode != 404) {
       var bridgesJson = json.decode(resp.resp);
-      //print("Bridges: ${value.resp.runtimeType}");
+      final dedup = bridgeDeduper;
       for (final e in bridgesJson) {
-        // Do something with the current element
-        //print(e);
-        Bridge brige = Bridge.fromJson(e);
-        // print(brige.bridge_type);
+        Bridge brige = dedup != null ? dedup(e) as Bridge : Bridge.fromJson(e);
         varBridges.add(brige);
       }
       //print("Bridges: ${varBridges.length}");
@@ -592,16 +530,10 @@ class Bridges {
     if (type != null) types = type.split(',');
 
     var resp = await BridgesAPI.create(name, bridgeId, types);
-    //resp.then((value) {
-    //print(resp.resp);
-    //Bridge brg;
-    //if (resp.statusCode != 404) {
     var bridgesJson = json.decode(resp.resp);
-    Bridge brg = Bridge.fromJson(bridgesJson);
-    //} else {
-    //callback(true);
-    //}
-    //});
-    return brg;
+    final dedup = bridgeDeduper;
+    return dedup != null
+        ? dedup(bridgesJson) as Bridge
+        : Bridge.fromJson(bridgesJson);
   }
 }
