@@ -842,34 +842,96 @@ class ChannelsApi {
     return await sendAriRequest(request);
   }
 
-  // static Future<HttpClientResponse> record(
-  //     String channelId, String playId, dynamic queryParams, qParams) async {
-  //   // params: {
-  //   //     'endpoint':,
-  //   //     'extension':,
-  //   //     'context':,
-  //   //     'priority':,
-  //   //     'label':,
-  //   //     'app':,
-  //   //     'appArgs':,
-  //   //     'callerId':,
-  //   //     'timeout':,
-  //   //     'channelId':,
-  //   //     'otherChannelId':,
-  //   //     'originator':,
-  //   //     'formats': [].concat(formats).join(","),
-  //   //   },
-  //   //   data: { variables },
+  /// POST /channels/{channelId}/record
+  ///
+  /// Start recording audio FROM a channel (this leg only; will NOT capture
+  /// audio sent TO the channel — use [BridgesAPI.record] on the mixing bridge
+  /// for a full both-sides recording).
+  ///
+  /// [name] and [format] are required by ARI. [ifExists] must be one of
+  /// `fail` (default), `overwrite`, `append`. [terminateOn] must be one of
+  /// `none` (default), `any`, `*`, `#`.
+  static Future<({int statusCode, String resp})> record({
+    required String channelId,
+    required String name,
+    String format = 'wav',
+    int? maxDurationSeconds,
+    int? maxSilenceSeconds,
+    String ifExists = 'fail',
+    bool beep = false,
+    String terminateOn = 'none',
+  }) async {
+    final qp = <String, String>{
+      'api_key': apiKey,
+      'name': name,
+      'format': format,
+      'ifExists': ifExists,
+      'beep': beep.toString(),
+      'terminateOn': terminateOn,
+    };
+    if (maxDurationSeconds != null) {
+      qp['maxDurationSeconds'] = maxDurationSeconds.toString();
+    }
+    if (maxSilenceSeconds != null) {
+      qp['maxSilenceSeconds'] = maxSilenceSeconds.toString();
+    }
 
-  //   var uri = Uri.http(baseUrl, '/channels/${channelId}/record', qParams);
-  //   HttpClientRequest request = await client.postUrl(uri);
-  //   HttpClientResponse response = await request.close();
-  //   //print(response);
-  //   final String stringData = await response.transform(utf8.decoder).join();
-  //   //print(response.statusCode);
-  //   //print(stringData);
-  //   return response;
-  // }
+    final uri = Uri(
+      scheme: scheme,
+      host: host,
+      port: port,
+      path: "ari/channels/$channelId/record",
+      queryParameters: qp,
+    );
+
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
+  }
+
+  /// GET /channels/{channelId}/rtp_statistics
+  ///
+  /// Returns the RTP stats block for a channel. Useful for grabbing the
+  /// negotiated local/remote RTP endpoints once media has been flowing.
+  static Future<({int statusCode, String resp})> rtpStatistics(
+      String channelId) async {
+    final uri = Uri(
+      scheme: scheme,
+      host: host,
+      port: port,
+      path: "ari/channels/$channelId/rtp_statistics",
+      queryParameters: {'api_key': apiKey},
+    );
+
+    final request = await client.getUrl(uri);
+    return await sendAriRequest(request);
+  }
+
+  /// POST /channels/{channelId}/dial
+  ///
+  /// Actually dial a channel that was previously allocated via
+  /// `POST /channels/create`. Without this call, a create-only channel sits
+  /// in the Stasis app in "pre-dial" state — no SIP INVITE is sent, so the
+  /// far end never rings.
+  static Future<({int statusCode, String resp})> dial({
+    required String channelId,
+    String? caller,
+    int? timeout,
+  }) async {
+    final qp = <String, String>{'api_key': apiKey};
+    if (caller != null && caller.isNotEmpty) qp['caller'] = caller;
+    if (timeout != null) qp['timeout'] = timeout.toString();
+
+    final uri = Uri(
+      scheme: scheme,
+      host: host,
+      port: port,
+      path: "ari/channels/$channelId/dial",
+      queryParameters: qp,
+    );
+
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
+  }
 
   static Future<dynamic> getChannelVariable(
       String channelId, String variable) async {
@@ -1418,6 +1480,72 @@ class Channel extends Resource {
     });
   }
 
+  /// Start a channel-leg recording. Returns the raw LiveRecording JSON.
+  /// Prefer [Bridge.record] for full-call (both-sides) audio.
+  Future<Map<String, dynamic>> record({
+    required String name,
+    String format = 'wav',
+    int? maxDurationSeconds,
+    int? maxSilenceSeconds,
+    String ifExists = 'overwrite',
+    bool beep = false,
+    String terminateOn = 'none',
+  }) async {
+    final resp = await ChannelsApi.record(
+      channelId: id,
+      name: name,
+      format: format,
+      maxDurationSeconds: maxDurationSeconds,
+      maxSilenceSeconds: maxSilenceSeconds,
+      ifExists: ifExists,
+      beep: beep,
+      terminateOn: terminateOn,
+    );
+    return jsonDecode(resp.resp) as Map<String, dynamic>;
+  }
+
+  /// GET /channels/{id}/rtp_statistics — raw RTPstat JSON.
+  Future<Map<String, dynamic>> rtpStatistics() async {
+    final resp = await ChannelsApi.rtpStatistics(id);
+    return jsonDecode(resp.resp) as Map<String, dynamic>;
+  }
+
+  /// Fetch the SDP-negotiated media endpoints for this channel via the
+  /// `CHANNEL()` dialplan function. Also grabs the SIP signaling peer via
+  /// `CHANNEL(pjsip,remote_addr)` / `CHANNEL(pjsip,local_addr)`.
+  ///
+  /// Each field is null if the variable isn't set (e.g. non-PJSIP channels,
+  /// or media not yet negotiated).
+  ///
+  /// The RTP fields come from the SDP, so they reflect what was announced
+  /// in the m=/c= lines — that's what "IPs in the SDP" refers to.
+  Future<SdpEndpoints> sdpEndpoints() async {
+    Future<String?> readVar(String v) async {
+      try {
+        final resp = await ChannelsApi.getChannelVariable(id, v);
+        final decoded = jsonDecode(resp.resp) as Map<String, dynamic>;
+        final value = decoded['value'] as String?;
+        return (value == null || value.isEmpty) ? null : value;
+      } on AriException {
+        return null;
+      }
+    }
+
+    final results = await Future.wait([
+      readVar('CHANNEL(pjsip,remote_addr)'),
+      readVar('CHANNEL(pjsip,local_addr)'),
+      readVar('CHANNEL(rtp,src)'),
+      readVar('CHANNEL(rtp,dest)'),
+    ]);
+
+    return SdpEndpoints(
+      pjsipRemote: results[0],
+      pjsipLocal: results[1],
+      rtpSrc: results[2],
+      rtpDest: results[3],
+    );
+  }
+
   @override
   String toString() {
     return jsonEncode(json);
@@ -1426,4 +1554,59 @@ class Channel extends Resource {
   String toJson() {
     return jsonEncode(json);
   }
+}
+
+/// SDP-negotiated media endpoints for a single channel, plus the SIP
+/// signaling peer address for reference.
+///
+/// Values are strings in `IP:PORT` form as Asterisk emits them. Any field
+/// may be null when the variable is unavailable (non-PJSIP channel, media
+/// not yet negotiated, or CHANNEL() returned empty).
+class SdpEndpoints {
+  final String? pjsipRemote;
+  final String? pjsipLocal;
+  final String? rtpSrc;
+  final String? rtpDest;
+
+  const SdpEndpoints({
+    this.pjsipRemote,
+    this.pjsipLocal,
+    this.rtpSrc,
+    this.rtpDest,
+  });
+
+  /// IP portion of [rtpDest] — the remote SDP RTP endpoint. This is the
+  /// "peer IP from the SDP" callers usually mean when they say "mark the
+  /// call by IP".
+  String? get remoteRtpIp => _ipOf(rtpDest);
+
+  /// IP portion of [rtpSrc] — Asterisk's local RTP endpoint.
+  String? get localRtpIp => _ipOf(rtpSrc);
+
+  /// IP portion of [pjsipRemote] — the SIP signaling peer.
+  String? get remoteSipIp => _ipOf(pjsipRemote);
+
+  static String? _ipOf(String? addr) {
+    if (addr == null || addr.isEmpty) return null;
+    // Bracketed IPv6: [::1]:5060
+    if (addr.startsWith('[')) {
+      final end = addr.indexOf(']');
+      if (end < 0) return addr;
+      return addr.substring(1, end);
+    }
+    final colon = addr.lastIndexOf(':');
+    if (colon < 0) return addr;
+    return addr.substring(0, colon);
+  }
+
+  Map<String, String?> toMap() => {
+        'pjsip_remote': pjsipRemote,
+        'pjsip_local': pjsipLocal,
+        'rtp_src': rtpSrc,
+        'rtp_dest': rtpDest,
+      };
+
+  @override
+  String toString() =>
+      'SdpEndpoints(pjsipRemote=$pjsipRemote, pjsipLocal=$pjsipLocal, rtpSrc=$rtpSrc, rtpDest=$rtpDest)';
 }

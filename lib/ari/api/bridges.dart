@@ -297,29 +297,52 @@ class BridgesAPI {
   //   return response;
   // }
 
-  // static Future<HttpClientResponse> record(
-  //     String bridgeId, dynamic queryParams) async {
-  //   var qParams = {
-  //     'bridgeId': queryParams.bridgeId,
-  //     'media': queryParams.media.join(','),
-  //     'playbackId': "",
-  //     'lang': "",
-  //     'offsetms': "",
-  //     'skipms': ""
-  //   };
+  /// POST /bridges/{bridgeId}/record
+  ///
+  /// Record all audio on a bridge (all participating channels mixed). This
+  /// is what you almost always want when "recording a call" — it captures
+  /// both legs unlike the per-channel record which only captures inbound
+  /// audio from one leg.
+  ///
+  /// [name] and [format] are required by ARI. [ifExists] is one of `fail`
+  /// (default), `overwrite`, `append`. [terminateOn] is one of `none`
+  /// (default), `any`, `*`, `#`.
+  static Future<({int statusCode, String resp})> record({
+    required String bridgeId,
+    required String name,
+    String format = 'wav',
+    int? maxDurationSeconds,
+    int? maxSilenceSeconds,
+    String ifExists = 'fail',
+    bool beep = false,
+    String terminateOn = 'none',
+  }) async {
+    final qp = <String, String>{
+      'api_key': apiKey,
+      'name': name,
+      'format': format,
+      'ifExists': ifExists,
+      'beep': beep.toString(),
+      'terminateOn': terminateOn,
+    };
+    if (maxDurationSeconds != null) {
+      qp['maxDurationSeconds'] = maxDurationSeconds.toString();
+    }
+    if (maxSilenceSeconds != null) {
+      qp['maxSilenceSeconds'] = maxSilenceSeconds.toString();
+    }
 
-  //   var uri = Uri.http(baseUrl, '/bridges/${bridgeId}/record', qParams);
+    final uri = Uri(
+      scheme: scheme,
+      host: host,
+      port: port,
+      path: "ari/bridges/$bridgeId/record",
+      queryParameters: qp,
+    );
 
-  //   /// print(uri); // http://example.org/path?q=dart
-  //   HttpClientRequest request = await client.postUrl(uri);
-  //   HttpClientResponse response = await request.close();
-  //   //print(response);
-
-  //   final String stringData = await response.transform(utf8.decoder).join();
-  //   //print(response.statusCode);
-  //   //print(stringData);
-  //   return response;
-  // }
+    final request = await client.postUrl(uri);
+    return await sendAriRequest(request);
+  }
 
   //Params params;
 }
@@ -469,6 +492,30 @@ class Bridge extends Resource {
     //     callback(true);
     // });
     //return;
+  }
+
+  /// Start recording this bridge (mixed audio from all participating
+  /// channels). Returns the raw LiveRecording JSON.
+  Future<Map<String, dynamic>> record({
+    required String name,
+    String format = 'wav',
+    int? maxDurationSeconds,
+    int? maxSilenceSeconds,
+    String ifExists = 'overwrite',
+    bool beep = false,
+    String terminateOn = 'none',
+  }) async {
+    final resp = await BridgesAPI.record(
+      bridgeId: id,
+      name: name,
+      format: format,
+      maxDurationSeconds: maxDurationSeconds,
+      maxSilenceSeconds: maxSilenceSeconds,
+      ifExists: ifExists,
+      beep: beep,
+      terminateOn: terminateOn,
+    );
+    return jsonDecode(resp.resp) as Map<String, dynamic>;
   }
 
   /// Refresh this bridge's mutable fields from a freshly fetched JSON
