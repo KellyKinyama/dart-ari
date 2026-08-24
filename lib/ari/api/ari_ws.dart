@@ -2,7 +2,7 @@ part of 'ari.dart';
 
 extension ARIPart1 on ARI {
   void listen(WebSocket ws) {
-    late Command command;
+    Command? command;
     final env = DotEnv(includePlatformEnvironment: true)..load();
     final serverIp = env['SERVER_IP']!;
     RedisConnection().connect(serverIp, 6379).then((connection) {
@@ -14,17 +14,10 @@ extension ARIPart1 on ARI {
     });
 
     ws.listen((onData) {
-      // eventEmitterProxy.emit("proxy", onData);
-
-      //  Command command = await RedisConnection().connect('10.44.0.55', 6379);
-      // command.send_object(["AUTH", "zsco@123deraboof"]).then((var response) {
-      //   //print(response);
-      // });
-      //final pubsub = PubSub(command);
-      //pubsub.sub(["monkey"]);
-
-      command
-          .send_object(["PUBLISH", "monkey", onData]).then((var response) {});
+      // Guard the Redis publish: on WS reconnect (ApplicationReplaced etc.)
+      // events can arrive before Redis auth completes; silently skip publish
+      // in that window rather than crashing the whole recorder.
+      command?.send_object(["PUBLISH", "monkey", onData]);
 
       var e = json.decode(onData);
 

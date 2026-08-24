@@ -89,6 +89,13 @@ class _CallState {
   SdpEndpoints? callerSdp;
   SdpEndpoints? peerSdp;
 
+  /// SIP correlation headers per leg. Populated in the same order the ARI
+  /// events fire; each map key is the SIP header name (Call-ID, From, To,
+  /// Contact, ...). Enables downstream tools to pull a pcap-side dialog
+  /// that carries the "real" agent SDP behind a B2BUA like Alcatel OXE.
+  final Map<String, String?> callerSip = {};
+  final Map<String, String?> peerSip = {};
+
   late final CallRecording rec = CallRecording(
     agent_number: peerEndpoint,
     phone_number: '',
@@ -192,6 +199,9 @@ Future<void> _handleStasisStart(StasisStart event, Channel channel) async {
     _mergeSdp(state);
     print('[recorder] caller SDP: ${state.callerSdp}');
 
+    state.callerSip.addAll(await _readSipHeaders(channel));
+    print('[recorder] caller SIP: ${state.callerSip}');
+
     await _originatePeer(channel, state);
   } catch (e, st) {
     print('[recorder] StasisStart error: $e\n$st');
@@ -266,6 +276,7 @@ Future<void> _onPeerStasisStart(
     // Fire-and-forget: trunk SDP finishes negotiating shortly after the
     // bridge is assembled; poll until CHANNEL(rtp,dest) is populated.
     unawaited(_capturePeerSdp(peer, state));
+    unawaited(_capturePeerSip(peer, state));
   } catch (e, st) {
     print('[recorder] externalMedia/bridge setup failed: $e\n$st');
     await _finalize(incoming, state, reason: 'setup failed');
@@ -290,6 +301,25 @@ Future<void> _capturePeerSdp(Channel peer, _CallState state) async {
     }
   }
   print('[recorder] peer SDP not populated after retries: ${state.peerSdp}');
+}
+
+/// Capture SIP correlation headers on the peer channel. Retries because the
+/// PJSIP session may not have processed the trunk's 200 OK by the time
+/// StasisStart fires. See docs/ari-recorder/agent-identification.md.
+Future<void> _capturePeerSip(Channel peer, _CallState state) async {
+  const attempts = [100, 300, 800, 1500];
+  for (final delayMs in attempts) {
+    await Future.delayed(Duration(milliseconds: delayMs));
+    if (!_calls.containsKey(state.callerId)) return;
+    final headers = await _readSipHeaders(peer);
+    if (headers.values.every((v) => v == null)) continue;
+    state.peerSip
+      ..clear()
+      ..addAll(headers);
+    print('[recorder] peer SIP: ${state.peerSip}');
+    return;
+  }
+  print('[recorder] peer SIP headers not populated after retries');
 }
 
 /// Ask the recorder daemon to reserve a UDP port for [basename].
@@ -346,6 +376,35 @@ Future<SdpEndpoints?> _safeSdp(Channel ch) async {
     print('[recorder] sdpEndpoints failed for ${ch.name}: $e');
     return null;
   }
+}
+
+/// Read the SIP correlation headers from a PJSIP channel via
+/// `PJSIP_HEADER(read,<name>)`. Any header that isn't set (or the channel
+/// isn't PJSIP) returns null and is skipped by the caller. These identify
+/// the exact SIP dialog for offline pcap correlation.
+Future<Map<String, String?>> _readSipHeaders(Channel ch) async {
+  const headerNames = [
+    'Call-ID',
+    'From',
+    'To',
+    'Contact',
+    'Remote-Party-ID',
+    'P-Asserted-Identity',
+    'Diversion',
+  ];
+  final out = <String, String?>{};
+  for (final name in headerNames) {
+    try {
+      final resp = await ChannelsApi.getChannelVariable(
+          ch.id, 'PJSIP_HEADER(read,$name)');
+      final decoded = jsonDecode(resp.resp) as Map<String, dynamic>;
+      final value = decoded['value'] as String?;
+      out[name] = (value == null || value.isEmpty) ? null : value;
+    } on AriException {
+      out[name] = null;
+    }
+  }
+  return out;
 }
 
 /// Diagnostic: query each channel variable individually and log what came
@@ -457,6 +516,10 @@ Future<void> _finalize(Channel caller, _CallState state,
     'recorder_rtp_host': _recorder.rtpHost,
     'recorder_rtp_port': state.rtpPort,
     'recorder_format': _recorder.format,
+    // SIP correlation IDs — feed to sngrep/tshark to pull the raw dialog
+    // and (for B2BUAs like Alcatel OXE) the real agent SDP endpoint.
+    'caller_sip': state.callerSip,
+    'peer_sip': state.peerSip,
     ...state.rec.parse(),
     'src': state.rec.src,
     'dst': state.rec.dst,

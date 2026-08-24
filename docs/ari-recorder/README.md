@@ -17,6 +17,10 @@ Entry point: [bin/record_calls.dart](../../bin/record_calls.dart).
   (`Channel.record`, `Bridge.record`, `Channel.sdpEndpoints`,
   `CallRecording` fields + `buildFilename`) with a Stasis-app wire-up
   example for the native `bridge.record()` code path.
+- [agent-identification.md](agent-identification.md) — deriving the
+  physical agent's SDP endpoint from the sidecar's `caller_sip` /
+  `peer_sip` correlation IDs (for B2BUA trunks like Alcatel OXE that
+  hide the agent behind a media anchor).
 - [implementation-notes.md](implementation-notes.md) — non-obvious
   Asterisk / ARI quirks we hit while building this. Read first if the
   recorder is misbehaving.
