@@ -1082,45 +1082,13 @@ class ChannelsApi {
   }
 
   static Future<dynamic> externalMediaDelete(String id) async {
-    // params: {
-    //     'endpoint':,
-    //     'extension':,
-    //     'context':,
-    //     'priority':,
-    //     'label':,
-    //     'app':,
-    //     'appArgs':,
-    //     'callerId':,
-    //     'timeout':,
-    //     'channelId':,
-    //     'otherChannelId':,
-    //     'originator':,
-    //     'formats': [].concat(formats).join(","),
-    //   },
-    //   data: { variables },
-    //POST /channels/externalMedia?app=MyApp&external_host=127.0.0.1%3A60000&format=ulaw
-    //print(variables);
-
     var uri = Uri(
       scheme: scheme,
       userInfo: "",
       host: host,
       port: port,
       path: "ari/channels/$id",
-      //Iterable<String>? pathSegments,
-      // query: "",
-      // queryParameters: {
-      //   'api_key': api_key,
-      //   'app': app,
-      //   'variables': jsonEncode(variables),
-      //   'external_host': external_host,
-      //   'encapsulation': encapsulation,
-      //   'transport': transport,
-      //   'connection_type': connection_type,
-      //   'format': format,
-      //   'direction': direction
-      // },
-      //String? fragment
+      queryParameters: {'api_key': apiKey},
     );
 
     final request = await client.deleteUrl(uri);
