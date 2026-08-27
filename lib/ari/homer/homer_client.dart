@@ -62,24 +62,35 @@ class HomerClient {
     final conn = await _connect();
     final fromSuffix = _phoneSuffix(fromUser);
     final fromLike = fromSuffix == null ? fromUser : '%$fromSuffix';
+    // For each dialog (sid) we want the *latest* INVITE's SDP, not the
+    // first. The initial INVITE anchors media at the B2BUA (e.g. OXE at
+    // 10.1.8.226); when OXE later transfers the call to a physical agent
+    // it sends a re-INVITE with the agent's phone IP in c=IN IP4 ...,
+    // and that's the value we actually want to surface.
+    //
+    // Both parties must be on the dialog: customer (fromLike) AND agent
+    // (toUser). Without the AND the hunt-group extension (3636) would
+    // match every concurrent call in the time window.
     final rows = await conn.execute(
       Sql.named('''
         SELECT DISTINCT ON (sid)
                sid,
-               data_header->>'from_user' AS from_user,
-               data_header->>'to_user'   AS to_user,
+               data_header->>'from_user'  AS from_user,
+               data_header->>'to_user'    AS to_user,
                data_header->>'user_agent' AS user_agent,
                raw
           FROM $sipTable
          WHERE create_date BETWEEN @from AND @to
            AND data_header->>'method' = 'INVITE'
            AND (
+             data_header->>'from_user' LIKE @fromLike
+             OR data_header->>'to_user' LIKE @fromLike
+           )
+           AND (
              data_header->>'to_user'   = @toUser
              OR data_header->>'from_user' = @toUser
-             OR data_header->>'from_user' LIKE @fromLike
-             OR data_header->>'to_user'   LIKE @fromLike
            )
-         ORDER BY sid, create_date ASC
+         ORDER BY sid, create_date DESC
       '''),
       parameters: {
         'from': TypedValue(Type.timestampWithoutTimezone, from),

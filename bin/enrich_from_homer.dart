@@ -29,6 +29,13 @@ import 'package:dotenv/dotenv.dart';
 ///   LOOKBACK_MINUTES     (default: 60 — sidecars older than this are
 ///                         ignored on first scan to avoid re-processing
 ///                         a full backlog)
+///   MIN_AGE_SECS         (default: 15 — do NOT process a sidecar until it
+///                         is this old, so heplify-server has had time to
+///                         flush the last SIP messages into TimescaleDB)
+///   RETRY_UNTIL_MINUTES  (default: 5 — if legs came back empty and the
+///                         sidecar is younger than this, leave it un-
+///                         finalized and try again next poll. After this
+///                         age we accept the empty result as final.)
 ///
 /// Optional flags:
 ///   --once               run one scan and exit (for cron)
@@ -64,9 +71,13 @@ Future<void> main(List<String> args) async {
   final lookback = backfill
       ? const Duration(days: 3650)
       : Duration(minutes: int.parse(env['LOOKBACK_MINUTES'] ?? '60'));
+  final minAge = Duration(seconds: int.parse(env['MIN_AGE_SECS'] ?? '15'));
+  final retryUntil =
+      Duration(minutes: int.parse(env['RETRY_UNTIL_MINUTES'] ?? '5'));
 
   print('[enricher] watching ${dir.path} '
       '(poll=${poll.inSeconds}s, lookback=${lookback.inMinutes}m, '
+      'min_age=${minAge.inSeconds}s, retry_until=${retryUntil.inMinutes}m, '
       'homer=$host, out=${enrichedDir?.path ?? "in-place"})');
 
   ProcessSignal.sigint.watch().listen((_) async {
@@ -77,7 +88,7 @@ Future<void> main(List<String> args) async {
 
   while (true) {
     try {
-      await _scan(dir, enrichedDir, client, lookback);
+      await _scan(dir, enrichedDir, client, lookback, minAge, retryUntil);
     } catch (e, st) {
       print('[enricher] scan error: $e\n$st');
     }
@@ -88,8 +99,9 @@ Future<void> main(List<String> args) async {
 }
 
 Future<void> _scan(Directory dir, Directory? outDir, HomerClient client,
-    Duration lookback) async {
-  final cutoff = DateTime.now().toUtc().subtract(lookback);
+    Duration lookback, Duration minAge, Duration retryUntil) async {
+  final now = DateTime.now().toUtc();
+  final cutoff = now.subtract(lookback);
   final files = dir
       .listSync()
       .whereType<File>()
@@ -98,13 +110,17 @@ Future<void> _scan(Directory dir, Directory? outDir, HomerClient client,
       .toList();
 
   for (final file in files) {
-    await _enrichOne(file, outDir, client);
+    await _enrichOne(file, outDir, client, minAge, retryUntil, now);
   }
 }
 
-Future<void> _enrichOne(
-    File file, Directory? outDir, HomerClient client) async {
+Future<void> _enrichOne(File file, Directory? outDir, HomerClient client,
+    Duration minAge, Duration retryUntil, DateTime now) async {
   final basename = file.uri.pathSegments.last;
+  final ageOfSidecar = now.difference(file.statSync().modified.toUtc());
+
+  // Too young: heplify may still be flushing the last SIP messages.
+  if (ageOfSidecar < minAge) return;
 
   // Idempotency: if a target already exists, skip.
   if (outDir != null) {
@@ -150,6 +166,17 @@ Future<void> _enrichOne(
   }
 
   sidecar['legs'] = [for (final l in legs) l.toJson()];
+
+  // If we found nothing yet AND the sidecar is still within the retry
+  // window, don't write anything — leave the file un-marked so we scan
+  // again next poll. After retry_until we accept empty as final.
+  final finalizeNow = legs.isNotEmpty || ageOfSidecar >= retryUntil;
+  if (!finalizeNow) {
+    print('[enricher] $basename (src=$src dst=$dst) '
+        '-> no legs yet, retry (age=${ageOfSidecar.inSeconds}s)');
+    return;
+  }
+
   final outFile = outDir == null
       ? file
       : File('${outDir.path}${Platform.pathSeparator}$basename');
