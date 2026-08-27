@@ -1,7 +1,7 @@
 import 'package:postgres/postgres.dart';
 
-/// Thin client over Homer's TimescaleDB. Only capability: look up the SIP
-/// Call-ID that carried a call, keyed by (from_user, to_user, time window).
+/// Thin client over Homer's TimescaleDB. Returns per-dialog SIP metadata
+/// (Call-ID, endpoints, SDP anchor IP) for a given call.
 class HomerClient {
   HomerClient({
     required this.host,
@@ -43,13 +43,17 @@ class HomerClient {
     return fresh;
   }
 
-  /// Return the SIP Call-ID for the dialog that carried this call, or null
-  /// if Homer didn't capture it. [fromUser] is matched loosely (last-N-digit
-  /// suffix if it looks like a phone number) because trunks and B2BUAs
-  /// often reformat prefixes; [toUser] is matched exactly since the agent
-  /// extension is stable end-to-end. Only INVITEs are considered — that's
-  /// the one dialog-forming message per call.
-  Future<String?> findCallId({
+  /// Return every distinct SIP dialog Homer saw within [from]..[to] that
+  /// involved the customer number ([fromUser]) or the agent extension
+  /// ([toUser]). One [HomerLeg] per Call-ID. A call through a B2BUA
+  /// typically produces 2-3 legs — customer→OXE, OXE→agent (and the
+  /// OXE→Asterisk callback whose SDP carries the *real* agent IP behind
+  /// the B2BUA anchor).
+  ///
+  /// [fromUser] matches by last-N-digit suffix if it looks like a phone
+  /// number (trunks/B2BUAs often reformat country-code prefixes);
+  /// [toUser] matches exactly.
+  Future<List<HomerLeg>> findLegs({
     required String fromUser,
     required String toUser,
     required DateTime from,
@@ -57,26 +61,44 @@ class HomerClient {
   }) async {
     final conn = await _connect();
     final fromSuffix = _phoneSuffix(fromUser);
+    final fromLike = fromSuffix == null ? fromUser : '%$fromSuffix';
     final rows = await conn.execute(
       Sql.named('''
-        SELECT sid
+        SELECT DISTINCT ON (sid)
+               sid,
+               data_header->>'from_user' AS from_user,
+               data_header->>'to_user'   AS to_user,
+               data_header->>'user_agent' AS user_agent,
+               raw
           FROM $sipTable
          WHERE create_date BETWEEN @from AND @to
            AND data_header->>'method' = 'INVITE'
-           AND data_header->>'to_user' = @toUser
-           AND data_header->>'from_user' LIKE @fromLike
-         ORDER BY create_date ASC
-         LIMIT 1
+           AND (
+             data_header->>'to_user'   = @toUser
+             OR data_header->>'from_user' = @toUser
+             OR data_header->>'from_user' LIKE @fromLike
+             OR data_header->>'to_user'   LIKE @fromLike
+           )
+         ORDER BY sid, create_date ASC
       '''),
       parameters: {
         'from': TypedValue(Type.timestampWithoutTimezone, from),
         'to': TypedValue(Type.timestampWithoutTimezone, to),
         'toUser': toUser,
-        'fromLike': fromSuffix == null ? fromUser : '%$fromSuffix',
+        'fromLike': fromLike,
       },
     );
-    if (rows.isEmpty) return null;
-    return rows.first[0] as String?;
+    return [
+      for (final row in rows)
+        if (row[0] is String)
+          HomerLeg(
+            callid: row[0] as String,
+            fromUser: row[1] as String?,
+            toUser: row[2] as String?,
+            userAgent: row[3] as String?,
+            sdp: _parseSdp(row[4] as String?),
+          ),
+    ];
   }
 
   /// If [v] contains ≥7 digits, return the last 9 (or all digits, if
@@ -87,8 +109,62 @@ class HomerClient {
     return digits.length <= 9 ? digits : digits.substring(digits.length - 9);
   }
 
+  /// Best-effort SDP parse. Returns null if [raw] has no SDP body or
+  /// neither a `c=` nor `m=audio` line is present.
+  static SdpAnchor? _parseSdp(String? raw) {
+    if (raw == null) return null;
+    final cLine =
+        RegExp(r'^c=IN\s+IP4\s+([\d.]+)', multiLine: true).firstMatch(raw);
+    final mLine = RegExp(r'^m=audio\s+(\d+)', multiLine: true).firstMatch(raw);
+    if (cLine == null && mLine == null) return null;
+    return SdpAnchor(
+      ip: cLine?.group(1),
+      port: mLine == null ? null : int.tryParse(mLine.group(1)!),
+    );
+  }
+
   Future<void> close() async {
     await _conn?.close();
     _conn = null;
   }
+}
+
+class HomerLeg {
+  HomerLeg({
+    required this.callid,
+    this.fromUser,
+    this.toUser,
+    this.userAgent,
+    this.sdp,
+  });
+
+  final String callid;
+  final String? fromUser;
+  final String? toUser;
+  final String? userAgent;
+  final SdpAnchor? sdp;
+
+  Map<String, dynamic> toJson() => {
+        'callid': callid,
+        if (fromUser != null) 'from_user': fromUser,
+        if (toUser != null) 'to_user': toUser,
+        if (userAgent != null) 'user_agent': userAgent,
+        if (sdp != null) 'sdp': sdp!.toJson(),
+      };
+}
+
+class SdpAnchor {
+  SdpAnchor({this.ip, this.port});
+
+  /// `c=IN IP4 …` — the media anchor IP the SDP is offering/answering.
+  /// Behind a B2BUA this is usually the agent's phone IP, not the B2BUA.
+  final String? ip;
+
+  /// `m=audio <port> …` — RTP port paired with [ip].
+  final int? port;
+
+  Map<String, dynamic> toJson() => {
+        if (ip != null) 'ip': ip,
+        if (port != null) 'port': port,
+      };
 }

@@ -7,9 +7,13 @@ import 'package:dotenv/dotenv.dart';
 
 /// Sidecar enricher: polls `RECORDINGS_DIR` for JSON sidecars produced by
 /// `bin/record_calls.dart`, looks up the matching SIP Call-ID in Homer's
-/// TimescaleDB, and writes it back into the same JSON as a top-level
-/// `callid` field. Idempotent — a sidecar is skipped once it has a
-/// `callid` key, so re-running is safe.
+/// TimescaleDB, and writes an enriched copy of each sidecar.
+///
+/// If `ENRICHED_DIR` is set, the enriched JSON is written there under the
+/// same basename and the original in `RECORDINGS_DIR` is left untouched.
+/// If unset, the enrichment is written in place (a `callid` key is added
+/// to the original file). Either way the process is idempotent: it skips
+/// sidecars that already have an enriched output.
 ///
 /// Env required:
 ///   HOMER_PG_HOST        (e.g. 127.0.0.1 — Homer db container port must
@@ -19,7 +23,8 @@ import 'package:dotenv/dotenv.dart';
 ///   HOMER_PG_USER        (default: root)
 ///   HOMER_PG_PASS        (must match heplify-server's DBPass)
 ///
-///   RECORDINGS_DIR       (default: ./recordings_out)
+///   RECORDINGS_DIR       (default: ./recordings_out — input)
+///   ENRICHED_DIR         (optional — output; created if missing)
 ///   POLL_INTERVAL_SECS   (default: 5)
 ///   LOOKBACK_MINUTES     (default: 60 — sidecars older than this are
 ///                         ignored on first scan to avoid re-processing
@@ -49,6 +54,12 @@ Future<void> main(List<String> args) async {
     exit(2);
   }
 
+  final enrichedPath = env['ENRICHED_DIR'];
+  final Directory? enrichedDir = (enrichedPath == null || enrichedPath.isEmpty)
+      ? null
+      : Directory(enrichedPath)
+    ?..createSync(recursive: true);
+
   final poll = Duration(seconds: int.parse(env['POLL_INTERVAL_SECS'] ?? '5'));
   final lookback = backfill
       ? const Duration(days: 3650)
@@ -56,7 +67,7 @@ Future<void> main(List<String> args) async {
 
   print('[enricher] watching ${dir.path} '
       '(poll=${poll.inSeconds}s, lookback=${lookback.inMinutes}m, '
-      'homer=$host)');
+      'homer=$host, out=${enrichedDir?.path ?? "in-place"})');
 
   ProcessSignal.sigint.watch().listen((_) async {
     print('[enricher] shutting down');
@@ -66,7 +77,7 @@ Future<void> main(List<String> args) async {
 
   while (true) {
     try {
-      await _scan(dir, client, lookback);
+      await _scan(dir, enrichedDir, client, lookback);
     } catch (e, st) {
       print('[enricher] scan error: $e\n$st');
     }
@@ -76,7 +87,8 @@ Future<void> main(List<String> args) async {
   await client.close();
 }
 
-Future<void> _scan(Directory dir, HomerClient client, Duration lookback) async {
+Future<void> _scan(Directory dir, Directory? outDir, HomerClient client,
+    Duration lookback) async {
   final cutoff = DateTime.now().toUtc().subtract(lookback);
   final files = dir
       .listSync()
@@ -86,11 +98,20 @@ Future<void> _scan(Directory dir, HomerClient client, Duration lookback) async {
       .toList();
 
   for (final file in files) {
-    await _enrichOne(file, client);
+    await _enrichOne(file, outDir, client);
   }
 }
 
-Future<void> _enrichOne(File file, HomerClient client) async {
+Future<void> _enrichOne(
+    File file, Directory? outDir, HomerClient client) async {
+  final basename = file.uri.pathSegments.last;
+
+  // Idempotency: if a target already exists, skip.
+  if (outDir != null) {
+    final target = File('${outDir.path}${Platform.pathSeparator}$basename');
+    if (target.existsSync()) return;
+  }
+
   final Map<String, dynamic> sidecar;
   try {
     sidecar = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
@@ -99,7 +120,7 @@ Future<void> _enrichOne(File file, HomerClient client) async {
     return;
   }
 
-  if (sidecar.containsKey('callid')) return; // already enriched
+  if (outDir == null && sidecar.containsKey('legs')) return;
 
   final src = _normalizeUser(_asString(sidecar['src']));
   final dst = _normalizeUser(_asString(sidecar['dst']));
@@ -113,10 +134,10 @@ Future<void> _enrichOne(File file, HomerClient client) async {
     return;
   }
 
-  final String? callid;
+  final List<HomerLeg> legs;
   try {
-    callid = await client
-        .findCallId(
+    legs = await client
+        .findLegs(
           fromUser: src,
           toUser: dst,
           from: callDate.subtract(const Duration(seconds: 30)),
@@ -128,13 +149,23 @@ Future<void> _enrichOne(File file, HomerClient client) async {
     return;
   }
 
-  sidecar['callid'] = callid; // null marks "looked up, not found"
-  await file.writeAsString(
+  sidecar['legs'] = [for (final l in legs) l.toJson()];
+  final outFile = outDir == null
+      ? file
+      : File('${outDir.path}${Platform.pathSeparator}$basename');
+  await outFile.writeAsString(
     const JsonEncoder.withIndent('  ').convert(sidecar),
     flush: true,
   );
-  print('[enricher] ${file.uri.pathSegments.last} '
-      '(src=$src dst=$dst) -> callid=${callid ?? "not-found"}');
+
+  // Concise log: how many legs, and any non-anchor SDP IPs we spotted
+  // (those are the real-agent IPs behind a B2BUA).
+  final ips = [
+    for (final l in legs)
+      if (l.sdp?.ip != null) l.sdp!.ip!,
+  ].toSet().toList();
+  print('[enricher] $basename (src=$src dst=$dst) '
+      '-> legs=${legs.length} sdp_ips=${ips.isEmpty ? "-" : ips.join(",")}');
 }
 
 /// Sidecar `dst` is stored as the ARI endpoint string ("PJSIP/3636@mytrunk"),
