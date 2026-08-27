@@ -386,7 +386,7 @@ packages:
     source: hosted
     version: "6.0.3"
   postgres:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: postgres
       sha256: "9aaa6f4872956adef653535a4e2133b167465c1a68c22b9bd0744ef1244e9393"
