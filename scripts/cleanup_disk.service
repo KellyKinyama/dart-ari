@@ -1,0 +1,11 @@
+[Unit]
+Description=Ari proxy for CCIVR
+
+[Service]
+ExecStart=/usr/src/ari_proxy/cleanup_disk.sh
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

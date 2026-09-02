@@ -26,6 +26,10 @@ class HomerClient {
 
   Connection? _conn;
 
+  /// Public accessor for the pooled connection, used by callers that need
+  /// to run their own SQL against Homer (e.g. bin/cleanup_disk.dart).
+  Future<Connection> connectRaw() => _connect();
+
   Future<Connection> _connect() async {
     final c = _conn;
     if (c != null && c.isOpen) return c;

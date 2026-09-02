@@ -1,0 +1,11 @@
+[Unit]
+Description=Ari proxy for CCIVR
+
+[Service]
+ExecStart=/usr/src/ari_proxy/publish_to_mysql.sh
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
