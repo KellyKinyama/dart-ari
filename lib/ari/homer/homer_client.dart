@@ -116,6 +116,71 @@ class HomerClient {
     ];
   }
 
+  /// Load EVERY SIP message (INVITE / 1xx / 2xx / 4xx / BYE / CANCEL /
+  /// their responses) for the given [sids] within [from]..[to], grouped
+  /// by sid and ordered chronologically. Used by the SIP-timeline
+  /// reducer to work out ringing_at / answered_at / bye_at etc. and to
+  /// determine who hung up first.
+  Future<Map<String, List<HomerMessage>>> loadMessagesForSids(
+    Iterable<String> sids, {
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final list = sids.toList();
+    if (list.isEmpty) return const {};
+
+    final conn = await _connect();
+    // Build named parameters :sid0, :sid1, … for a parameterised IN clause.
+    final params = <String, dynamic>{
+      'from': TypedValue(Type.timestampWithoutTimezone, from),
+      'to': TypedValue(Type.timestampWithoutTimezone, to),
+    };
+    final placeholders = <String>[];
+    for (var i = 0; i < list.length; i++) {
+      final key = 'sid$i';
+      placeholders.add('@$key');
+      params[key] = list[i];
+    }
+    final inClause = placeholders.join(',');
+
+    final rows = await conn.execute(
+      Sql.named('''
+        SELECT sid,
+               create_date,
+               data_header->>'method'      AS method,
+               data_header->>'from_user'   AS from_user,
+               data_header->>'to_user'     AS to_user,
+               data_header->>'cseq'        AS cseq,
+               data_header->>'user_agent'  AS user_agent,
+               raw
+          FROM $sipTable
+         WHERE create_date BETWEEN @from AND @to
+           AND sid IN ($inClause)
+         ORDER BY sid, create_date ASC
+      '''),
+      parameters: params,
+    );
+
+    final out = <String, List<HomerMessage>>{};
+    for (final row in rows) {
+      final sid = row[0] as String?;
+      if (sid == null) continue;
+      (out[sid] ??= <HomerMessage>[]).add(
+        HomerMessage(
+          sid: sid,
+          createDate: row[1] as DateTime,
+          method: row[2] as String?,
+          fromUser: row[3] as String?,
+          toUser: row[4] as String?,
+          cseq: row[5] as String?,
+          userAgent: row[6] as String?,
+          raw: row[7] as String?,
+        ),
+      );
+    }
+    return out;
+  }
+
   /// If [v] contains ≥7 digits, return the last 9 (or all digits, if
   /// fewer). Used to match phone numbers regardless of country-code prefix.
   static String? _phoneSuffix(String v) {
@@ -128,8 +193,10 @@ class HomerClient {
   /// neither a `c=` nor `m=audio` line is present.
   static SdpAnchor? _parseSdp(String? raw) {
     if (raw == null) return null;
-    final cLine =
-        RegExp(r'^c=IN\s+IP4\s+([\d.]+)', multiLine: true).firstMatch(raw);
+    final cLine = RegExp(
+      r'^c=IN\s+IP4\s+([\d.]+)',
+      multiLine: true,
+    ).firstMatch(raw);
     final mLine = RegExp(r'^m=audio\s+(\d+)', multiLine: true).firstMatch(raw);
     if (cLine == null && mLine == null) return null;
     return SdpAnchor(
@@ -160,12 +227,12 @@ class HomerLeg {
   final SdpAnchor? sdp;
 
   Map<String, dynamic> toJson() => {
-        'callid': callid,
-        if (fromUser != null) 'from_user': fromUser,
-        if (toUser != null) 'to_user': toUser,
-        if (userAgent != null) 'user_agent': userAgent,
-        if (sdp != null) 'sdp': sdp!.toJson(),
-      };
+    'callid': callid,
+    if (fromUser != null) 'from_user': fromUser,
+    if (toUser != null) 'to_user': toUser,
+    if (userAgent != null) 'user_agent': userAgent,
+    if (sdp != null) 'sdp': sdp!.toJson(),
+  };
 }
 
 class SdpAnchor {
@@ -179,7 +246,53 @@ class SdpAnchor {
   final int? port;
 
   Map<String, dynamic> toJson() => {
-        if (ip != null) 'ip': ip,
-        if (port != null) 'port': port,
-      };
+    if (ip != null) 'ip': ip,
+    if (port != null) 'port': port,
+  };
+}
+
+/// One row from `hep_proto_1_call` in Homer. A single SIP dialog is
+/// represented by many of these (one per INVITE / response / ACK / BYE
+/// etc.), sharing the same [sid] (= SIP Call-ID).
+class HomerMessage {
+  HomerMessage({
+    required this.sid,
+    required this.createDate,
+    this.method,
+    this.fromUser,
+    this.toUser,
+    this.cseq,
+    this.userAgent,
+    this.raw,
+  });
+
+  final String sid;
+  final DateTime createDate;
+
+  /// For requests: `INVITE`, `BYE`, `CANCEL`, `ACK`, …
+  /// For responses: the numeric status code as a string (`"180"`, `"200"`,
+  /// `"487"`, …) — this is heplify-server's default encoding.
+  final String? method;
+  final String? fromUser;
+  final String? toUser;
+
+  /// e.g. `"1 INVITE"`. Used to disambiguate `200 OK` responses to
+  /// INVITE vs BYE.
+  final String? cseq;
+  final String? userAgent;
+
+  /// Raw SIP message (headers + body). Used only to parse SDP from
+  /// INVITE / 200-OK.
+  final String? raw;
+
+  bool get isResponse {
+    final m = method;
+    if (m == null || m.isEmpty) return false;
+    final c = m.codeUnitAt(0);
+    return c >= 0x30 && c <= 0x39;
+  }
+
+  int? get statusCode => isResponse ? int.tryParse(method!) : null;
+
+  SdpAnchor? get sdp => HomerClient._parseSdp(raw);
 }
