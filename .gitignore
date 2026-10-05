@@ -3,3 +3,6 @@
 .dart_tool/
 .env
 bin/dart_ari.exe
+# Compiled STT binaries (build artifacts)
+stt_watch.exe
+stt.exe
