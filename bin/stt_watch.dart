@@ -27,6 +27,8 @@ import 'package:dotenv/dotenv.dart';
 ///                            with the LLM (writes `<name>.enhanced.txt`)
 ///   STT_WATCH_ENHANCED_DIR    optional — write enhanced transcripts here
 ///                            (defaults to STT_WATCH_OUTPUT_DIR)
+///   STT_WATCH_SKIP_EXISTING   default: false — ignore recordings already
+///                            present at startup; only transcribe new arrivals
 ///
 /// Flags:
 ///   --once   transcribe existing untranscribed files once, then exit
@@ -45,6 +47,8 @@ Future<void> main(List<String> args) async {
   final outputDir = env['STT_WATCH_OUTPUT_DIR'];
   final enhance = (env['STT_WATCH_ENHANCE'] ?? 'false').toLowerCase() == 'true';
   final enhancedDir = env['STT_WATCH_ENHANCED_DIR'] ?? outputDir;
+  final skipExisting =
+      (env['STT_WATCH_SKIP_EXISTING'] ?? 'false').toLowerCase() == 'true';
 
   final SttService service;
   try {
@@ -80,15 +84,19 @@ Future<void> main(List<String> args) async {
 
   print('[stt-watch] dir=$watchDir '
       'out=${outputDir == null || outputDir.isEmpty ? '(alongside audio)' : outputDir} '
-      'enhance=${enhancer != null} '
+      'enhance=${enhancer != null} skip_existing=$skipExisting '
       'poll=${poll.inSeconds}s stable=${stable.inSeconds}s overwrite=$overwrite '
       'locales=${service.locales.join(",")}');
 
   // Guards against processing the same recording twice concurrently.
   final inFlight = <String>{};
 
+  // Recordings present at startup that should be ignored (skip-existing mode).
+  final preExisting = <String>{};
+
   Future<void> process(String path) async {
     if (!path.toLowerCase().endsWith('.wav')) return;
+    if (preExisting.contains(path)) return;
     if (inFlight.contains(path)) return;
 
     final file = File(path);
@@ -154,8 +162,19 @@ Future<void> main(List<String> args) async {
     }
   }
 
-  // Pick up anything already present before watching for new arrivals.
-  await sweep();
+  // Pick up anything already present before watching for new arrivals, unless
+  // skip-existing mode is on — then record the current backlog and ignore it.
+  if (skipExisting) {
+    for (final file in dir.listSync().whereType<File>()) {
+      if (file.path.toLowerCase().endsWith('.wav')) {
+        preExisting.add(file.path);
+      }
+    }
+    print('[stt-watch] skip_existing: ignoring ${preExisting.length} '
+        'existing recordings; only new files will be transcribed');
+  } else {
+    await sweep();
+  }
 
   if (once) {
     print('[stt-watch] --once complete');
