@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dart_ari/stt/call_rater.dart';
+import 'package:dart_ari/stt/call_rating_repository.dart';
 import 'package:dart_ari/stt/llm_enhancer.dart';
 import 'package:dart_ari/stt/stt_service.dart';
 import 'package:dotenv/dotenv.dart';
+import 'package:eloquent/eloquent.dart';
 
 /// Recording watcher: monitors a directory for newly created WAV recordings
 /// and transcribes each one with [SttService], writing a sibling `.txt` next
@@ -29,9 +32,38 @@ import 'package:dotenv/dotenv.dart';
 ///                            (defaults to STT_WATCH_OUTPUT_DIR)
 ///   STT_WATCH_SKIP_EXISTING   default: false — ignore recordings already
 ///                            present at startup; only transcribe new arrivals
+///   STT_WATCH_RATE            default: false — AI-score each call (agent
+///                            introduction, handling, closing, overall) into
+///                            the `ai_call_ratings` table (needs AST_DB_* +
+///                            AZURE_AI_* / AZURE_SPEECH_KEY)
 ///
 /// Flags:
 ///   --once   transcribe existing untranscribed files once, then exit
+
+/// Opens the Asterisk MySQL pool used to store AI call ratings.
+Future<Connection> _openRatingDb(DotEnv env) async {
+  final host = env['AST_DB_HOST'];
+  final database = env['AST_DB_DATABASE'];
+  final username = env['AST_DB_USERNAME'];
+  if (host == null || database == null || username == null) {
+    throw StateError('AST_DB_HOST/DATABASE/USERNAME not set');
+  }
+  final manager = Manager();
+  manager.addConnection({
+    'driver': 'mysql',
+    'host': host,
+    'port': env['AST_DB_PORT'] ?? '3306',
+    'database': database,
+    'username': username,
+    'password': env['AST_DB_PASSWORD'] ?? '',
+    'pool': 'true',
+    'poolsize': env['AST_DB_POOL_SIZE'] ?? '2',
+    'allowreconnect': 'true',
+    'application_name': 'stt_watch',
+  });
+  manager.setAsGlobal();
+  return manager.connection();
+}
 
 Future<void> main(List<String> args) async {
   final env = DotEnv(includePlatformEnvironment: true)..load();
@@ -49,6 +81,7 @@ Future<void> main(List<String> args) async {
   final enhancedDir = env['STT_WATCH_ENHANCED_DIR'] ?? outputDir;
   final skipExisting =
       (env['STT_WATCH_SKIP_EXISTING'] ?? 'false').toLowerCase() == 'true';
+  final rate = (env['STT_WATCH_RATE'] ?? 'false').toLowerCase() == 'true';
 
   final SttService service;
   try {
@@ -69,6 +102,22 @@ Future<void> main(List<String> args) async {
     }
   }
 
+  // AI call rating is best-effort too: a config or DB error disables it.
+  CallRater? rater;
+  CallRatingRepository? ratingRepo;
+  Connection? ratingDb;
+  if (rate) {
+    try {
+      rater = CallRater.fromEnv();
+      ratingDb = await _openRatingDb(env);
+      ratingRepo = CallRatingRepository(ratingDb);
+    } catch (err) {
+      stderr.writeln('[stt-watch] rating disabled: $err');
+      rater = null;
+      ratingRepo = null;
+    }
+  }
+
   final dir = Directory(watchDir);
   if (!dir.existsSync()) {
     stderr.writeln('[stt-watch] directory not found: $watchDir');
@@ -84,7 +133,7 @@ Future<void> main(List<String> args) async {
 
   print('[stt-watch] dir=$watchDir '
       'out=${outputDir == null || outputDir.isEmpty ? '(alongside audio)' : outputDir} '
-      'enhance=${enhancer != null} skip_existing=$skipExisting '
+      'enhance=${enhancer != null} rate=${rater != null} skip_existing=$skipExisting '
       'poll=${poll.inSeconds}s stable=${stable.inSeconds}s overwrite=$overwrite '
       'locales=${service.locales.join(",")}');
 
@@ -123,6 +172,7 @@ Future<void> main(List<String> args) async {
     inFlight.add(path);
     try {
       String transcript;
+      var ratingInput = '';
       if (overwrite || !txtExists) {
         print('[stt-watch] transcribing: $path');
         final result =
@@ -133,14 +183,40 @@ Future<void> main(List<String> args) async {
       } else {
         transcript = await File(txtPath).readAsString();
       }
+      ratingInput = transcript;
 
-      if (enhancer != null &&
+      final localEnhancer = enhancer;
+      final localRater = rater;
+      final localRepo = ratingRepo;
+      final localEnhancedPath = enhancedPath;
+
+      if (localEnhancer != null &&
           transcript.trim().isNotEmpty &&
           (overwrite || !enhancedExists)) {
         print('[stt-watch] enhancing: $txtPath');
         final enhanced =
-            await enhancer.enhanceFile(txtPath, outputDir: enhancedDir);
+            await localEnhancer.enhanceFile(txtPath, outputDir: enhancedDir);
+        if (enhanced.text.trim().isNotEmpty) ratingInput = enhanced.text;
         print('[stt-watch] enhanced: ${enhanced.outputPath}');
+      } else if (localEnhancedPath != null && File(localEnhancedPath).existsSync()) {
+        ratingInput = await File(localEnhancedPath).readAsString();
+      }
+
+      if (localRater != null &&
+          localRepo != null &&
+          ratingInput.trim().isNotEmpty) {
+        try {
+          final rating = await localRater.rate(ratingInput);
+          if (rating != null) {
+            final fileName = path.replaceAll('\\', '/').split('/').last;
+            await localRepo.save(fileName, rating);
+            print('[stt-watch] rated: $fileName '
+                'intro=${rating.introduction} handling=${rating.callHandling} '
+                'closing=${rating.closing} overall=${rating.overall}');
+          }
+        } catch (err) {
+          stderr.writeln('[stt-watch] rating failed: $path -> $err');
+        }
       }
     } catch (err) {
       stderr.writeln('[stt-watch] failed: $path -> $err');
@@ -207,6 +283,9 @@ Future<void> main(List<String> args) async {
     print('[stt-watch] shutting down');
     sweepTimer.cancel();
     await watchSub?.cancel();
+    try {
+      await ratingDb?.disconnect();
+    } catch (_) {}
     if (!shutdown.isCompleted) shutdown.complete();
   });
 
