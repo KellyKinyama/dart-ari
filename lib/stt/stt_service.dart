@@ -1,14 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dotenv/dotenv.dart';
 import 'package:http/http.dart' as http;
 
+import 'wav_chunker.dart';
+
 /// Azure Speech-to-Text service, ported from the Python `stt_service`.
 ///
 /// Uses the Azure AI Speech **real-time REST short-audio** API (there is no
-/// native Azure Speech SDK for Dart). It accepts a WAV file and returns the
-/// transcript synchronously. Audio must be 60 seconds or shorter.
+/// native Azure Speech SDK for Dart). Each request handles up to ~60 seconds,
+/// so longer recordings are split into chunks and transcribed sequentially.
 class SttService {
   /// Resource endpoint, e.g. `https://<name>.cognitiveservices.azure.com/`,
   /// used to mint the auth token.
@@ -23,11 +26,15 @@ class SttService {
   /// Candidate locales. Only the first is used (short-audio takes one locale).
   final List<String> locales;
 
+  /// Max seconds of audio per recognition request (short-audio limit is 60).
+  final int chunkSeconds;
+
   SttService({
     required this.endpoint,
     required this.apiKey,
     required this.region,
     this.locales = const ['en-US'],
+    this.chunkSeconds = 50,
   });
 
   /// Builds a service from `.env` (AZURE_SPEECH_* keys), independent of the
@@ -56,11 +63,14 @@ class SttService {
         .where((locale) => locale.isNotEmpty)
         .toList();
 
+    final chunkSeconds = int.tryParse(env['STT_CHUNK_SECONDS'] ?? '') ?? 50;
+
     return SttService(
       endpoint: endpoint,
       apiKey: apiKey,
       region: region,
       locales: locales.isEmpty ? const ['en-US'] : locales,
+      chunkSeconds: chunkSeconds.clamp(5, 59),
     );
   }
 
@@ -94,7 +104,8 @@ class SttService {
     return response.body;
   }
 
-  /// Transcribes a single WAV file (<= 60s) and returns the transcript text.
+  /// Transcribes a WAV file of any length, chunking as needed, and returns the
+  /// concatenated transcript text.
   Future<String> transcribeFile(String audioPath) async {
     final file = File(audioPath);
     if (!file.existsSync()) {
@@ -102,6 +113,19 @@ class SttService {
     }
 
     final token = await _fetchAuthToken();
+    final bytes = await file.readAsBytes();
+    final chunks = WavChunker.split(bytes, maxSeconds: chunkSeconds);
+
+    final parts = <String>[];
+    for (final chunk in chunks) {
+      final text = await _recognizeBytes(chunk, token);
+      if (text.isNotEmpty) parts.add(text);
+    }
+    return parts.join(' ');
+  }
+
+  /// Recognizes a single WAV chunk (<= 60s) using a pre-minted [token].
+  Future<String> _recognizeBytes(Uint8List wavBytes, String token) async {
     final uri = _recognitionUri();
     final response = await http.post(
       uri,
@@ -110,7 +134,7 @@ class SttService {
         'Content-Type': 'audio/wav',
         'Accept': 'application/json',
       },
-      body: await file.readAsBytes(),
+      body: wavBytes,
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
