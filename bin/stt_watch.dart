@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dart_ari/stt/llm_enhancer.dart';
 import 'package:dart_ari/stt/stt_service.dart';
 import 'package:dotenv/dotenv.dart';
 
@@ -20,6 +21,12 @@ import 'package:dotenv/dotenv.dart';
 ///                            than this (avoids reading writes-in-flight)
 ///   STT_WATCH_OVERWRITE      default: false — reprocess even if a `.txt`
 ///                            already exists for the recording
+///   STT_WATCH_OUTPUT_DIR      optional — write transcripts here instead of
+///                            alongside the audio file
+///   STT_WATCH_ENHANCE         default: false — also enhance each transcript
+///                            with the LLM (writes `<name>.enhanced.txt`)
+///   STT_WATCH_ENHANCED_DIR    optional — write enhanced transcripts here
+///                            (defaults to STT_WATCH_OUTPUT_DIR)
 ///
 /// Flags:
 ///   --once   transcribe existing untranscribed files once, then exit
@@ -36,6 +43,8 @@ Future<void> main(List<String> args) async {
   final overwrite =
       (env['STT_WATCH_OVERWRITE'] ?? 'false').toLowerCase() == 'true';
   final outputDir = env['STT_WATCH_OUTPUT_DIR'];
+  final enhance = (env['STT_WATCH_ENHANCE'] ?? 'false').toLowerCase() == 'true';
+  final enhancedDir = env['STT_WATCH_ENHANCED_DIR'] ?? outputDir;
 
   final SttService service;
   try {
@@ -43,6 +52,17 @@ Future<void> main(List<String> args) async {
   } on StateError catch (err) {
     stderr.writeln('[stt-watch] config error: ${err.message}');
     exit(78); // EX_CONFIG
+  }
+
+  // Enhancement is best-effort: a config error disables it but still lets
+  // transcription run.
+  LlmEnhancer? enhancer;
+  if (enhance) {
+    try {
+      enhancer = LlmEnhancer.fromEnv();
+    } on StateError catch (err) {
+      stderr.writeln('[stt-watch] enhancement disabled: ${err.message}');
+    }
   }
 
   final dir = Directory(watchDir);
@@ -54,9 +74,13 @@ Future<void> main(List<String> args) async {
   if (outputDir != null && outputDir.isNotEmpty) {
     Directory(outputDir).createSync(recursive: true);
   }
+  if (enhancer != null && enhancedDir != null && enhancedDir.isNotEmpty) {
+    Directory(enhancedDir).createSync(recursive: true);
+  }
 
   print('[stt-watch] dir=$watchDir '
       'out=${outputDir == null || outputDir.isEmpty ? '(alongside audio)' : outputDir} '
+      'enhance=${enhancer != null} '
       'poll=${poll.inSeconds}s stable=${stable.inSeconds}s overwrite=$overwrite '
       'locales=${service.locales.join(",")}');
 
@@ -71,7 +95,18 @@ Future<void> main(List<String> args) async {
     if (!file.existsSync()) return;
 
     final txtPath = SttService.transcriptPathFor(path, outputDir: outputDir);
-    if (!overwrite && File(txtPath).existsSync()) return;
+    final enhancedPath = enhancer == null
+        ? null
+        : LlmEnhancer.enhancedPathFor(txtPath, outputDir: enhancedDir);
+    final txtExists = File(txtPath).existsSync();
+    final enhancedExists =
+        enhancedPath != null && File(enhancedPath).existsSync();
+
+    // Nothing to do if the expected outputs already exist.
+    if (!overwrite) {
+      if (enhancer == null && txtExists) return;
+      if (enhancer != null && txtExists && enhancedExists) return;
+    }
 
     // Skip files still being written; a later sweep/event retries them.
     final age = DateTime.now().difference(file.statSync().modified);
@@ -79,10 +114,26 @@ Future<void> main(List<String> args) async {
 
     inFlight.add(path);
     try {
-      print('[stt-watch] transcribing: $path');
-      final result = await service.transcribeAndSave(path, outputDir: outputDir);
-      print('[stt-watch] saved: ${result.outputPath}'
-          '${result.text.isEmpty ? ' (no speech)' : ''}');
+      String transcript;
+      if (overwrite || !txtExists) {
+        print('[stt-watch] transcribing: $path');
+        final result =
+            await service.transcribeAndSave(path, outputDir: outputDir);
+        transcript = result.text;
+        print('[stt-watch] saved: ${result.outputPath}'
+            '${result.text.isEmpty ? ' (no speech)' : ''}');
+      } else {
+        transcript = await File(txtPath).readAsString();
+      }
+
+      if (enhancer != null &&
+          transcript.trim().isNotEmpty &&
+          (overwrite || !enhancedExists)) {
+        print('[stt-watch] enhancing: $txtPath');
+        final enhanced =
+            await enhancer.enhanceFile(txtPath, outputDir: enhancedDir);
+        print('[stt-watch] enhanced: ${enhanced.outputPath}');
+      }
     } catch (err) {
       stderr.writeln('[stt-watch] failed: $path -> $err');
     } finally {
